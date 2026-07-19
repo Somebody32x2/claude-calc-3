@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Calc 3 · Field Labs</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#081416;--bg2:#0c1e22;--panel:#0f2429;
+  --line:rgba(120,170,175,0.16);--line-strong:rgba(120,170,175,0.32);
+  --ink:#e7f2f0;--ink-dim:#9db3b3;--ink-faint:#6b8484;
+  --x:#ff7a5c;--y:#46c9d6;--grad:#ffd15c;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font-family:'Inter',system-ui,sans-serif;font-size:16px;line-height:1.6;-webkit-font-smoothing:antialiased;
+  background-image:radial-gradient(1200px 500px at 80% -10%,rgba(70,201,214,0.06),transparent),radial-gradient(900px 400px at 0% 5%,rgba(255,122,92,0.05),transparent);}
+.wrap{max-width:1080px;margin:0 auto;padding:0 24px}
+h1,h2,h3{font-family:'Space Grotesk',sans-serif;font-weight:600;line-height:1.1;letter-spacing:-0.01em}
+.mono{font-family:'IBM Plex Mono',monospace}
+header{padding:80px 0 8px}
+.eyebrow{font-family:'IBM Plex Mono',monospace;font-size:12.5px;letter-spacing:0.28em;text-transform:uppercase;color:var(--ink-faint);display:flex;align-items:center;gap:12px}
+.eyebrow::before{content:"";width:34px;height:1px;background:var(--line-strong)}
+h1{font-size:clamp(40px,7vw,76px);margin:18px 0 0;font-weight:700}
+h1 .accent{background:linear-gradient(100deg,var(--x),var(--grad) 55%,var(--y));-webkit-background-clip:text;background-clip:text;color:transparent}
+.lede{max-width:640px;color:var(--ink-dim);font-size:clamp(17px,2.2vw,20px);margin:22px 0 0}
+.lede b{color:var(--ink);font-weight:600}
+
+.grid{margin:54px 0 0;display:grid;grid-template-columns:repeat(2,1fr);gap:18px}
+a.card{display:block;text-decoration:none;color:inherit;border:1px solid var(--line);border-radius:16px;
+  background:var(--bg2);padding:26px 24px;transition:border-color .18s,transform .18s,background .18s}
+a.card:hover{border-color:var(--y);transform:translateY(-3px);background:var(--panel)}
+.card .num{font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:0.2em;color:var(--ink-faint);text-transform:uppercase}
+.card h2{font-size:26px;margin:12px 0 0}
+.card .sym{font-family:'IBM Plex Mono',monospace;font-size:14px;color:var(--grad);margin-top:8px}
+.card p{color:var(--ink-dim);font-size:14.5px;margin:12px 0 0}
+.card .go{font-family:'IBM Plex Mono',monospace;font-size:13px;color:var(--y);margin-top:16px;display:block}
+.card.soon{opacity:.5;pointer-events:none}
+.card.soon .go{color:var(--ink-faint)}
+.tag{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:0.14em;text-transform:uppercase;
+  border:1px solid var(--line-strong);border-radius:6px;padding:3px 8px;color:var(--ink-faint);float:right}
+footer{padding:56px 0 80px;border-top:1px solid var(--line);margin-top:56px;color:var(--ink-faint);font-size:13.5px}
+footer a{color:var(--y)}
+@media (max-width:820px){.grid{grid-template-columns:1fr}}
+:focus-visible{outline:2px solid var(--y);outline-offset:3px;border-radius:8px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="eyebrow">Calc 3 · Field Labs</div>
+    <h1>Multivariable, <span class="accent">felt</span></h1>
+    <p class="lede">Interactive labs for the core ideas of Calculus III. Every surface, slope and
+      volume on these pages is computed from an <b>exact closed form</b> — nothing is faked, so the
+      numbers you read are the real ones. Drag, slide, and predict before you look.</p>
+  </header>
+
+  <div class="grid">
+    <a class="card" href="partial-derivatives-lab_1.html">
+      <span class="tag">Ready</span>
+      <div class="num">Lab 01</div>
+      <h2>Partial derivatives</h2>
+      <div class="sym">∂f/∂x · ∂f/∂y · ∇f</div>
+      <p>Freeze one variable and read the slope. Slice curves, tangent lines, cutting planes, and a
+        topographic map with the gradient arrow pointing straight uphill.</p>
+      <span class="go">→ open the lab</span>
+    </a>
+    <a class="card" href="double-integrals-lab_2.html">
+      <span class="tag">Ready</span>
+      <div class="num">Lab 02</div>
+      <h2>Double integrals</h2>
+      <div class="sym">∬<sub>R</sub> f(x,y) dA</div>
+      <p>Stand a column on every tile and add them up. Riemann columns collapsing onto the surface,
+        Fubini's sweeping blade, and the limits that non-rectangular regions force on you.</p>
+      <span class="go">→ open the lab</span>
+    </a>
+    <div class="card soon">
+      <span class="tag">Next</span>
+      <div class="num">Lab 03</div>
+      <h2>Directional derivatives</h2>
+      <div class="sym">D<sub>u</sub> f = ∇f · u</div>
+      <p>Any compass heading, not just the two axes. Why the gradient is the steepest one, and why
+        level curves are exactly where the dot product vanishes.</p>
+      <span class="go">in progress</span>
+    </div>
+    <div class="card soon">
+      <span class="tag">Planned</span>
+      <div class="num">Lab 04</div>
+      <h2>Tangent planes</h2>
+      <div class="sym">L(x,y) ≈ f(x,y)</div>
+      <p>Zoom in until the surface and its plane are indistinguishable. Local linearity is the whole
+        of differentiability.</p>
+      <span class="go">planned</span>
+    </div>
+  </div>
+
+  <footer>
+    Nine labs planned across two tracks — see <a href="https://github.com/Somebody32x2/claude-calc-3/blob/main/CURRICULUM.md">CURRICULUM.md</a>
+    for the full sequence. Source on <a href="https://github.com/Somebody32x2/claude-calc-3">GitHub</a>.
+  </footer>
+</div>
+</body>
+</html>

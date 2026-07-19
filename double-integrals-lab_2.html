@@ -1,0 +1,807 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Double Integrals · A Field Lab</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#081416;--bg2:#0c1e22;--panel:#0f2429;--panel2:#123037;
+  --line:rgba(120,170,175,0.16);--line-strong:rgba(120,170,175,0.32);
+  --ink:#e7f2f0;--ink-dim:#9db3b3;--ink-faint:#6b8484;
+  --x:#ff7a5c;--x-soft:#ffab90;--y:#46c9d6;--y-soft:#8fe3ec;
+  --grad:#ffd15c;--grad-soft:#ffe4a1;--peak:#f0d79a;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font-family:'Inter',system-ui,sans-serif;font-size:16px;line-height:1.6;-webkit-font-smoothing:antialiased;
+  background-image:radial-gradient(1200px 500px at 80% -10%,rgba(255,209,92,0.055),transparent),radial-gradient(900px 400px at 0% 5%,rgba(70,201,214,0.05),transparent);}
+.wrap{max-width:1180px;margin:0 auto;padding:0 24px}
+h1,h2,h3{font-family:'Space Grotesk',sans-serif;font-weight:600;line-height:1.1;letter-spacing:-0.01em}
+.mono{font-family:'IBM Plex Mono',monospace}
+#errbar{display:none;background:#3a1414;border:1px solid #ff7a5c;color:#ffd9cf;padding:12px 16px;margin:16px 0;border-radius:10px;font-family:'IBM Plex Mono';font-size:13px}
+
+header{padding:64px 0 8px}
+.eyebrow{font-family:'IBM Plex Mono',monospace;font-size:12.5px;letter-spacing:0.28em;text-transform:uppercase;color:var(--ink-faint);display:flex;align-items:center;gap:12px}
+.eyebrow::before{content:"";width:34px;height:1px;background:var(--line-strong)}
+.eyebrow a{color:var(--ink-faint);text-decoration:none;border-bottom:1px solid var(--line-strong)}
+.eyebrow a:hover{color:var(--y)}
+h1{font-size:clamp(40px,7vw,76px);margin:18px 0 0;font-weight:700}
+h1 .accent{background:linear-gradient(100deg,var(--y),var(--grad) 55%,var(--x));-webkit-background-clip:text;background-clip:text;color:transparent}
+.lede{max-width:680px;color:var(--ink-dim);font-size:clamp(17px,2.2vw,20px);margin:22px 0 0}
+.lede b{color:var(--ink);font-weight:600}
+
+.idea{margin:52px 0;display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.idea>div{background:var(--bg2);padding:26px 24px}
+.idea .k{font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:0.14em;text-transform:uppercase;margin-bottom:10px}
+.idea .kx{color:var(--x)}.idea .ky{color:var(--y)}.idea .kg{color:var(--grad)}
+.idea p{margin:0;color:var(--ink-dim);font-size:15px}
+.idea .big{font-family:'Space Grotesk';font-size:19px;color:var(--ink);display:block;margin-bottom:6px;font-weight:500}
+
+section{padding:34px 0}
+.sec-head{display:flex;align-items:baseline;gap:16px;margin-bottom:22px;flex-wrap:wrap}
+.sec-num{font-family:'IBM Plex Mono',monospace;color:var(--ink-faint);font-size:14px;letter-spacing:0.1em}
+h2{font-size:clamp(26px,3.6vw,38px)}
+.sec-head p{margin:0;color:var(--ink-dim);font-size:15px;flex:1;min-width:240px}
+
+.lab{display:grid;grid-template-columns:1fr 356px;gap:20px;border:1px solid var(--line);border-radius:16px;background:var(--bg2);padding:20px}
+.viewport{position:relative;height:520px;border-radius:12px;overflow:hidden;background:linear-gradient(180deg,#0a1a1e,#081315);border:1px solid var(--line)}
+.viewport.short{height:400px}
+canvas.stage{width:100%;height:100%;display:block;touch-action:none;cursor:grab}
+canvas.stage:active{cursor:grabbing}
+.vhint{position:absolute;left:14px;bottom:12px;z-index:3;font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:0.12em;color:var(--ink-faint);text-transform:uppercase;pointer-events:none;background:rgba(8,20,22,0.55);padding:4px 9px;border-radius:6px}
+.rail{display:flex;flex-direction:column;gap:16px}
+.chips{display:flex;flex-wrap:wrap;gap:7px}
+.chip{font-family:'IBM Plex Mono',monospace;font-size:12.5px;padding:7px 12px;border-radius:8px;border:1px solid var(--line-strong);background:transparent;color:var(--ink-dim);cursor:pointer;transition:all .15s}
+.chip:hover{border-color:var(--y);color:var(--ink)}
+.chip.on{background:var(--panel2);border-color:var(--y);color:var(--ink)}
+.chip.on::before{content:"▸ "}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px}
+.card .lbl{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:var(--ink-faint);margin-bottom:12px}
+.sliderrow{margin-bottom:14px}.sliderrow:last-child{margin-bottom:0}
+.sliderrow .top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px}
+.sliderrow .name{font-family:'Space Grotesk';font-size:14px;font-weight:500}
+.sliderrow .name .sub{color:var(--ink-faint);font-size:12px;font-weight:400}
+.sliderrow .val{font-family:'IBM Plex Mono';font-size:14px}
+.dotx{color:var(--x)}.doty{color:var(--y)}.dotg{color:var(--grad)}
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:4px;border-radius:4px;background:var(--line-strong);outline:none;margin:6px 0 2px}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:17px;height:17px;border-radius:50%;background:var(--grad);border:2px solid var(--bg);cursor:pointer;box-shadow:0 0 0 1px var(--line-strong)}
+input[type=range]::-moz-range-thumb{width:17px;height:17px;border-radius:50%;background:var(--grad);border:2px solid var(--bg);cursor:pointer}
+input.tealthumb::-webkit-slider-thumb{background:var(--y)}input.tealthumb::-moz-range-thumb{background:var(--y)}
+input.coralthumb::-webkit-slider-thumb{background:var(--x)}input.coralthumb::-moz-range-thumb{background:var(--x)}
+.readout .line{display:flex;justify-content:space-between;align-items:baseline;padding:9px 0;border-bottom:1px solid var(--line);gap:12px}
+.readout .line:last-child{border-bottom:none;padding-bottom:0}.readout .line:first-child{padding-top:0}
+.readout .rl{font-size:13.5px;color:var(--ink-dim)}
+.readout .rl .exp{font-family:'IBM Plex Mono';font-size:12px;color:var(--ink-faint);display:block}
+.readout .rv{font-family:'IBM Plex Mono';font-size:17px;font-weight:500;text-align:right;white-space:nowrap}
+.readout .walk{font-size:12px;color:var(--ink-faint);display:block;margin-top:2px}
+.rv.vx{color:var(--x)}.rv.vy{color:var(--y)}.rv.vg{color:var(--grad)}
+.errbarwrap{margin-top:12px}
+.errtrack{height:6px;border-radius:6px;background:var(--line-strong);overflow:hidden}
+.errfill{height:100%;background:linear-gradient(90deg,var(--grad),var(--x));width:0%;transition:width .18s}
+.toggles{display:flex;flex-direction:column;gap:9px}
+.tg{display:flex;align-items:center;gap:9px;font-size:13.5px;color:var(--ink-dim);cursor:pointer;user-select:none}
+.tg input{appearance:none;-webkit-appearance:none;width:34px;height:19px;border-radius:20px;background:var(--line-strong);position:relative;cursor:pointer;transition:.15s;flex:none}
+.tg input::after{content:"";position:absolute;top:2px;left:2px;width:15px;height:15px;border-radius:50%;background:var(--ink-faint);transition:.15s}
+.tg input:checked{background:var(--y)}
+.tg input:checked::after{background:var(--bg);transform:translateX(15px)}
+.seg{display:flex;gap:6px}
+.seg button{flex:1;font-family:'IBM Plex Mono',monospace;font-size:12px;padding:7px 4px;border-radius:8px;border:1px solid var(--line-strong);background:transparent;color:var(--ink-dim);cursor:pointer;transition:.15s}
+.seg button:hover{border-color:var(--y);color:var(--ink)}
+.seg button.on{background:var(--panel2);border-color:var(--y);color:var(--ink)}
+.note{border-left:2px solid var(--grad);background:rgba(255,209,92,0.06);padding:12px 14px;border-radius:0 8px 8px 0;font-size:13.5px;color:var(--ink-dim)}
+.note b{color:var(--grad-soft);font-weight:600}
+
+.fubini{display:grid;grid-template-columns:1fr 356px;gap:20px;border:1px solid var(--line);border-radius:16px;background:var(--bg2);padding:20px}
+.panels{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:18px}
+.panel{border:1px solid var(--line);border-radius:14px;background:var(--bg2);padding:16px 16px 12px}
+.panel h3{font-size:16px;margin:0 0 2px;display:flex;align-items:center;gap:8px}
+.panel .cap{font-size:13px;color:var(--ink-dim);margin:0 0 8px}
+.panel .swatch{width:11px;height:11px;border-radius:3px;flex:none}
+.sw-x{background:var(--x)}.sw-y{background:var(--y)}.sw-g{background:var(--grad)}
+.plot2d{width:100%;height:236px;display:block}
+.pbadge{font-family:'IBM Plex Mono';font-size:13px;padding:2px 8px;border-radius:6px;margin-left:auto;white-space:nowrap}
+.badge-x{color:var(--x);background:rgba(255,122,92,0.1)}
+.badge-y{color:var(--y);background:rgba(70,201,214,0.1)}
+.badge-g{color:var(--grad);background:rgba(255,209,92,0.1)}
+
+.regions{display:grid;grid-template-columns:1.05fr 1fr;gap:20px;align-items:start}
+.regionbox{border:1px solid var(--line);border-radius:14px;background:var(--bg2);padding:16px}
+#region{width:100%;height:400px;display:block;border-radius:8px}
+.limits{border:1px solid var(--line);border-radius:14px;background:var(--bg2);padding:20px}
+.limits .row{padding:14px 0;border-bottom:1px solid var(--line)}
+.limits .row:last-child{border-bottom:none;padding-bottom:0}
+.limits .row:first-child{padding-top:0}
+.limits .rt{font-family:'IBM Plex Mono';font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:var(--ink-faint);margin-bottom:8px}
+.limits .big{font-family:'IBM Plex Mono';font-size:18px;color:var(--ink);line-height:1.5;word-break:break-word}
+.limits .why{font-size:13.5px;color:var(--ink-dim);margin:8px 0 0}
+.limits .on-x{color:var(--x)}.limits .on-y{color:var(--y)}
+
+.rule{font-size:17px;color:var(--ink);max-width:760px;margin:0 0 26px}
+.rule b{color:var(--y-soft)}
+.worked{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.wk{border:1px solid var(--line);border-radius:12px;background:var(--bg2);padding:18px}
+.wk .fn{font-family:'IBM Plex Mono';font-size:14.5px;color:var(--peak);margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid var(--line);line-height:1.5}
+.wk .step{display:flex;gap:10px;font-size:14px;margin-bottom:10px;align-items:baseline}
+.wk .step:last-child{margin-bottom:0}
+.wk .tag{font-family:'IBM Plex Mono';font-size:12px;padding:2px 6px;border-radius:5px;flex:none}
+.tag-x{color:var(--x);background:rgba(255,122,92,0.1)}
+.tag-y{color:var(--y);background:rgba(70,201,214,0.1)}
+.tag-g{color:var(--grad);background:rgba(255,209,92,0.1)}
+.wk .res{font-family:'IBM Plex Mono';color:var(--ink)}
+.wk .hint{color:var(--ink-faint);font-size:13px}
+.pitfall{margin-top:26px;border-left:2px solid var(--x);background:rgba(255,122,92,0.06);padding:14px 16px;border-radius:0 8px 8px 0;font-size:14.5px;color:var(--ink-dim);max-width:820px}
+.pitfall b{color:var(--x-soft);font-weight:600}
+footer{padding:48px 0 72px;border-top:1px solid var(--line);margin-top:36px;color:var(--ink-dim)}
+footer h3{font-size:20px;color:var(--ink);margin:0 0 14px}
+.next{display:flex;flex-wrap:wrap;gap:10px}
+.next span{font-family:'IBM Plex Mono';font-size:13px;padding:8px 12px;border:1px solid var(--line);border-radius:8px;color:var(--ink-dim)}
+.next span .n{color:var(--y)}
+.fine{font-size:13px;color:var(--ink-faint);margin-top:20px;max-width:820px}
+@media (max-width:920px){
+  .lab,.fubini{grid-template-columns:1fr}.viewport{height:420px}
+  .idea,.worked{grid-template-columns:1fr}.panels{grid-template-columns:1fr}.regions{grid-template-columns:1fr}
+}
+@media (prefers-reduced-motion:no-preference){
+  .fade{opacity:0;transform:translateY(14px);animation:rise .7s cubic-bezier(.2,.7,.3,1) forwards}
+  @keyframes rise{to{opacity:1;transform:none}}
+}
+:focus-visible{outline:2px solid var(--y);outline-offset:2px;border-radius:4px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div id="errbar"></div>
+  <header>
+    <div class="eyebrow fade">Calc 3 · Field Lab 02 · <a href="partial-derivatives-lab_1.html">← partial derivatives</a></div>
+    <h1 class="fade" style="animation-delay:.05s">Double <span class="accent">integrals</span></h1>
+    <p class="lede fade" style="animation-delay:.12s">
+      Last lab asked how the landscape tilts <b>at a point</b>. This one asks the opposite question:
+      <b>how much is there in total?</b> Tile the ground with tiny rectangles, stand a column on each one
+      as tall as the surface above it, and add up the volumes. Shrink the tiles to nothing and the sum
+      stops being an estimate — it becomes <b class="mono">∬<sub>R</sub> f(x,y) dA</b>.</p>
+  </header>
+
+  <div class="idea fade" style="animation-delay:.18s">
+    <div><div class="k ky">Σ f(xᵢ, yⱼ) ΔA</div><span class="big">Add up columns</span>
+      <p>Chop the region into a grid. Each cell gets a box of base <span class="mono">ΔA</span> and height <span class="mono">f</span> sampled somewhere inside. The sum of the boxes approximates the volume.</p></div>
+    <div><div class="k kg">∬<sub>R</sub> f dA</div><span class="big">Take the limit</span>
+      <p>Let the cells shrink. If the sum settles on one number no matter how you sample, that number is the double integral — a signed volume, not an approximation.</p></div>
+    <div><div class="k kx">∫∫ f dx dy</div><span class="big">Do it one axis at a time</span>
+      <p>Nobody evaluates a limit of sums by hand. Fubini's theorem says you can integrate in <span class="mono">x</span>, then integrate the result in <span class="mono">y</span> — two Calc 1 problems, nested.</p></div>
+  </div>
+
+  <section>
+    <div class="sec-head"><span class="sec-num">01</span><h2>The volume lab</h2>
+      <p>Drag to orbit. Push the grid slider and watch the staircase of boxes collapse onto the surface — and the running sum collapse onto the exact answer.</p></div>
+    <div class="lab">
+      <div class="viewport"><canvas class="stage" id="c3d"></canvas><div class="vhint">drag to orbit · scroll or pinch to zoom</div></div>
+      <div class="rail">
+        <div class="chips" id="chips"></div>
+        <div class="card">
+          <div class="lbl">Grid resolution</div>
+          <div class="sliderrow"><div class="top"><span class="name"><span class="dotg">■</span> n <span class="sub">— cells per side</span></span><span class="val" id="valn">6</span></div><input type="range" id="sn" min="1" max="28" step="1" value="6"></div>
+          <div class="lbl" style="margin:16px 0 8px">Sample height at</div>
+          <div class="seg" id="segmode">
+            <button data-m="mid" class="on">midpoint</button>
+            <button data-m="ll">lower corner</button>
+          </div>
+        </div>
+        <div class="card readout">
+          <div class="lbl">Instruments</div>
+          <div class="line"><span class="rl">Riemann sum <span class="exp mono" id="esum">Σ f · ΔA</span><span class="walk" id="wcells">36 boxes</span></span><span class="rv vg" id="rsum">0.00</span></div>
+          <div class="line"><span class="rl">Exact integral <span class="exp mono" id="eexact">∬ f dA</span></span><span class="rv" id="rex">0.00</span></div>
+          <div class="line"><span class="rl">Error <span class="walk" id="werr">—</span>
+            <span class="errbarwrap"><span class="errtrack"><span class="errfill" id="efill"></span></span></span></span><span class="rv vx" id="rerr">0.00</span></div>
+        </div>
+        <div class="card"><div class="lbl">Show on the stage</div>
+          <div class="toggles">
+            <label class="tg"><input type="checkbox" id="tBox" checked> Riemann columns</label>
+            <label class="tg"><input type="checkbox" id="tSurf" checked> True surface (wireframe)</label>
+            <label class="tg"><input type="checkbox" id="tBase" checked> Base grid on the region</label>
+          </div></div>
+        <div class="note" id="exnote"></div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="sec-num">02</span><h2>One integral at a time</h2>
+      <p>Slice the solid with a blade held perpendicular to one axis. Each slice is a flat 2-D area you can find with Calc 1 — then sweep the blade and accumulate those areas.</p></div>
+    <div class="fubini">
+      <div class="viewport short"><canvas class="stage" id="c3db"></canvas><div class="vhint">the blade is at the highlighted slice</div></div>
+      <div class="rail">
+        <div class="card">
+          <div class="lbl">Which way does the blade face?</div>
+          <div class="seg" id="segorder">
+            <button data-o="y" class="on">inner dx, then dy</button>
+            <button data-o="x">inner dy, then dx</button>
+          </div>
+          <div class="sliderrow" style="margin-top:16px"><div class="top"><span class="name"><span id="sweepdot" class="doty">■</span> <span id="sweepvar">y</span> <span class="sub">— blade position</span></span><span class="val" id="vals">0.00</span></div><input type="range" id="ss" class="tealthumb"></div>
+        </div>
+        <div class="card readout">
+          <div class="line"><span class="rl">Area of this slice <span class="exp mono" id="eA">A(y)</span></span><span class="rv vy" id="rA">0.00</span></div>
+          <div class="line"><span class="rl">Volume swept so far <span class="walk" id="wacc">from the near edge</span></span><span class="rv vg" id="racc">0.00</span></div>
+          <div class="line"><span class="rl">Full volume</span><span class="rv" id="rfull">0.00</span></div>
+        </div>
+        <div class="note"><b>Both orders land on the same number.</b> Flip the blade and sweep again — the intermediate area function is completely different, but the total it accumulates to is identical. That equality is Fubini's theorem, and it is why you are allowed to pick whichever order is easier to compute.</div>
+      </div>
+    </div>
+    <div class="panels">
+      <div class="panel"><h3><span class="swatch sw-y"></span> The slice itself<span class="pbadge badge-y" id="badgeA">—</span></h3>
+        <p class="cap" id="capA">Freeze y. The surface becomes a single curve; the shaded area under it is A(y).</p>
+        <canvas class="plot2d" id="plotslice"></canvas></div>
+      <div class="panel"><h3><span class="swatch sw-g"></span> Sweeping those areas<span class="pbadge badge-g" id="badgeB">—</span></h3>
+        <p class="cap" id="capB">Now plot A against y and integrate <em>that</em>. The gold area is the volume you have swept out so far.</p>
+        <canvas class="plot2d" id="plotarea"></canvas></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="sec-num">03</span><h2>Regions that aren't rectangles</h2>
+      <p>Over a rectangle all four limits are constants. Over anything else, the inner limits become <em>functions</em> — and which variable they depend on is decided entirely by which way you slice.</p></div>
+    <div class="regions">
+      <div class="regionbox">
+        <div class="chips" id="regchips" style="margin-bottom:14px"></div>
+        <canvas id="region"></canvas>
+        <div class="seg" id="segtype" style="margin-top:14px">
+          <button data-t="1" class="on">Type I · vertical strips</button>
+          <button data-t="2">Type II · horizontal strips</button>
+        </div>
+      </div>
+      <div class="limits">
+        <div class="row"><div class="rt">The integral, this way</div><div class="big" id="limbig">—</div>
+          <p class="why" id="limwhy">—</p></div>
+        <div class="row"><div class="rt">Reading the strip</div><p class="why" id="limread">—</p></div>
+        <div class="row"><div class="rt">Sanity check · area of the region</div>
+          <div class="big"><span id="limarea">—</span></div>
+          <p class="why">Setting <span class="mono">f = 1</span> makes the double integral return the plain area of R. Both orders must agree — a fast way to catch limits you set up backwards.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="sec-num">04</span><h2>Computing them by hand</h2></div>
+    <p class="rule">Work <b>inside out</b>. The inner integral treats the outer variable as a constant — exactly the habit you built with partial derivatives, run backwards. Its limits may involve the outer variable; the <b>outer</b> integral's limits must always be plain numbers, and the answer must be a number too.</p>
+    <div class="worked">
+      <div class="wk"><div class="fn">∫₀² ∫₀¹ (x + y) dx dy</div>
+        <div class="step"><span class="tag tag-x">inner dx</span><span class="hint">y is a constant here</span></div>
+        <div class="step">→ <span class="res">[x²/2 + xy]₀¹ = ½ + y</span></div>
+        <div class="step"><span class="tag tag-y">outer dy</span><span class="hint">now an ordinary integral in y</span></div>
+        <div class="step">→ <span class="res">[y/2 + y²/2]₀² = 1 + 2 = 3</span></div></div>
+      <div class="wk"><div class="fn">∫₀¹ ∫₀ˣ 2y dy dx</div>
+        <div class="step"><span class="tag tag-y">inner dy</span><span class="hint">limit depends on x — that's fine</span></div>
+        <div class="step">→ <span class="res">[y²]₀ˣ = x²</span></div>
+        <div class="step"><span class="tag tag-x">outer dx</span><span class="hint">the x's must all be gone by now</span></div>
+        <div class="step">→ <span class="res">[x³/3]₀¹ = 1/3</span></div></div>
+      <div class="wk"><div class="fn">∫₀¹ ∫ᵧ¹ e^{x²} dx dy</div>
+        <div class="step"><span class="tag tag-x">inner dx</span><span class="hint">e^{x²} has no elementary antiderivative — stuck</span></div>
+        <div class="step"><span class="tag tag-g">swap</span><span class="hint">same triangle, other order: 0≤x≤1, 0≤y≤x</span></div>
+        <div class="step">→ <span class="res">∫₀¹ ∫₀ˣ e^{x²} dy dx</span></div>
+        <div class="step">→ <span class="res">∫₀¹ x e^{x²} dx = (e−1)/2</span></div></div>
+    </div>
+    <p class="pitfall"><b>The mistake everyone makes once.</b> Sketch the region before you write a single limit. Reversing the order of integration is <em>not</em> swapping the two <span class="mono">d</span>'s and leaving the numbers where they are — it is re-describing the same region with strips turned ninety degrees, which almost always produces different limits. The third example above only becomes solvable because the swap was done properly.</p>
+  </section>
+
+  <footer>
+    <h3>Where this goes next</h3>
+    <div class="next">
+      <span><span class="n">→</span> polar coordinates &amp; why dA = r dr dθ</span>
+      <span><span class="n">→</span> the Jacobian as an area-stretch factor</span>
+      <span><span class="n">→</span> triple integrals over solids</span>
+      <span><span class="n">→</span> mass, centroids &amp; moments</span>
+      <span><span class="n">→</span> surface area &amp; flux</span>
+    </div>
+    <p class="fine">Every exact value on this page comes from a closed-form antiderivative worked out in advance — the Riemann sums are the only approximations, and they are shown next to the truth on purpose. Try predicting whether the midpoint rule will land above or below the exact volume before you switch sampling modes.</p>
+  </footer>
+</div>
+
+<script>
+try{
+/* ---------- examples: f, its exact slice-areas, and its exact volume ---------- */
+/* Ax(y) = ∫ f dx across the region's x-span.  Ay(x) = ∫ f dy across the y-span. */
+const EX=[
+ {id:'plane',name:'Tilted plane',sym:'x + y',f:(x,y)=>x+y,
+  xa:0,xb:2,ya:0,yb:2,
+  Ax:y=>2+2*y, Ay:x=>2+2*x, V:8,
+  Axs:'∫₀² (x+y) dx = 2 + 2y', Ays:'∫₀² (x+y) dy = 2 + 2x',
+  Vs:'∬ (x+y) dA = 8',
+  note:'The simplest solid with a slanted lid. Because the surface is flat, the midpoint rule is exact at every resolution — even n = 1. Switch to lower-corner sampling and the error appears immediately.'},
+ {id:'prod',name:'Hyperbolic sheet',sym:'x·y',f:(x,y)=>x*y,
+  xa:0,xb:2,ya:0,yb:2,
+  Ax:y=>2*y, Ay:x=>2*x, V:4,
+  Axs:'∫₀² xy dx = 2y', Ays:'∫₀² xy dy = 2x',
+  Vs:'∬ xy dA = 4',
+  note:'A product function, so the whole integral factors: (∫₀² x dx)(∫₀² y dy) = 2 · 2. That shortcut only works over a rectangle, and only when f splits cleanly into a function of x times a function of y.'},
+ {id:'dome',name:'Dome',sym:'4 − x² − y²',f:(x,y)=>4-x*x-y*y,
+  xa:-1,xb:1,ya:-1,yb:1,
+  Ax:y=>22/3-2*y*y, Ay:x=>22/3-2*x*x, V:40/3,
+  Axs:'∫₋₁¹ (4−x²−y²) dx = 22/3 − 2y²', Ays:'∫₋₁¹ (4−x²−y²) dy = 22/3 − 2x²',
+  Vs:'∬ (4−x²−y²) dA = 40/3',
+  note:'A concave lid over a square. Every column overshoots on the way up and undershoots on the way down, so midpoint sampling cancels most of the error and converges strikingly fast.'},
+ {id:'ripple',name:'Ripple',sym:'sin(x)·sin(y)',f:(x,y)=>Math.sin(x)*Math.sin(y),
+  xa:0,xb:Math.PI,ya:0,yb:Math.PI,
+  Ax:y=>2*Math.sin(y), Ay:x=>2*Math.sin(x), V:4,
+  Axs:'∫₀^π sin x sin y dx = 2 sin y', Ays:'∫₀^π sin x sin y dy = 2 sin x',
+  Vs:'∬ sin x sin y dA = 4',
+  note:'One clean bump over the square [0, π]². The slice areas are themselves a sine curve, which makes the second stage of Fubini as recognisable as the first.'},
+ {id:'trough',name:'Trough',sym:'x²·y',f:(x,y)=>x*x*y,
+  xa:0,xb:1,ya:0,yb:2,
+  Ax:y=>y/3, Ay:x=>2*x*x, V:2/3,
+  Axs:'∫₀¹ x²y dx = y/3', Ays:'∫₀² x²y dy = 2x²',
+  Vs:'∬ x²y dA = 2/3',
+  note:'A non-square region, so the cells are rectangles rather than squares. Notice the two slice-area functions look nothing alike — one is linear, one is quadratic — yet both sweep out exactly 2/3.'},
+ {id:'signed',name:'Signed',sym:'x·y  over [−1,1]²',f:(x,y)=>x*y,
+  xa:-1,xb:1,ya:-1,yb:1,
+  Ax:y=>0, Ay:x=>0, V:0,
+  Axs:'∫₋₁¹ xy dx = 0', Ays:'∫₋₁¹ xy dy = 0',
+  Vs:'∬ xy dA = 0',
+  note:'The important case. Two quadrants sit above the floor and two hang below it, and the double integral counts the ones below as negative. The total is exactly zero — an integral of zero does not mean an empty solid.'}
+];
+
+const TERRAIN=[[0,10,46,51],[0.22,18,78,84],[0.45,47,125,107],[0.68,127,166,95],[0.85,217,180,91],[1,240,215,154]];
+function terrain(t){t=t<0?0:t>1?1:t;for(let k=1;k<TERRAIN.length;k++){if(t<=TERRAIN[k][0]){const a=TERRAIN[k-1],b=TERRAIN[k],f=(t-a[0])/((b[0]-a[0])||1);return[a[1]+(b[1]-a[1])*f,a[2]+(b[2]-a[2])*f,a[3]+(b[3]-a[3])*f];}}const l=TERRAIN[TERRAIN.length-1];return[l[1],l[2],l[3]];}
+const clamp=(v,a,b)=>v<a?a:v>b?b:v;
+const lin=(a,b,n)=>{const o=[];for(let i=0;i<n;i++)o.push(a+(b-a)*i/(n-1));return o;};
+/* a value that rounds to zero must not print as "−0.000" */
+const fmt=v=>{const a=Math.abs(v);return(v<0&&a>=5e-4?'−':' ')+a.toFixed(3);};
+
+/* ---------- state ---------- */
+let cur=0, n=6, sampleMode='mid', order='y', sweep=0;
+let show={box:true,surf:true,base:true};
+const camA={yaw:-0.62,pitch:0.55,zoom:1};
+const camB={yaw:-0.72,pitch:0.48,zoom:1};
+let box=null; /* per-example normalization box */
+
+function buildBox(ex){
+  const G=44,xs=lin(ex.xa,ex.xb,G),ys=lin(ex.ya,ex.yb,G);
+  let zmin=Infinity,zmax=-Infinity;
+  for(let j=0;j<G;j++)for(let i=0;i<G;i++){const v=ex.f(xs[i],ys[j]);if(v<zmin)zmin=v;if(v>zmax)zmax=v;}
+  const zlo=Math.min(zmin,0),zhi=Math.max(zmax,0);
+  const span=(zhi-zlo)||1;
+  box={zlo:zlo-span*0.04,zhi:zhi+span*0.04,zmin,zmax};
+  box.span=box.zhi-box.zlo;
+}
+const NX=x=>-1+2*(x-EX[cur].xa)/(EX[cur].xb-EX[cur].xa);
+const NY=y=>-1+2*(y-EX[cur].ya)/(EX[cur].yb-EX[cur].ya);
+const NZ=z=>-1+2*(z-box.zlo)/box.span;
+
+function fit(cv){const dpr=window.devicePixelRatio||1;const rect=cv.getBoundingClientRect();const W=Math.max(1,rect.width),H=Math.max(1,rect.height);const bw=Math.round(W*dpr),bh=Math.round(H*dpr);if(cv.width!==bw||cv.height!==bh){cv.width=bw;cv.height=bh;}const ctx=cv.getContext('2d');ctx.setTransform(dpr,0,0,dpr,0,0);return{ctx,W,H};}
+
+/* projection: normalized world (wx,wy,wz)∈[-1,1] -> screen. larger d = farther. */
+function makeP(W,H,cam){const S=Math.min(W/3.25,H/2.75)*cam.zoom;
+  return{cy:Math.cos(cam.yaw),sy:Math.sin(cam.yaw),cp:Math.cos(cam.pitch),sp:Math.sin(cam.pitch),S,cx:W/2,cc:H*0.58};}
+function proj(wx,wy,wz,P){wz*=0.92;const xr=wx*P.cy-wy*P.sy,yr=wx*P.sy+wy*P.cy;const yp=yr*P.cp-wz*P.sp,zp=yr*P.sp+wz*P.cp;return{x:P.cx+xr*P.S,y:P.cc-zp*P.S,d:yp};}
+/* gradient of depth wrt world position — lets us cull back faces in one dot product */
+const depthGrad=P=>[P.sy*P.cp,P.cy*P.cp,-P.sp*0.92];
+
+const LIGHT=(()=>{const L=[0.32,0.34,0.88],m=Math.hypot(L[0],L[1],L[2]);return[L[0]/m,L[1]/m,L[2]/m];})();
+
+/* ---------- primitives ---------- */
+function line3(ctx,P,a,b,color,width){const p0=proj(a[0],a[1],a[2],P),p1=proj(b[0],b[1],b[2],P);ctx.strokeStyle=color;ctx.lineWidth=width;ctx.setLineDash([]);ctx.beginPath();ctx.moveTo(p0.x,p0.y);ctx.lineTo(p1.x,p1.y);ctx.stroke();}
+function poly3(ctx,P,w,fill,stroke,lw){const p=w.map(v=>proj(v[0],v[1],v[2],P));ctx.beginPath();ctx.moveTo(p[0].x,p[0].y);for(let k=1;k<p.length;k++)ctx.lineTo(p[k].x,p[k].y);ctx.closePath();if(fill){ctx.fillStyle=fill;ctx.fill();}if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=lw||1;ctx.setLineDash([]);ctx.stroke();}}
+function strokePath3(ctx,P,w,color,width,dash){const p=w.map(v=>proj(v[0],v[1],v[2],P));ctx.save();ctx.beginPath();ctx.moveTo(p[0].x,p[0].y);for(let k=1;k<p.length;k++)ctx.lineTo(p[k].x,p[k].y);ctx.strokeStyle=color;ctx.lineWidth=width;ctx.lineJoin='round';ctx.setLineDash(dash||[]);ctx.stroke();ctx.restore();}
+function text3(ctx,P,a,txt,color,dx,dy,font){const p=proj(a[0],a[1],a[2],P);ctx.fillStyle=color;ctx.font=font||'12px "IBM Plex Mono",monospace';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(txt,p.x+(dx||0),p.y+(dy||0));}
+function arrow3(ctx,P,a,b,color){const p0=proj(a[0],a[1],a[2],P),p1=proj(b[0],b[1],b[2],P);ctx.strokeStyle=color;ctx.fillStyle=color;ctx.lineWidth=1.7;ctx.setLineDash([]);ctx.beginPath();ctx.moveTo(p0.x,p0.y);ctx.lineTo(p1.x,p1.y);ctx.stroke();const ang=Math.atan2(p1.y-p0.y,p1.x-p0.x),h=8;ctx.beginPath();ctx.moveTo(p1.x,p1.y);ctx.lineTo(p1.x-h*Math.cos(ang-0.42),p1.y-h*Math.sin(ang-0.42));ctx.lineTo(p1.x-h*Math.cos(ang+0.42),p1.y-h*Math.sin(ang+0.42));ctx.closePath();ctx.fill();}
+
+function drawFrame(ctx,P){
+  const gc='rgba(120,170,175,0.10)',bc='rgba(120,170,175,0.22)';
+  for(const g of[-1,-0.5,0,0.5,1]){line3(ctx,P,[g,-1,-1],[g,1,-1],gc,1);line3(ctx,P,[-1,g,-1],[1,g,-1],gc,1);}
+  for(const c of[[-1,-1],[1,-1],[1,1],[-1,1]])line3(ctx,P,[c[0],c[1],-1],[c[0],c[1],1],bc,1);
+  const top=[[-1,-1,1],[1,-1,1],[1,1,1],[-1,1,1]],bot=[[-1,-1,-1],[1,-1,-1],[1,1,-1],[-1,1,-1]];
+  for(let k=0;k<4;k++){line3(ctx,P,top[k],top[(k+1)%4],bc,1);line3(ctx,P,bot[k],bot[(k+1)%4],bc,1);}
+}
+function drawFloor(ctx,P){ /* the z = 0 plane: where the columns actually stand */
+  const z=NZ(0);
+  poly3(ctx,P,[[-1,-1,z],[1,-1,z],[1,1,z],[-1,1,z]],'rgba(70,201,214,0.05)','rgba(70,201,214,0.30)',1.2);
+}
+function drawBaseGrid(ctx,P,ex,n){
+  const z=NZ(0)+0.002,c='rgba(255,209,92,0.34)';
+  for(let i=0;i<=n;i++){const t=-1+2*i/n;line3(ctx,P,[t,-1,z],[t,1,z],c,1);line3(ctx,P,[-1,t,z],[1,t,z],c,1);}
+}
+function axfmt(v){if(Math.abs(Math.abs(v)-Math.PI)<0.03)return(v<0?'−':'')+'π';const s=(v%1===0?v.toFixed(0):v.toFixed(1));return s.replace('-','−');}
+function drawAxes(ctx,P,ex){
+  const O=[-1,-1,-1];
+  arrow3(ctx,P,O,[1.18,-1,-1],'#ff9a80');arrow3(ctx,P,O,[-1,1.18,-1],'#7fdbe6');arrow3(ctx,P,O,[-1,-1,1.18],'#ffdd82');
+  const bf='600 14px "Space Grotesk",sans-serif';
+  text3(ctx,P,[1.34,-1,-1],'x','#ff9a80',0,0,bf);
+  text3(ctx,P,[-1,1.34,-1],'y','#7fdbe6',0,0,bf);
+  text3(ctx,P,[-1,-1,1.35],'z','#ffdd82',0,0,bf);
+  const tc='rgba(160,184,184,0.8)',fn='10px "IBM Plex Mono",monospace';
+  text3(ctx,P,[-1,-1,-1],axfmt(ex.xa),tc,-14,11,fn);
+  text3(ctx,P,[1,-1,-1],axfmt(ex.xb),tc,0,13,fn);
+  text3(ctx,P,[-1,1,-1],axfmt(ex.yb),tc,0,13,fn);
+  text3(ctx,P,[-1,-1,1],axfmt(box.zhi),tc,-18,0,fn);
+}
+
+/* ---------- the shaded surface (wire or solid) ---------- */
+const GV=34;
+function surfaceQuads(ex,P){
+  const xs=lin(ex.xa,ex.xb,GV),ys=lin(ex.ya,ex.yb,GV),out=[];
+  for(let j=0;j<GV-1;j++)for(let i=0;i<GV-1;i++){
+    const c=[[i,j],[i+1,j],[i+1,j+1],[i,j+1]];
+    const w=c.map(([ii,jj])=>[NX(xs[ii]),NY(ys[jj]),NZ(ex.f(xs[ii],ys[jj]))]);
+    const p=w.map(v=>proj(v[0],v[1],v[2],P));
+    const za=(ex.f(xs[i],ys[j])+ex.f(xs[i+1],ys[j])+ex.f(xs[i+1],ys[j+1])+ex.f(xs[i],ys[j+1]))/4;
+    const e1=[w[1][0]-w[0][0],w[1][1]-w[0][1],w[1][2]-w[0][2]],e2=[w[3][0]-w[0][0],w[3][1]-w[0][1],w[3][2]-w[0][2]];
+    let nv=[e1[1]*e2[2]-e1[2]*e2[1],e1[2]*e2[0]-e1[0]*e2[2],e1[0]*e2[1]-e1[1]*e2[0]];
+    const nl=Math.hypot(nv[0],nv[1],nv[2])||1;nv=[nv[0]/nl,nv[1]/nl,nv[2]/nl];if(nv[2]<0)nv=[-nv[0],-nv[1],-nv[2]];
+    const br=0.5+0.5*Math.max(0,nv[0]*LIGHT[0]+nv[1]*LIGHT[1]+nv[2]*LIGHT[2]);
+    const t=(za-box.zlo)/box.span,col=terrain(t);
+    out.push({p,depth:(p[0].d+p[1].d+p[2].d+p[3].d)/4,
+      col:'rgb('+(col[0]*br|0)+','+(col[1]*br|0)+','+(col[2]*br|0)+')'});
+  }
+  return out;
+}
+function paintQuads(ctx,qs,alpha){
+  qs.sort((a,b)=>b.depth-a.depth);
+  ctx.save();if(alpha!=null)ctx.globalAlpha=alpha;
+  for(const q of qs){ctx.beginPath();ctx.moveTo(q.p[0].x,q.p[0].y);for(let k=1;k<4;k++)ctx.lineTo(q.p[k].x,q.p[k].y);ctx.closePath();ctx.fillStyle=q.col;ctx.strokeStyle=q.col;ctx.lineWidth=1;ctx.fill();ctx.stroke();}
+  ctx.restore();
+}
+function drawWire(ctx,P,ex){
+  const N=25,xs=lin(ex.xa,ex.xb,N),ys=lin(ex.ya,ex.yb,N),step=4,c='rgba(231,242,240,0.30)';
+  for(let j=0;j<N;j+=step)strokePath3(ctx,P,xs.map(x=>[NX(x),NY(ys[j]),NZ(ex.f(x,ys[j]))]),c,1.1);
+  for(let i=0;i<N;i+=step)strokePath3(ctx,P,ys.map(y=>[NX(xs[i]),NY(y),NZ(ex.f(xs[i],y))]),c,1.1);
+}
+
+/* ---------- Riemann columns ---------- */
+function riemannSum(ex,n,mode){
+  const dx=(ex.xb-ex.xa)/n,dy=(ex.yb-ex.ya)/n,off=mode==='mid'?0.5:0;let s=0;
+  for(let j=0;j<n;j++)for(let i=0;i<n;i++)s+=ex.f(ex.xa+(i+off)*dx,ex.ya+(j+off)*dy);
+  return s*dx*dy;
+}
+const BOXFACES=[
+  {idx:[4,5,6,7],nrm:[0,0,1]},{idx:[1,2,6,5],nrm:[1,0,0]},{idx:[0,4,7,3],nrm:[-1,0,0]},
+  {idx:[3,7,6,2],nrm:[0,1,0]},{idx:[0,1,5,4],nrm:[0,-1,0]},{idx:[0,3,2,1],nrm:[0,0,-1]}
+];
+function drawColumns(ctx,P,ex,n,mode){
+  const dx=(ex.xb-ex.xa)/n,dy=(ex.yb-ex.ya)/n,off=mode==='mid'?0.5:0;
+  const g=depthGrad(P),faces=[];
+  const z0n=NZ(0);
+  for(let j=0;j<n;j++)for(let i=0;i<n;i++){
+    const xl=ex.xa+i*dx,yl=ex.ya+j*dy;
+    const h=ex.f(xl+off*dx,yl+off*dy);
+    const X0=NX(xl),X1=NX(xl+dx),Y0=NY(yl),Y1=NY(yl+dy),Zt=NZ(h);
+    const zA=Math.min(z0n,Zt),zB=Math.max(z0n,Zt);
+    if(Math.abs(zB-zA)<1e-6)continue;
+    const v=[[X0,Y0,zA],[X1,Y0,zA],[X1,Y1,zA],[X0,Y1,zA],[X0,Y0,zB],[X1,Y0,zB],[X1,Y1,zB],[X0,Y1,zB]];
+    const t=(h-box.zlo)/box.span;let col=terrain(t);
+    if(h<0)col=[col[0]*0.45+255*0.55,col[1]*0.45+122*0.55,col[2]*0.45+92*0.55]; /* below the floor reads coral */
+    for(const F of BOXFACES){
+      const nr=F.nrm;
+      if(nr[0]*g[0]+nr[1]*g[1]+nr[2]*g[2]>=0)continue; /* back face */
+      const w=F.idx.map(k=>v[k]),p=w.map(q=>proj(q[0],q[1],q[2],P));
+      const br=0.42+0.58*Math.max(0,nr[0]*LIGHT[0]+nr[1]*LIGHT[1]+nr[2]*LIGHT[2]);
+      faces.push({p,depth:(p[0].d+p[1].d+p[2].d+p[3].d)/4,
+        col:'rgb('+(col[0]*br|0)+','+(col[1]*br|0)+','+(col[2]*br|0)+')'});
+    }
+  }
+  faces.sort((a,b)=>b.depth-a.depth);
+  const edge=n<=16;
+  for(const f of faces){
+    ctx.beginPath();ctx.moveTo(f.p[0].x,f.p[0].y);for(let k=1;k<4;k++)ctx.lineTo(f.p[k].x,f.p[k].y);ctx.closePath();
+    ctx.fillStyle=f.col;ctx.fill();
+    ctx.strokeStyle=edge?'rgba(8,20,22,0.55)':f.col;ctx.lineWidth=edge?1:1;ctx.stroke();
+  }
+}
+
+/* ---------- stage A: the volume lab ---------- */
+function renderA(){
+  const ex=EX[cur],cv=document.getElementById('c3d');const{ctx,W,H}=fit(cv);
+  ctx.clearRect(0,0,W,H);
+  const P=makeP(W,H,camA);
+  drawFrame(ctx,P);
+  if(box.zlo<0&&box.zhi>0)drawFloor(ctx,P);
+  if(show.base)drawBaseGrid(ctx,P,ex,n);
+  if(show.box)drawColumns(ctx,P,ex,n,sampleMode);
+  if(show.surf){ if(show.box) drawWire(ctx,P,ex); else paintQuads(ctx,surfaceQuads(ex,P)); }
+  drawAxes(ctx,P,ex);
+}
+
+/* ---------- stage B: the sweeping blade ---------- */
+function sliceCurve(ex,s,ord,N){
+  /* points along the free axis of the slice, in world coords */
+  const out=[];
+  if(ord==='y'){const xs=lin(ex.xa,ex.xb,N);for(const x of xs)out.push([NX(x),NY(s),NZ(ex.f(x,s))]);}
+  else{const ys=lin(ex.ya,ex.yb,N);for(const y of ys)out.push([NX(s),NY(y),NZ(ex.f(s,y))]);}
+  return out;
+}
+function renderB(){
+  const ex=EX[cur],cv=document.getElementById('c3db');const{ctx,W,H}=fit(cv);
+  ctx.clearRect(0,0,W,H);
+  const P=makeP(W,H,camB);
+  drawFrame(ctx,P);
+  if(box.zlo<0&&box.zhi>0)drawFloor(ctx,P);
+  paintQuads(ctx,surfaceQuads(ex,P),0.55);
+  /* the blade: a translucent plane at the sweep position */
+  const s=sweep,z0=NZ(0);
+  if(order==='y'){
+    const Y=NY(s);
+    poly3(ctx,P,[[-1,Y,-1],[1,Y,-1],[1,Y,1],[-1,Y,1]],'rgba(70,201,214,0.10)','rgba(70,201,214,0.42)',1);
+  }else{
+    const X=NX(s);
+    poly3(ctx,P,[[X,-1,-1],[X,1,-1],[X,1,1],[X,-1,1]],'rgba(255,122,92,0.10)','rgba(255,122,92,0.42)',1);
+  }
+  /* the slice area itself, filled down to z = 0 */
+  const cv2=sliceCurve(ex,s,order,60);
+  const back=cv2.map(p=>[p[0],p[1],z0]).reverse();
+  poly3(ctx,P,cv2.concat(back),'rgba(255,209,92,0.30)','rgba(255,209,92,0.85)',1.5);
+  strokePath3(ctx,P,cv2,'#ffe4a1',3);
+  drawAxes(ctx,P,ex);
+}
+
+/* ---------- 2-D panels ---------- */
+function plotFrame(cv,xlo,xhi,ylo,yhi){
+  const{ctx,W,H}=fit(cv);ctx.clearRect(0,0,W,H);
+  const pL=42,pB=28,pT=12,pR=14;
+  const pad=((yhi-ylo)||1)*0.14;const y0=ylo-pad,y1=yhi+pad;
+  const MX=v=>pL+(v-xlo)/((xhi-xlo)||1)*(W-pL-pR);
+  const MY=v=>pT+(y1-v)/((y1-y0)||1)*(H-pT-pB);
+  ctx.strokeStyle='rgba(120,170,175,0.12)';ctx.lineWidth=1;ctx.setLineDash([]);
+  for(let g=Math.ceil(xlo);g<=Math.floor(xhi);g++){ctx.beginPath();ctx.moveTo(MX(g),pT);ctx.lineTo(MX(g),H-pB);ctx.stroke();}
+  if(0>=y0&&0<=y1){ctx.strokeStyle='rgba(120,170,175,0.34)';ctx.beginPath();ctx.moveTo(pL,MY(0));ctx.lineTo(W-pR,MY(0));ctx.stroke();}
+  return{ctx,W,H,MX,MY,pL,pB,pT,pR};
+}
+function shadeUnder(g,xs,vals,from,to,fill){
+  const{ctx,MX,MY}=g;ctx.beginPath();let started=false;
+  for(let i=0;i<xs.length;i++){if(xs[i]<from-1e-9||xs[i]>to+1e-9)continue;
+    const px=MX(xs[i]),py=MY(vals[i]);if(!started){ctx.moveTo(px,MY(0));ctx.lineTo(px,py);started=true;}else ctx.lineTo(px,py);}
+  if(!started)return;
+  const last=Math.min(to,xs[xs.length-1]);ctx.lineTo(MX(last),MY(0));ctx.closePath();ctx.fillStyle=fill;ctx.fill();
+}
+function curve(g,xs,vals,color,width){const{ctx,MX,MY}=g;ctx.strokeStyle=color;ctx.lineWidth=width||2.5;ctx.lineJoin='round';ctx.setLineDash([]);ctx.beginPath();
+  for(let i=0;i<xs.length;i++){const px=MX(xs[i]),py=MY(vals[i]);i?ctx.lineTo(px,py):ctx.moveTo(px,py);}ctx.stroke();}
+function xlabel(g,txt){const{ctx,W,H}=g;ctx.fillStyle='#6b8484';ctx.font='11px "IBM Plex Mono",monospace';ctx.textAlign='center';ctx.fillText(txt,W/2,H-8);}
+
+const NQ=400; /* Simpson panels for the running total */
+function simpson(f,a,b,m){ /* m must be even */
+  if(b<=a)return 0;const h=(b-a)/m;let s=f(a)+f(b);
+  for(let i=1;i<m;i++)s+=f(a+i*h)*(i%2?4:2);
+  return s*h/3;
+}
+function drawSlicePanel(){
+  const ex=EX[cur];
+  const lo=order==='y'?ex.xa:ex.ya, hi=order==='y'?ex.xb:ex.yb;
+  const xs=lin(lo,hi,160);
+  const vals=xs.map(t=>order==='y'?ex.f(t,sweep):ex.f(sweep,t));
+  const g=plotFrame(document.getElementById('plotslice'),lo,hi,Math.min(0,...vals),Math.max(0,...vals));
+  shadeUnder(g,xs,vals,lo,hi,'rgba(255,209,92,0.22)');
+  curve(g,xs,vals,order==='y'?'#46c9d6':'#ff7a5c');
+  xlabel(g,order==='y'?('x   (y held at '+sweep.toFixed(2)+')'):('y   (x held at '+sweep.toFixed(2)+')'));
+}
+function drawAreaPanel(){
+  const ex=EX[cur];
+  const lo=order==='y'?ex.ya:ex.xa, hi=order==='y'?ex.yb:ex.xb;
+  const A=t=>order==='y'?ex.Ax(t):ex.Ay(t);
+  const xs=lin(lo,hi,160),vals=xs.map(A);
+  const g=plotFrame(document.getElementById('plotarea'),lo,hi,Math.min(0,...vals),Math.max(0,...vals));
+  shadeUnder(g,xs,vals,lo,hi,'rgba(120,170,175,0.10)');
+  shadeUnder(g,xs,vals,lo,sweep,'rgba(255,209,92,0.30)');
+  curve(g,xs,vals,'#ffd15c');
+  const{ctx,MX,MY}=g;
+  ctx.strokeStyle='rgba(231,242,240,0.55)';ctx.lineWidth=1.5;ctx.setLineDash([5,4]);
+  ctx.beginPath();ctx.moveTo(MX(sweep),g.pT);ctx.lineTo(MX(sweep),g.H-g.pB);ctx.stroke();ctx.setLineDash([]);
+  ctx.beginPath();ctx.arc(MX(sweep),MY(A(sweep)),5,0,7);ctx.fillStyle='#fff';ctx.fill();ctx.lineWidth=2;ctx.strokeStyle='#ffd15c';ctx.stroke();
+  xlabel(g,order==='y'?'y   →   A(y)':'x   →   A(x)');
+}
+
+/* ---------- readouts ---------- */
+function readoutA(){
+  const ex=EX[cur];
+  const S=riemannSum(ex,n,sampleMode),err=Math.abs(S-ex.V);
+  document.getElementById('valn').textContent=n;
+  document.getElementById('wcells').textContent=(n*n)+(n*n===1?' box':' boxes')+' · ΔA = '+(((ex.xb-ex.xa)/n)*((ex.yb-ex.ya)/n)).toFixed(4);
+  document.getElementById('rsum').textContent=fmt(S);
+  document.getElementById('rex').textContent=fmt(ex.V);
+  document.getElementById('eexact').textContent=ex.Vs;
+  document.getElementById('rerr').textContent=fmt(S-ex.V);
+  const rel=Math.abs(ex.V)>1e-9?err/Math.abs(ex.V):err;
+  document.getElementById('werr').textContent=err<5e-4?'the sum has converged to display precision'
+    :(S>ex.V?'overestimating by ':'underestimating by ')+(Math.abs(ex.V)>1e-9?(rel*100).toFixed(2)+'%':err.toFixed(3));
+  document.getElementById('efill').style.width=clamp(Math.sqrt(rel)*100,0,100).toFixed(1)+'%';
+}
+function readoutB(){
+  const ex=EX[cur];
+  const A=t=>order==='y'?ex.Ax(t):ex.Ay(t);
+  const lo=order==='y'?ex.ya:ex.xa;
+  const acc=simpson(A,lo,sweep,NQ);
+  document.getElementById('vals').textContent=sweep.toFixed(2);
+  document.getElementById('sweepvar').textContent=order==='y'?'y':'x';
+  document.getElementById('sweepdot').className=order==='y'?'doty':'dotx';
+  document.getElementById('eA').textContent=order==='y'?ex.Axs:ex.Ays;
+  document.getElementById('rA').textContent=fmt(A(sweep));
+  document.getElementById('rA').className='rv '+(order==='y'?'vy':'vx');
+  document.getElementById('racc').textContent=fmt(acc);
+  document.getElementById('rfull').textContent=fmt(ex.V);
+  document.getElementById('badgeA').textContent='area = '+A(sweep).toFixed(3);
+  document.getElementById('badgeA').className='pbadge '+(order==='y'?'badge-y':'badge-x');
+  document.getElementById('badgeB').textContent='swept = '+acc.toFixed(3)+' / '+ex.V.toFixed(3);
+  document.getElementById('capA').textContent=order==='y'
+    ?'Freeze y. The surface collapses to one curve in x; the shaded area under it is A(y).'
+    :'Freeze x instead. A different curve, a different area — call it A(x).';
+  document.getElementById('capB').textContent=order==='y'
+    ?'Now plot A against y and integrate that. The gold region is the volume swept so far.'
+    :'Now plot A against x and integrate that. It ends at the same total volume.';
+  const ss=document.getElementById('ss');
+  ss.className=order==='y'?'tealthumb':'coralthumb';
+}
+
+/* ---------- section 03: regions ---------- */
+const REG=[
+ {id:'tri',name:'Triangle',
+  xa:0,xb:1,ya:0,yb:1,
+  ylo:x=>0, yhi:x=>x, xlo:y=>y, xhi:y=>1,
+  t1:'∫₀¹ ∫₀ˣ f(x,y) dy dx', t2:'∫₀¹ ∫ᵧ¹ f(x,y) dx dy',
+  w1:'For each x between 0 and 1, the vertical strip runs from the floor y = 0 up to the diagonal y = x. The inner limits depend on x; the outer ones are constants.',
+  w2:'For each y between 0 and 1, the horizontal strip starts at the diagonal x = y and runs to the wall x = 1. Same region, completely different limits.',
+  r1:'The strip is vertical, so it is swept by dy first. Its bottom and top are the two curves you cross going up.',
+  r2:'The strip is horizontal, so dx goes first. Its left and right ends are the curves you cross going right.',
+  area:'1/2'},
+ {id:'para',name:'Between two parabolas',
+  xa:0,xb:1,ya:0,yb:1,
+  ylo:x=>x*x, yhi:x=>Math.sqrt(x), xlo:y=>y*y, xhi:y=>Math.sqrt(y),
+  t1:'∫₀¹ ∫_{x²}^{√x} f(x,y) dy dx', t2:'∫₀¹ ∫_{y²}^{√y} f(x,y) dx dy',
+  w1:'Going up a vertical strip you enter through y = x² and leave through y = √x. The two curves cross at (0,0) and (1,1), which is where the outer limits come from.',
+  w2:'Going right along a horizontal strip you enter through x = y² and leave through x = √y. This region is symmetric about the line y = x, so the two set-ups mirror each other.',
+  r1:'Enter-curve becomes the lower limit, exit-curve the upper. Always in that order.',
+  r2:'Same rule rotated: whichever curve you hit first is the lower limit.',
+  area:'1/3'},
+ {id:'disk',name:'Quarter disk',
+  xa:0,xb:1,ya:0,yb:1,
+  ylo:x=>0, yhi:x=>Math.sqrt(Math.max(0,1-x*x)), xlo:y=>0, xhi:y=>Math.sqrt(Math.max(0,1-y*y)),
+  t1:'∫₀¹ ∫₀^{√(1−x²)} f(x,y) dy dx', t2:'∫₀¹ ∫₀^{√(1−y²)} f(x,y) dx dy',
+  w1:'The strip runs from the x-axis up to the circle x² + y² = 1, solved for y. Neither order is easier here, and both produce square roots that are unpleasant to integrate.',
+  w2:'Mirror image, mirror difficulty. This is precisely the region that polar coordinates are built for — the next lab turns those square roots into a single r.',
+  r1:'A curved boundary is still just a function of x. Solve the boundary equation for the strip variable.',
+  r2:'Solve the same circle for x instead, and the roles of the variables swap.',
+  area:'π/4'}
+];
+let curReg=0,regType=1,regStrips=12;
+
+function drawRegion(){
+  const R=REG[curReg],cv=document.getElementById('region');const{ctx,W,H}=fit(cv);
+  ctx.clearRect(0,0,W,H);
+  const pad=44,span=1.18;
+  const MX=v=>pad+(v/span)*(W-pad-18);
+  const MY=v=>H-pad-(v/span)*(H-pad-18);
+  /* grid + axes */
+  ctx.strokeStyle='rgba(120,170,175,0.12)';ctx.lineWidth=1;
+  for(let g=0;g<=5;g++){const t=g/5;ctx.beginPath();ctx.moveTo(MX(t),MY(0));ctx.lineTo(MX(t),MY(span));ctx.stroke();ctx.beginPath();ctx.moveTo(MX(0),MY(t));ctx.lineTo(MX(span),MY(t));ctx.stroke();}
+  ctx.strokeStyle='rgba(120,170,175,0.45)';ctx.lineWidth=1.4;
+  ctx.beginPath();ctx.moveTo(MX(0),MY(0));ctx.lineTo(MX(span),MY(0));ctx.stroke();
+  ctx.beginPath();ctx.moveTo(MX(0),MY(0));ctx.lineTo(MX(0),MY(span));ctx.stroke();
+  ctx.fillStyle='#ff9a80';ctx.font='600 13px "Space Grotesk",sans-serif';ctx.textAlign='center';
+  ctx.fillText('x',MX(span),MY(0)+20);
+  ctx.fillStyle='#7fdbe6';ctx.fillText('y',MX(0)-18,MY(span));
+  ctx.fillStyle='#6b8484';ctx.font='10px "IBM Plex Mono",monospace';
+  ctx.fillText('1',MX(1),MY(0)+16);ctx.fillText('1',MX(0)-14,MY(1));
+
+  /* region fill */
+  const N=140,pts=[];
+  for(let i=0;i<=N;i++){const x=R.xa+(R.xb-R.xa)*i/N;pts.push([MX(x),MY(R.ylo(x))]);}
+  for(let i=N;i>=0;i--){const x=R.xa+(R.xb-R.xa)*i/N;pts.push([MX(x),MY(R.yhi(x))]);}
+  ctx.beginPath();ctx.moveTo(pts[0][0],pts[0][1]);for(let k=1;k<pts.length;k++)ctx.lineTo(pts[k][0],pts[k][1]);ctx.closePath();
+  ctx.fillStyle='rgba(70,201,214,0.10)';ctx.fill();
+
+  /* strips */
+  const m=regStrips;
+  if(regType===1){
+    const dx=(R.xb-R.xa)/m;
+    for(let i=0;i<m;i++){
+      const xc=R.xa+(i+0.5)*dx,lo=R.ylo(xc),hi=R.yhi(xc);
+      if(hi<=lo)continue;
+      const x0=MX(R.xa+i*dx),x1=MX(R.xa+(i+1)*dx);
+      ctx.fillStyle='rgba(255,209,92,0.20)';
+      ctx.fillRect(x0+0.5,MY(hi),Math.max(1,x1-x0-1),MY(lo)-MY(hi));
+      ctx.strokeStyle='rgba(255,209,92,0.75)';ctx.lineWidth=1.4;
+      ctx.beginPath();ctx.moveTo(MX(xc),MY(lo));ctx.lineTo(MX(xc),MY(hi));ctx.stroke();
+    }
+  }else{
+    const dy=(R.yb-R.ya)/m;
+    for(let j=0;j<m;j++){
+      const yc=R.ya+(j+0.5)*dy,lo=R.xlo(yc),hi=R.xhi(yc);
+      if(hi<=lo)continue;
+      const y0=MY(R.ya+(j+1)*dy),y1=MY(R.ya+j*dy);
+      ctx.fillStyle='rgba(255,209,92,0.20)';
+      ctx.fillRect(MX(lo),y0+0.5,MX(hi)-MX(lo),Math.max(1,y1-y0-1));
+      ctx.strokeStyle='rgba(255,209,92,0.75)';ctx.lineWidth=1.4;
+      ctx.beginPath();ctx.moveTo(MX(lo),MY(yc));ctx.lineTo(MX(hi),MY(yc));ctx.stroke();
+    }
+  }
+  /* boundary curves */
+  const drawB=(fn,color)=>{ctx.strokeStyle=color;ctx.lineWidth=2.4;ctx.lineJoin='round';ctx.beginPath();
+    for(let i=0;i<=N;i++){const x=R.xa+(R.xb-R.xa)*i/N,px=MX(x),py=MY(fn(x));i?ctx.lineTo(px,py):ctx.moveTo(px,py);}ctx.stroke();};
+  drawB(R.ylo,'#46c9d6');drawB(R.yhi,'#ff7a5c');
+  ctx.fillStyle='rgba(155,179,179,0.9)';ctx.font='11px "IBM Plex Mono",monospace';ctx.textAlign='left';
+  ctx.fillText(regType===1?'sweep dy along each strip, then dx across':'sweep dx along each strip, then dy up',MX(0)+6,MY(span)+14);
+}
+function readoutReg(){
+  const R=REG[curReg];
+  document.getElementById('limbig').textContent=regType===1?R.t1:R.t2;
+  document.getElementById('limwhy').textContent=regType===1?R.w1:R.w2;
+  document.getElementById('limread').textContent=regType===1?R.r1:R.r2;
+  document.getElementById('limarea').textContent='∬ 1 dA = '+R.area;
+  document.querySelectorAll('#segtype button').forEach(b=>b.classList.toggle('on',+b.dataset.t===regType));
+  document.querySelectorAll('#regchips button').forEach((b,i)=>{b.classList.toggle('on',i===curReg);b.setAttribute('aria-pressed',i===curReg);});
+}
+function renderReg(){drawRegion();readoutReg();}
+
+/* ---------- orchestration ---------- */
+function renderAll(){renderA();renderB();drawSlicePanel();drawAreaPanel();readoutA();readoutB();}
+
+const sn=document.getElementById('sn'),ss=document.getElementById('ss');
+sn.addEventListener('input',()=>{n=+sn.value;renderA();readoutA();});
+ss.addEventListener('input',()=>{sweep=+ss.value;renderB();drawSlicePanel();drawAreaPanel();readoutB();});
+document.querySelectorAll('#segmode button').forEach(b=>b.addEventListener('click',()=>{
+  sampleMode=b.dataset.m;
+  document.querySelectorAll('#segmode button').forEach(o=>o.classList.toggle('on',o===b));
+  renderA();readoutA();}));
+document.querySelectorAll('#segorder button').forEach(b=>b.addEventListener('click',()=>{
+  order=b.dataset.o;
+  document.querySelectorAll('#segorder button').forEach(o=>o.classList.toggle('on',o===b));
+  configSweep(EX[cur]);renderB();drawSlicePanel();drawAreaPanel();readoutB();}));
+document.querySelectorAll('#segtype button').forEach(b=>b.addEventListener('click',()=>{regType=+b.dataset.t;renderReg();}));
+for(const[id,key]of[['tBox','box'],['tSurf','surf'],['tBase','base']])
+  document.getElementById(id).addEventListener('change',e=>{show[key]=e.target.checked;renderA();});
+
+function configSweep(ex){
+  const lo=order==='y'?ex.ya:ex.xa, hi=order==='y'?ex.yb:ex.xb;
+  ss.min=lo;ss.max=hi;ss.step=(hi-lo)/200;
+  sweep=clamp(sweep,lo,hi);
+  if(sweep<=lo)sweep=lo+(hi-lo)*0.5;
+  ss.value=sweep;
+}
+function buildChips(){
+  const c=document.getElementById('chips');c.innerHTML='';
+  EX.forEach((ex,i)=>{const b=document.createElement('button');b.className='chip'+(i===cur?' on':'');b.textContent=ex.sym;
+    b.setAttribute('aria-pressed',i===cur);b.onclick=()=>{cur=i;loadExample();};c.appendChild(b);});
+  const r=document.getElementById('regchips');r.innerHTML='';
+  REG.forEach((R,i)=>{const b=document.createElement('button');b.className='chip'+(i===curReg?' on':'');b.textContent=R.name;
+    b.setAttribute('aria-pressed',i===curReg);b.onclick=()=>{curReg=i;renderReg();};r.appendChild(b);});
+}
+function loadExample(){
+  const ex=EX[cur];
+  buildBox(ex);configSweep(ex);
+  document.getElementById('exnote').innerHTML='<b>'+ex.name+'.</b> '+ex.note;
+  document.getElementById('esum').textContent='Σ f(xᵢ*, yⱼ*) ΔA';
+  buildChips();renderAll();
+}
+
+/* drag to orbit — one handler set, bound per canvas */
+function orbit(cv,cam,redraw){
+  let raf=false;const pts=new Map();let pinchD=0;
+  const sched=()=>{if(raf)return;raf=true;requestAnimationFrame(()=>{raf=false;redraw();});};
+  const dist=()=>{const a=[...pts.values()];return Math.hypot(a[0].x-a[1].x,a[0].y-a[1].y);};
+  cv.addEventListener('pointerdown',e=>{cv.setPointerCapture(e.pointerId);pts.set(e.pointerId,{x:e.clientX,y:e.clientY});if(pts.size===2)pinchD=dist();});
+  cv.addEventListener('pointermove',e=>{
+    if(!pts.has(e.pointerId))return;
+    const prev=pts.get(e.pointerId);pts.set(e.pointerId,{x:e.clientX,y:e.clientY});
+    if(pts.size>=2){const d=dist();if(pinchD>0)cam.zoom=clamp(cam.zoom*d/pinchD,0.45,3.5);pinchD=d;sched();return;}
+    cam.yaw+=(e.clientX-prev.x)*0.01;
+    cam.pitch=clamp(cam.pitch+(e.clientY-prev.y)*0.007,0.05,1.5);
+    sched();
+  });
+  const end=e=>{pts.delete(e.pointerId);pinchD=0;};
+  cv.addEventListener('pointerup',end);cv.addEventListener('pointercancel',end);
+  cv.addEventListener('wheel',e=>{e.preventDefault();cam.zoom=clamp(cam.zoom*(e.deltaY<0?1.12:0.9),0.45,3.5);sched();},{passive:false});
+}
+orbit(document.getElementById('c3d'),camA,renderA);
+orbit(document.getElementById('c3db'),camB,renderB);
+
+let rt=false;
+window.addEventListener('resize',()=>{if(rt)return;rt=true;requestAnimationFrame(()=>{rt=false;renderAll();renderReg();});});
+window.addEventListener('load',()=>{renderAll();renderReg();});
+
+loadExample();renderReg();
+}catch(err){
+  const b=document.getElementById('errbar');if(b){b.style.display='block';b.textContent='Something failed while loading the lab: '+err.message;}
+  console.error(err);
+}
+</script>
+</body>
+</html>

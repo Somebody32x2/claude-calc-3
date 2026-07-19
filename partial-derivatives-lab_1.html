@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Partial Derivatives · A Field Lab</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#081416;--bg2:#0c1e22;--panel:#0f2429;--panel2:#123037;
+  --line:rgba(120,170,175,0.16);--line-strong:rgba(120,170,175,0.32);
+  --ink:#e7f2f0;--ink-dim:#9db3b3;--ink-faint:#6b8484;
+  --x:#ff7a5c;--x-soft:#ffab90;--y:#46c9d6;--y-soft:#8fe3ec;
+  --grad:#ffd15c;--grad-soft:#ffe4a1;--peak:#f0d79a;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font-family:'Inter',system-ui,sans-serif;font-size:16px;line-height:1.6;-webkit-font-smoothing:antialiased;
+  background-image:radial-gradient(1200px 500px at 80% -10%,rgba(70,201,214,0.06),transparent),radial-gradient(900px 400px at 0% 5%,rgba(255,122,92,0.05),transparent);}
+.wrap{max-width:1180px;margin:0 auto;padding:0 24px}
+h1,h2,h3{font-family:'Space Grotesk',sans-serif;font-weight:600;line-height:1.1;letter-spacing:-0.01em}
+.mono{font-family:'IBM Plex Mono',monospace}
+#errbar{display:none;background:#3a1414;border:1px solid #ff7a5c;color:#ffd9cf;padding:12px 16px;margin:16px 0;border-radius:10px;font-family:'IBM Plex Mono';font-size:13px}
+
+header{padding:64px 0 8px}
+.eyebrow{font-family:'IBM Plex Mono',monospace;font-size:12.5px;letter-spacing:0.28em;text-transform:uppercase;color:var(--ink-faint);display:flex;align-items:center;gap:12px}
+.eyebrow::before{content:"";width:34px;height:1px;background:var(--line-strong)}
+h1{font-size:clamp(40px,7vw,76px);margin:18px 0 0;font-weight:700}
+h1 .accent{background:linear-gradient(100deg,var(--x),var(--grad) 55%,var(--y));-webkit-background-clip:text;background-clip:text;color:transparent}
+.lede{max-width:660px;color:var(--ink-dim);font-size:clamp(17px,2.2vw,20px);margin:22px 0 0}
+.lede b{color:var(--ink);font-weight:600}
+
+.idea{margin:52px 0;display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.idea>div{background:var(--bg2);padding:26px 24px}
+.idea .k{font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:0.14em;text-transform:uppercase;margin-bottom:10px}
+.idea .kx{color:var(--x)}.idea .ky{color:var(--y)}.idea .kg{color:var(--grad)}
+.idea p{margin:0;color:var(--ink-dim);font-size:15px}
+.idea .big{font-family:'Space Grotesk';font-size:19px;color:var(--ink);display:block;margin-bottom:6px;font-weight:500}
+
+section{padding:34px 0}
+.sec-head{display:flex;align-items:baseline;gap:16px;margin-bottom:22px;flex-wrap:wrap}
+.sec-num{font-family:'IBM Plex Mono',monospace;color:var(--ink-faint);font-size:14px;letter-spacing:0.1em}
+h2{font-size:clamp(26px,3.6vw,38px)}
+.sec-head p{margin:0;color:var(--ink-dim);font-size:15px;flex:1;min-width:240px}
+
+.lab{display:grid;grid-template-columns:1fr 356px;gap:20px;border:1px solid var(--line);border-radius:16px;background:var(--bg2);padding:20px}
+.viewport{position:relative;height:520px;border-radius:12px;overflow:hidden;background:linear-gradient(180deg,#0a1a1e,#081315);border:1px solid var(--line)}
+#c3d{width:100%;height:100%;display:block;touch-action:none;cursor:grab}
+#c3d:active{cursor:grabbing}
+.vhint{position:absolute;left:14px;bottom:12px;z-index:3;font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:0.12em;color:var(--ink-faint);text-transform:uppercase;pointer-events:none;background:rgba(8,20,22,0.55);padding:4px 9px;border-radius:6px}
+.rail{display:flex;flex-direction:column;gap:16px}
+.chips{display:flex;flex-wrap:wrap;gap:7px}
+.chip{font-family:'IBM Plex Mono',monospace;font-size:12.5px;padding:7px 12px;border-radius:8px;border:1px solid var(--line-strong);background:transparent;color:var(--ink-dim);cursor:pointer;transition:all .15s}
+.chip:hover{border-color:var(--y);color:var(--ink)}
+.chip.on{background:var(--panel2);border-color:var(--y);color:var(--ink)}
+.chip.on::before{content:"▸ "}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px}
+.card .lbl{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:var(--ink-faint);margin-bottom:12px}
+.sliderrow{margin-bottom:14px}.sliderrow:last-child{margin-bottom:0}
+.sliderrow .top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px}
+.sliderrow .name{font-family:'Space Grotesk';font-size:14px;font-weight:500}
+.sliderrow .name .sub{color:var(--ink-faint);font-size:12px;font-weight:400}
+.sliderrow .val{font-family:'IBM Plex Mono';font-size:14px}
+.dotx{color:var(--x)}.doty{color:var(--y)}.dotg{color:var(--grad)}
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:4px;border-radius:4px;background:var(--line-strong);outline:none;margin:6px 0 2px}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:17px;height:17px;border-radius:50%;background:var(--ink);border:2px solid var(--bg);cursor:pointer;box-shadow:0 0 0 1px var(--line-strong)}
+input[type=range]::-moz-range-thumb{width:17px;height:17px;border-radius:50%;background:var(--ink);border:2px solid var(--bg);cursor:pointer}
+input#sx::-webkit-slider-thumb{background:var(--x)}input#sx::-moz-range-thumb{background:var(--x)}
+input#sy::-webkit-slider-thumb{background:var(--y)}input#sy::-moz-range-thumb{background:var(--y)}
+.readout .line{display:flex;justify-content:space-between;align-items:baseline;padding:9px 0;border-bottom:1px solid var(--line)}
+.readout .line:last-child{border-bottom:none;padding-bottom:0}.readout .line:first-child{padding-top:0}
+.readout .rl{font-size:13.5px;color:var(--ink-dim)}
+.readout .rl .exp{font-family:'IBM Plex Mono';font-size:12px;color:var(--ink-faint);display:block}
+.readout .rv{font-family:'IBM Plex Mono';font-size:17px;font-weight:500;text-align:right}
+.readout .walk{font-size:12px;color:var(--ink-faint);display:block;margin-top:2px}
+.rv.vx{color:var(--x)}.rv.vy{color:var(--y)}.rv.vg{color:var(--grad)}
+.toggles{display:flex;flex-direction:column;gap:9px}
+.tg{display:flex;align-items:center;gap:9px;font-size:13.5px;color:var(--ink-dim);cursor:pointer;user-select:none}
+.tg input{appearance:none;-webkit-appearance:none;width:34px;height:19px;border-radius:20px;background:var(--line-strong);position:relative;cursor:pointer;transition:.15s;flex:none}
+.tg input::after{content:"";position:absolute;top:2px;left:2px;width:15px;height:15px;border-radius:50%;background:var(--ink-faint);transition:.15s}
+.tg input:checked{background:var(--y)}
+.tg input:checked::after{background:var(--bg);transform:translateX(15px)}
+.note{border-left:2px solid var(--grad);background:rgba(255,209,92,0.06);padding:12px 14px;border-radius:0 8px 8px 0;font-size:13.5px;color:var(--ink-dim)}
+.note b{color:var(--grad-soft);font-weight:600}
+
+.slices{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.slicebox{border:1px solid var(--line);border-radius:14px;background:var(--bg2);padding:16px 16px 12px}
+.slicebox h3{font-size:16px;margin:0 0 2px;display:flex;align-items:center;gap:8px}
+.slicebox .cap{font-size:13px;color:var(--ink-dim);margin:0 0 8px}
+.slicebox .swatch{width:11px;height:11px;border-radius:3px;flex:none}
+.sw-x{background:var(--x)}.sw-y{background:var(--y)}
+.plot2d{width:100%;height:230px;display:block}
+.slope-badge{font-family:'IBM Plex Mono';font-size:13px;padding:2px 8px;border-radius:6px;margin-left:auto}
+.badge-x{color:var(--x);background:rgba(255,122,92,0.1)}
+.badge-y{color:var(--y);background:rgba(70,201,214,0.1)}
+
+.contour-grid{display:grid;grid-template-columns:1.15fr 1fr;gap:20px;align-items:center}
+.contour-box{border:1px solid var(--line);border-radius:14px;background:var(--bg2);padding:16px}
+#contour{width:100%;height:360px;display:block;border-radius:8px}
+.legend{display:flex;flex-direction:column;gap:14px}
+.legend .li{display:flex;gap:12px;align-items:flex-start}
+.legend .dot{width:14px;height:14px;border-radius:4px;flex:none;margin-top:4px}
+.legend .li b{font-family:'Space Grotesk';font-weight:600;color:var(--ink)}
+.legend .li p{margin:2px 0 0;font-size:14px;color:var(--ink-dim)}
+
+.rule{font-size:17px;color:var(--ink);max-width:720px;margin:0 0 26px}
+.rule b{color:var(--y-soft)}
+.worked{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.wk{border:1px solid var(--line);border-radius:12px;background:var(--bg2);padding:18px}
+.wk .fn{font-family:'IBM Plex Mono';font-size:16px;color:var(--peak);margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid var(--line)}
+.wk .step{display:flex;gap:10px;font-size:14px;margin-bottom:10px;align-items:baseline}
+.wk .step:last-child{margin-bottom:0}
+.wk .tag{font-family:'IBM Plex Mono';font-size:12px;padding:2px 6px;border-radius:5px;flex:none}
+.tag-x{color:var(--x);background:rgba(255,122,92,0.1)}
+.tag-y{color:var(--y);background:rgba(70,201,214,0.1)}
+.wk .res{font-family:'IBM Plex Mono';color:var(--ink)}
+.wk .hint{color:var(--ink-faint);font-size:13px}
+footer{padding:48px 0 72px;border-top:1px solid var(--line);margin-top:36px;color:var(--ink-dim)}
+footer h3{font-size:20px;color:var(--ink);margin:0 0 14px}
+.next{display:flex;flex-wrap:wrap;gap:10px}
+.next span{font-family:'IBM Plex Mono';font-size:13px;padding:8px 12px;border:1px solid var(--line);border-radius:8px;color:var(--ink-dim)}
+.next span .n{color:var(--y)}
+.fine{font-size:13px;color:var(--ink-faint);margin-top:20px}
+@media (max-width:920px){
+  .lab{grid-template-columns:1fr}.viewport{height:420px}
+  .idea,.worked{grid-template-columns:1fr}.slices{grid-template-columns:1fr}.contour-grid{grid-template-columns:1fr}
+}
+@media (prefers-reduced-motion:no-preference){
+  .fade{opacity:0;transform:translateY(14px);animation:rise .7s cubic-bezier(.2,.7,.3,1) forwards}
+  @keyframes rise{to{opacity:1;transform:none}}
+}
+:focus-visible{outline:2px solid var(--y);outline-offset:2px;border-radius:4px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div id="errbar"></div>
+  <header>
+    <div class="eyebrow fade">Calc 3 · Field Lab 01</div>
+    <h1 class="fade" style="animation-delay:.05s">Partial <span class="accent">derivatives</span></h1>
+    <p class="lede fade" style="animation-delay:.12s">
+      Picture the surface <b class="mono">z = f(x, y)</b> as a landscape. A partial derivative just asks:
+      <b>how steep is the ground if I walk in one direction?</b> Walk due east and you get ∂f/∂x. Walk due
+      north and you get ∂f/∂y. That's the whole idea — everything below is a way to <b>feel</b> it.</p>
+  </header>
+
+  <div class="idea fade" style="animation-delay:.18s">
+    <div><div class="k kx">∂f / ∂x</div><span class="big">Slope walking east</span>
+      <p>Freeze <span class="mono">y</span>. Slice the surface and read the slope of the curve you exposed. It's an ordinary Calc 1 derivative — in the x-direction only.</p></div>
+    <div><div class="k ky">∂f / ∂y</div><span class="big">Slope walking north</span>
+      <p>Freeze <span class="mono">x</span> instead. Same move, perpendicular direction. One surface, two independent slopes, one at each point.</p></div>
+    <div><div class="k kg">∇f = (∂f/∂x, ∂f/∂y)</div><span class="big">The steepest way up</span>
+      <p>Stack the two slopes into a vector. It points straight uphill, and its length is how steep that steepest climb is.</p></div>
+  </div>
+
+  <section>
+    <div class="sec-head"><span class="sec-num">01</span><h2>The terrain lab</h2>
+      <p>Drag the surface to orbit it. Move the point with the sliders and watch the two tangent lines tilt — those tilts <em>are</em> the partials.</p></div>
+    <div class="lab">
+      <div class="viewport"><canvas id="c3d"></canvas><div class="vhint">drag to orbit · scroll or pinch to zoom</div></div>
+      <div class="rail">
+        <div class="chips" id="chips"></div>
+        <div class="card">
+          <div class="lbl">Your position on the map</div>
+          <div class="sliderrow"><div class="top"><span class="name"><span class="dotx">■</span> x <span class="sub">— east / west</span></span><span class="val" id="valx">0.00</span></div><input type="range" id="sx"></div>
+          <div class="sliderrow"><div class="top"><span class="name"><span class="doty">■</span> y <span class="sub">— north / south</span></span><span class="val" id="valy">0.00</span></div><input type="range" id="sy"></div>
+        </div>
+        <div class="card readout" id="readout">
+          <div class="lbl">Instruments</div>
+          <div class="line"><span class="rl">Height <span class="exp mono">f(x, y)</span></span><span class="rv" id="rf">0.00</span></div>
+          <div class="line"><span class="rl">∂f/∂x <span class="exp mono" id="efx">2x</span><span class="walk" id="wx">walking east</span></span><span class="rv vx" id="rfx">0.00</span></div>
+          <div class="line"><span class="rl">∂f/∂y <span class="exp mono" id="efy">2y</span><span class="walk" id="wy">walking north</span></span><span class="rv vy" id="rfy">0.00</span></div>
+          <div class="line"><span class="rl">∇f steepest climb <span class="walk" id="wg">heading —</span></span><span class="rv vg" id="rg">0.00</span></div>
+        </div>
+        <div class="card"><div class="lbl">Show on the surface</div>
+          <div class="toggles">
+            <label class="tg"><input type="checkbox" id="tSlice" checked> Slice curves</label>
+            <label class="tg"><input type="checkbox" id="tTan" checked> Tangent lines (the slopes)</label>
+            <label class="tg"><input type="checkbox" id="tPlane" checked> Cutting planes</label>
+          </div></div>
+        <div class="note" id="exnote"></div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="sec-num">02</span><h2>Why it's just Calc 1</h2>
+      <p>Each partial is the slope of one of these flat cross-sections. Freeze a variable and the surface collapses into a single curve you already know how to differentiate.</p></div>
+    <div class="slices">
+      <div class="slicebox"><h3><span class="swatch sw-x"></span> Hold y fixed → slope is ∂f/∂x<span class="slope-badge badge-x" id="badgeX">—</span></h3>
+        <p class="cap">The east–west cross-section through your point. Its tangent slope is the x-partial.</p>
+        <canvas class="plot2d" id="slicex"></canvas></div>
+      <div class="slicebox"><h3><span class="swatch sw-y"></span> Hold x fixed → slope is ∂f/∂y<span class="slope-badge badge-y" id="badgeY">—</span></h3>
+        <p class="cap">The north–south cross-section. Same surface, perpendicular cut, a different slope.</p>
+        <canvas class="plot2d" id="slicey"></canvas></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="sec-num">03</span><h2>Looking straight down</h2>
+      <p>Flatten the landscape into a topographic map. The gold gradient arrow is built from your two partials — and it always points across the bands, straight uphill.</p></div>
+    <div class="contour-grid">
+      <div class="contour-box"><canvas id="contour"></canvas></div>
+      <div class="legend">
+        <div class="li"><span class="dot" style="background:var(--grad)"></span><div><b>The gold arrow is ∇f</b><p>Its components are exactly the numbers on your instrument panel: ∂f/∂x points east, ∂f/∂y points north, and together they aim at the fastest way up.</p></div></div>
+        <div class="li"><span class="dot" style="background:var(--peak)"></span><div><b>Each color band is one elevation</b><p>Everywhere inside a band sits at nearly the same height. Move along a band and your height barely changes — that direction has almost zero slope.</p></div></div>
+        <div class="li"><span class="dot" style="background:var(--y)"></span><div><b>Tight bands mean steep ground</b><p>Where the colors change fast over a short distance, the gradient is long. Wide bands mean gentle terrain and a short arrow.</p></div></div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="sec-num">04</span><h2>Computing them by hand</h2></div>
+    <p class="rule">The mechanical rule is short: to get <b>∂f/∂x</b>, treat every other variable as a <b>constant</b> and differentiate normally. Then do the same for <b>∂f/∂y</b>. No new differentiation rules — just a new habit about what's holding still.</p>
+    <div class="worked">
+      <div class="wk"><div class="fn">f = x²y + 3y</div>
+        <div class="step"><span class="tag tag-x">∂/∂x</span><span class="hint">y is a constant, so 3y vanishes</span></div><div class="step">→ <span class="res">2xy</span></div>
+        <div class="step"><span class="tag tag-y">∂/∂y</span><span class="hint">x² is a constant coefficient here</span></div><div class="step">→ <span class="res">x² + 3</span></div></div>
+      <div class="wk"><div class="fn">f = sin(xy)</div>
+        <div class="step"><span class="tag tag-x">∂/∂x</span><span class="hint">chain rule; inner deriv w.r.t x is y</span></div><div class="step">→ <span class="res">y·cos(xy)</span></div>
+        <div class="step"><span class="tag tag-y">∂/∂y</span><span class="hint">now the inner deriv is x</span></div><div class="step">→ <span class="res">x·cos(xy)</span></div></div>
+      <div class="wk"><div class="fn">f = x / y</div>
+        <div class="step"><span class="tag tag-x">∂/∂x</span><span class="hint">1/y is just a constant multiplier</span></div><div class="step">→ <span class="res">1 / y</span></div>
+        <div class="step"><span class="tag tag-y">∂/∂y</span><span class="hint">rewrite as x·y⁻¹, power rule</span></div><div class="step">→ <span class="res">−x / y²</span></div></div>
+    </div>
+  </section>
+
+  <footer>
+    <h3>Where this goes next</h3>
+    <div class="next">
+      <span><span class="n">→</span> directional derivatives (any compass heading)</span>
+      <span><span class="n">→</span> the gradient as a full vector field</span>
+      <span><span class="n">→</span> tangent planes &amp; linear approximation</span>
+      <span><span class="n">→</span> maxima, minima &amp; saddle points</span>
+      <span><span class="n">→</span> Lagrange multipliers</span>
+    </div>
+    <p class="fine">Every surface uses its exact analytic partials, so the tangent lines and readouts are the real values — not estimates. Try predicting a slope's sign before you read it.</p>
+  </footer>
+</div>
+
+<script>
+try{
+/* ---------- examples (exact analytic partials) ---------- */
+const EX=[
+ {id:'bowl',name:'Bowl',sym:'x² + y²',f:(x,y)=>x*x+y*y,fx:(x,y)=>2*x,fy:(x,y)=>2*y,fxs:'2x',fys:'2y',r:3,step:0.1,
+  note:'A perfect valley. At the very bottom both slopes read zero; step away in any direction and the ground climbs. The gradient always points outward, away from the low point.'},
+ {id:'saddle',name:'Saddle',sym:'x² − y²',f:(x,y)=>x*x-y*y,fx:(x,y)=>2*x,fy:(x,y)=>-2*y,fxs:'2x',fys:'−2y',r:3,step:0.1,
+  note:'Uphill east–west, downhill north–south. At the origin both partials are zero — yet it is neither a peak nor a pit. A saddle point: the reason zero slopes are not enough on their own.'},
+ {id:'ripple',name:'Ripple',sym:'sin(x)·cos(y)',f:(x,y)=>Math.sin(x)*Math.cos(y),fx:(x,y)=>Math.cos(x)*Math.cos(y),fy:(x,y)=>-Math.sin(x)*Math.sin(y),fxs:'cos(x)·cos(y)',fys:'−sin(x)·sin(y)',r:Math.PI,step:0.05,
+  note:'An egg-carton of ridges and troughs. Slide across a ridge and each slope flips sign — a good place to feel that partials are their own functions, different at every point.'},
+ {id:'hill',name:'Hill',sym:'e^−(x²+y²)/2',f:(x,y)=>Math.exp(-(x*x+y*y)/2),fx:(x,y)=>-x*Math.exp(-(x*x+y*y)/2),fy:(x,y)=>-y*Math.exp(-(x*x+y*y)/2),fxs:'−x·e^−(x²+y²)/2',fys:'−y·e^−(x²+y²)/2',r:3,step:0.1,
+  note:'A smooth bump. The gradient always aims toward the summit, and far from the peak the land flattens so both slopes fade toward zero.'},
+ {id:'monkey',name:'Monkey saddle',sym:'x³ − 3xy²',f:(x,y)=>x*x*x-3*x*y*y,fx:(x,y)=>3*x*x-3*y*y,fy:(x,y)=>-6*x*y,fxs:'3x² − 3y²',fys:'−6xy',r:2,step:0.05,
+  note:'Three ridges and three valleys all meet at the origin — enough room for two legs and a tail. A real workout for predicting which way each slope tips.'},
+ {id:'ramp',name:'Ramp',sym:'0.7x + 0.4y',f:(x,y)=>0.7*x+0.4*y,fx:(x,y)=>0.7,fy:(x,y)=>0.4,fxs:'0.7',fys:'0.4',r:3,step:0.1,
+  note:'A flat tilted plane. Both partials are constant — the slope is identical no matter where you stand. The simplest possible case, and a useful baseline.'}
+];
+
+const TERRAIN=[[0,10,46,51],[0.22,18,78,84],[0.45,47,125,107],[0.68,127,166,95],[0.85,217,180,91],[1,240,215,154]];
+function terrain(t){t=t<0?0:t>1?1:t;for(let k=1;k<TERRAIN.length;k++){if(t<=TERRAIN[k][0]){const a=TERRAIN[k-1],b=TERRAIN[k],f=(t-a[0])/((b[0]-a[0])||1);return[a[1]+(b[1]-a[1])*f,a[2]+(b[2]-a[2])*f,a[3]+(b[3]-a[3])*f];}}const l=TERRAIN[TERRAIN.length-1];return[l[1],l[2],l[3]];}
+
+let cur=0,ax=0.7,ay=-0.9,yaw=-0.62,pitch=0.62,zoom=1;
+const clamp=(v,a,b)=>v<a?a:v>b?b:v;
+let show={slice:true,tan:true,plane:true};
+const GV=36; // vertices per side
+const lin=(a,b,n)=>{const o=[];for(let i=0;i<n;i++)o.push(a+(b-a)*i/(n-1));return o;};
+const fmt=v=>(v>=0?' ':'−')+Math.abs(v).toFixed(2);
+let mesh=null, contourCache={};
+
+function buildMesh(ex){
+  const xs=lin(-ex.r,ex.r,GV),ys=lin(-ex.r,ex.r,GV),Z=[];
+  let zmin=Infinity,zmax=-Infinity;
+  for(let j=0;j<GV;j++){const row=[];for(let i=0;i<GV;i++){const v=ex.f(xs[i],ys[j]);row.push(v);if(v<zmin)zmin=v;if(v>zmax)zmax=v;}Z.push(row);}
+  const zmid=(zmin+zmax)/2,zhalf=((zmax-zmin)/2)||1;
+  mesh={xs,ys,Z,zmin,zmax,zmid,zhalf,r:ex.r};
+}
+function tanHalf(ex,slope){const zspan=(mesh.zmax-mesh.zmin)||1;let L=ex.r*0.30;const cap=0.42*zspan;if(Math.abs(slope)*L>cap)L=cap/(Math.abs(slope)+1e-9);return Math.max(L,ex.r*0.05);}
+
+function fit(cv){const dpr=window.devicePixelRatio||1;const rect=cv.getBoundingClientRect();const W=Math.max(1,rect.width),H=Math.max(1,rect.height);const bw=Math.round(W*dpr),bh=Math.round(H*dpr);if(cv.width!==bw||cv.height!==bh){cv.width=bw;cv.height=bh;}const ctx=cv.getContext('2d');ctx.setTransform(dpr,0,0,dpr,0,0);return{ctx,W,H};}
+
+/* projection: normalized world (wx,wy,wz)∈[-1,1] -> screen */
+function makeP(W,H){const S=Math.min(W/3.25,H/2.75)*zoom;return{cy:Math.cos(yaw),sy:Math.sin(yaw),cp:Math.cos(pitch),sp:Math.sin(pitch),S:S,cx:W/2,cc:H*0.58};}
+function proj(wx,wy,wz,P){wz*=0.92;const xr=wx*P.cy-wy*P.sy,yr=wx*P.sy+wy*P.cy;const yp=yr*P.cp-wz*P.sp,zp=yr*P.sp+wz*P.cp;return{x:P.cx+xr*P.S,y:P.cc-zp*P.S,d:yp};}
+const NW=(x)=>x/mesh.r, NZ=(z)=>(z-mesh.zmid)/mesh.zhalf;
+
+/* ---------------- 3D ---------------- */
+function render3D(){
+  const cv=document.getElementById('c3d');const{ctx,W,H}=fit(cv);
+  ctx.clearRect(0,0,W,H);
+  const P=makeP(W,H);const ex=EX[cur];const{xs,ys,Z,zmin,zmax}=mesh;
+  drawFrame(ctx,P);
+  const L=[0.32,0.34,0.88],Ln=Math.hypot(L[0],L[1],L[2]);L[0]/=Ln;L[1]/=Ln;L[2]/=Ln;
+  const quads=[];
+  for(let j=0;j<GV-1;j++)for(let i=0;i<GV-1;i++){
+    const c=[[i,j],[i+1,j],[i+1,j+1],[i,j+1]];
+    const w=c.map(([ii,jj])=>[NW(xs[ii]),NW(ys[jj]),NZ(Z[jj][ii])]);
+    const p=w.map(v=>proj(v[0],v[1],v[2],P));
+    const depth=(p[0].d+p[1].d+p[2].d+p[3].d)/4;
+    const za=(Z[j][i]+Z[j][i+1]+Z[j+1][i+1]+Z[j+1][i])/4;
+    const t=(za-zmin)/((zmax-zmin)||1);
+    // normal
+    const e1=[w[1][0]-w[0][0],w[1][1]-w[0][1],w[1][2]-w[0][2]];
+    const e2=[w[3][0]-w[0][0],w[3][1]-w[0][1],w[3][2]-w[0][2]];
+    let n=[e1[1]*e2[2]-e1[2]*e2[1],e1[2]*e2[0]-e1[0]*e2[2],e1[0]*e2[1]-e1[1]*e2[0]];
+    const nl=Math.hypot(n[0],n[1],n[2])||1;n=[n[0]/nl,n[1]/nl,n[2]/nl];if(n[2]<0)n=[-n[0],-n[1],-n[2]];
+    const ndl=Math.max(0,n[0]*L[0]+n[1]*L[1]+n[2]*L[2]);const br=0.5+0.5*ndl;
+    const col=terrain(t);
+    quads.push({p,depth,col:'rgb('+(col[0]*br|0)+','+(col[1]*br|0)+','+(col[2]*br|0)+')'});
+  }
+  quads.sort((a,b)=>b.depth-a.depth);
+  for(const q of quads){ctx.beginPath();ctx.moveTo(q.p[0].x,q.p[0].y);for(let k=1;k<4;k++)ctx.lineTo(q.p[k].x,q.p[k].y);ctx.closePath();ctx.fillStyle=q.col;ctx.strokeStyle=q.col;ctx.lineWidth=1;ctx.fill();ctx.stroke();}
+
+  const z0=ex.f(ax,ay),dx=ex.fx(ax,ay),dy=ex.fy(ax,ay);
+  if(show.plane){
+    drawQuad(ctx,P,[[-1,NW(ay),-1],[1,NW(ay),-1],[1,NW(ay),1],[-1,NW(ay),1]],'rgba(255,122,92,0.13)','rgba(255,122,92,0.45)');
+    drawQuad(ctx,P,[[NW(ax),-1,-1],[NW(ax),1,-1],[NW(ax),1,1],[NW(ax),-1,1]],'rgba(70,201,214,0.13)','rgba(70,201,214,0.45)');
+  }
+  if(show.slice){
+    strokePath(ctx,P,xs.map(x=>[NW(x),NW(ay),NZ(ex.f(x,ay))]),'#ff7a5c',3);
+    strokePath(ctx,P,ys.map(y=>[NW(ax),NW(y),NZ(ex.f(ax,y))]),'#46c9d6',3);
+  }
+  if(show.tan){
+    const Lx=tanHalf(ex,dx);strokePath(ctx,P,[[NW(ax-Lx),NW(ay),NZ(z0-dx*Lx)],[NW(ax+Lx),NW(ay),NZ(z0+dx*Lx)]],'#ffab90',4,[7,5]);
+    const Ly=tanHalf(ex,dy);strokePath(ctx,P,[[NW(ax),NW(ay-Ly),NZ(z0-dy*Ly)],[NW(ax),NW(ay+Ly),NZ(z0+dy*Ly)]],'#8fe3ec',4,[7,5]);
+  }
+  const pp=proj(NW(ax),NW(ay),NZ(z0),P);
+  ctx.beginPath();ctx.arc(pp.x,pp.y,5.5,0,7);ctx.fillStyle='#fff';ctx.fill();ctx.lineWidth=2;ctx.strokeStyle='#081416';ctx.stroke();
+  drawAxes(ctx,P,ex);
+}
+function drawQuad(ctx,P,w,fill,stroke){const p=w.map(v=>proj(v[0],v[1],v[2],P));ctx.beginPath();ctx.moveTo(p[0].x,p[0].y);for(let k=1;k<4;k++)ctx.lineTo(p[k].x,p[k].y);ctx.closePath();ctx.fillStyle=fill;ctx.fill();ctx.strokeStyle=stroke;ctx.lineWidth=1;ctx.stroke();}
+function strokePath(ctx,P,w,color,width,dash){const p=w.map(v=>proj(v[0],v[1],v[2],P));ctx.save();ctx.beginPath();ctx.moveTo(p[0].x,p[0].y);for(let k=1;k<p.length;k++)ctx.lineTo(p[k].x,p[k].y);ctx.strokeStyle=color;ctx.lineWidth=width;ctx.lineJoin='round';ctx.setLineDash(dash||[]);ctx.stroke();ctx.restore();}
+function line3(ctx,P,a,b,color,width){const p0=proj(a[0],a[1],a[2],P),p1=proj(b[0],b[1],b[2],P);ctx.strokeStyle=color;ctx.lineWidth=width;ctx.setLineDash([]);ctx.beginPath();ctx.moveTo(p0.x,p0.y);ctx.lineTo(p1.x,p1.y);ctx.stroke();}
+function text3(ctx,P,a,txt,color,dx,dy,font){const p=proj(a[0],a[1],a[2],P);ctx.fillStyle=color;ctx.font=font||'12px "IBM Plex Mono",monospace';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(txt,p.x+(dx||0),p.y+(dy||0));}
+function arrow3(ctx,P,a,b,color){const p0=proj(a[0],a[1],a[2],P),p1=proj(b[0],b[1],b[2],P);ctx.strokeStyle=color;ctx.fillStyle=color;ctx.lineWidth=1.7;ctx.setLineDash([]);ctx.beginPath();ctx.moveTo(p0.x,p0.y);ctx.lineTo(p1.x,p1.y);ctx.stroke();const ang=Math.atan2(p1.y-p0.y,p1.x-p0.x),h=8;ctx.beginPath();ctx.moveTo(p1.x,p1.y);ctx.lineTo(p1.x-h*Math.cos(ang-0.42),p1.y-h*Math.sin(ang-0.42));ctx.lineTo(p1.x-h*Math.cos(ang+0.42),p1.y-h*Math.sin(ang+0.42));ctx.closePath();ctx.fill();}
+function drawFrame(ctx,P){
+  const gc='rgba(120,170,175,0.12)',bc='rgba(120,170,175,0.22)';
+  for(const g of[-1,-0.5,0,0.5,1]){line3(ctx,P,[g,-1,-1],[g,1,-1],gc,1);line3(ctx,P,[-1,g,-1],[1,g,-1],gc,1);}
+  for(const c of[[-1,-1],[1,-1],[1,1],[-1,1]])line3(ctx,P,[c[0],c[1],-1],[c[0],c[1],1],bc,1);
+  const top=[[-1,-1,1],[1,-1,1],[1,1,1],[-1,1,1]];
+  for(let k=0;k<4;k++)line3(ctx,P,top[k],top[(k+1)%4],bc,1);
+  const bot=[[-1,-1,-1],[1,-1,-1],[1,1,-1],[-1,1,-1]];
+  for(let k=0;k<4;k++)line3(ctx,P,bot[k],bot[(k+1)%4],bc,1);
+}
+function axfmt(v){if(Math.abs(Math.abs(v)-Math.PI)<0.03)return(v<0?'−':'')+'π';const s=(v%1===0?v.toFixed(0):v.toFixed(1));return s.replace('-','−');}
+function drawAxes(ctx,P,ex){
+  const O=[-1,-1,-1];
+  arrow3(ctx,P,O,[1.18,-1,-1],'#ff9a80');
+  arrow3(ctx,P,O,[-1,1.18,-1],'#7fdbe6');
+  arrow3(ctx,P,O,[-1,-1,1.18],'#ffdd82');
+  text3(ctx,P,[1.34,-1,-1],'x','#ff9a80',0,0,'600 14px "Space Grotesk",sans-serif');
+  text3(ctx,P,[-1,1.34,-1],'y','#7fdbe6',0,0,'600 14px "Space Grotesk",sans-serif');
+  text3(ctx,P,[-1,-1,1.35],'z','#ffdd82',0,0,'600 14px "Space Grotesk",sans-serif');
+  const tc='rgba(160,184,184,0.8)',fn='10px "IBM Plex Mono",monospace';
+  text3(ctx,P,[1,-1,-1],axfmt(ex.r),tc,0,13,fn);
+  text3(ctx,P,[-1,1,-1],axfmt(ex.r),tc,0,13,fn);
+  text3(ctx,P,[-1,-1,1],axfmt(mesh.zmax),tc,-16,0,fn);
+  text3(ctx,P,[-1,-1,-1],'0',tc,-9,11,fn);
+}
+
+/* ---------------- 2D slice ---------------- */
+function draw2D(id,ex,axis){
+  const cv=document.getElementById(id);const{ctx,W,H}=fit(cv);ctx.clearRect(0,0,W,H);
+  const r=ex.r,pL=36,pB=26,pT=10,pR=12;
+  const N=120,xs=lin(-r,r,N);
+  const val=axis==='x'?xs.map(x=>ex.f(x,ay)):xs.map(y=>ex.f(ax,y));
+  let ymin=Math.min.apply(null,val),ymax=Math.max.apply(null,val);const pad=((ymax-ymin)||1)*0.14;ymin-=pad;ymax+=pad;
+  const MX=v=>pL+(v+r)/(2*r)*(W-pL-pR);
+  const MY=v=>pT+(ymax-v)/(ymax-ymin)*(H-pT-pB);
+  // grid
+  ctx.strokeStyle='rgba(120,170,175,0.12)';ctx.lineWidth=1;ctx.setLineDash([]);
+  for(let g=-Math.ceil(r);g<=Math.ceil(r);g++){if(g<-r||g>r)continue;ctx.beginPath();ctx.moveTo(MX(g),pT);ctx.lineTo(MX(g),H-pB);ctx.stroke();}
+  // zero line
+  if(0>=ymin&&0<=ymax){ctx.strokeStyle='rgba(120,170,175,0.32)';ctx.beginPath();ctx.moveTo(pL,MY(0));ctx.lineTo(W-pR,MY(0));ctx.stroke();}
+  // curve
+  const col=axis==='x'?'#ff7a5c':'#46c9d6',soft=axis==='x'?'#ffab90':'#8fe3ec';
+  ctx.strokeStyle=col;ctx.lineWidth=2.5;ctx.lineJoin='round';ctx.beginPath();
+  for(let i=0;i<N;i++){const px=MX(xs[i]),py=MY(val[i]);i?ctx.lineTo(px,py):ctx.moveTo(px,py);}ctx.stroke();
+  // tangent
+  const at=axis==='x'?ax:ay,z0=ex.f(ax,ay),slope=axis==='x'?ex.fx(ax,ay):ex.fy(ax,ay),Lt=r*0.34;
+  ctx.strokeStyle=soft;ctx.lineWidth=2;ctx.setLineDash([6,5]);ctx.beginPath();
+  ctx.moveTo(MX(at-Lt),MY(z0-slope*Lt));ctx.lineTo(MX(at+Lt),MY(z0+slope*Lt));ctx.stroke();ctx.setLineDash([]);
+  // point
+  ctx.beginPath();ctx.arc(MX(at),MY(z0),5,0,7);ctx.fillStyle='#fff';ctx.fill();ctx.lineWidth=2;ctx.strokeStyle=col;ctx.stroke();
+  // label
+  ctx.fillStyle='#6b8484';ctx.font='11px "IBM Plex Mono",monospace';ctx.textAlign='center';
+  ctx.fillText(axis==='x'?('x   (y held at '+ay.toFixed(2)+')'):('y   (x held at '+ax.toFixed(2)+')'),W/2,H-8);
+  document.getElementById(axis==='x'?'badgeX':'badgeY').textContent='slope = '+slope.toFixed(2);
+}
+
+/* ---------------- contour ---------------- */
+function contourBase(ex,W,H){
+  const key=ex.id+'_'+W+'x'+H;if(contourCache[key])return contourCache[key];
+  const oc=document.createElement('canvas');oc.width=W;oc.height=H;const octx=oc.getContext('2d');
+  const img=octx.createImageData(W,H),d=img.data;const r=ex.r;
+  let zmin=Infinity,zmax=-Infinity;const G=40;
+  for(let j=0;j<=G;j++)for(let i=0;i<=G;i++){const v=ex.f(-r+2*r*i/G,-r+2*r*j/G);if(v<zmin)zmin=v;if(v>zmax)zmax=v;}
+  const span=(zmax-zmin)||1,BANDS=11;
+  for(let py=0;py<H;py++){const y=r-(py/H)*2*r;for(let px=0;px<W;px++){const x=-r+(px/W)*2*r;let t=(ex.f(x,y)-zmin)/span;t=Math.floor(t*BANDS)/BANDS+0.5/BANDS;const c=terrain(t);const o=(py*W+px)*4;d[o]=c[0];d[o+1]=c[1];d[o+2]=c[2];d[o+3]=255;}}
+  octx.putImageData(img,0,0);
+  contourCache[key]={cv:oc,W,H};return contourCache[key];
+}
+function drawContour(ex){
+  const cv=document.getElementById('contour');const{ctx,W,H}=fit(cv);
+  const base=contourBase(ex,Math.round(W),Math.round(H));
+  ctx.clearRect(0,0,W,H);ctx.drawImage(base.cv,0,0,W,H);
+  const r=ex.r,MX=v=>(v+r)/(2*r)*W,MY=v=>(r-v)/(2*r)*H;
+  const dx=ex.fx(ax,ay),dy=ex.fy(ax,ay),m=Math.hypot(dx,dy);
+  if(m>1e-3){const ux=dx/m,uy=dy/m,len=r*0.34;const x0=MX(ax),y0=MY(ay),x1=MX(ax+ux*len),y1=MY(ay+uy*len);
+    ctx.strokeStyle='#ffd15c';ctx.lineWidth=3;ctx.lineCap='round';ctx.beginPath();ctx.moveTo(x0,y0);ctx.lineTo(x1,y1);ctx.stroke();
+    const ang=Math.atan2(y1-y0,x1-x0),ah=9;ctx.fillStyle='#ffd15c';ctx.beginPath();ctx.moveTo(x1,y1);
+    ctx.lineTo(x1-ah*Math.cos(ang-0.4),y1-ah*Math.sin(ang-0.4));ctx.lineTo(x1-ah*Math.cos(ang+0.4),y1-ah*Math.sin(ang+0.4));ctx.closePath();ctx.fill();}
+  ctx.beginPath();ctx.arc(MX(ax),MY(ay),6,0,7);ctx.fillStyle='#fff';ctx.fill();ctx.lineWidth=2;ctx.strokeStyle='#081416';ctx.stroke();
+  ctx.fillStyle='rgba(155,179,179,0.9)';ctx.font='12px "IBM Plex Mono",monospace';ctx.textAlign='left';ctx.fillText('x →',W-34,H-10);ctx.fillText('y ↑',8,18);
+}
+
+/* ---------------- readouts ---------------- */
+const COMPASS=['E','NE','N','NW','W','SW','S','SE'];
+function heading(fx,fy){const m=Math.hypot(fx,fy);if(m<1e-4)return'flat ground';const idx=((Math.round(Math.atan2(fy,fx)/(Math.PI/4))%8)+8)%8;return COMPASS[idx];}
+function readout(ex){
+  const z0=ex.f(ax,ay),dx=ex.fx(ax,ay),dy=ex.fy(ax,ay),m=Math.hypot(dx,dy);
+  document.getElementById('valx').textContent=ax.toFixed(2);
+  document.getElementById('valy').textContent=ay.toFixed(2);
+  document.getElementById('rf').textContent=fmt(z0);
+  document.getElementById('rfx').textContent=fmt(dx);
+  document.getElementById('rfy').textContent=fmt(dy);
+  document.getElementById('rg').textContent=m.toFixed(2);
+  document.getElementById('efx').textContent=ex.fxs;
+  document.getElementById('efy').textContent=ex.fys;
+  const cE=v=>Math.abs(v)<1e-3?'level here':(v>0?'climbing east':'descending east');
+  const cN=v=>Math.abs(v)<1e-3?'level here':(v>0?'climbing north':'descending north');
+  document.getElementById('wx').textContent=cE(dx);
+  document.getElementById('wy').textContent=cN(dy);
+  document.getElementById('wg').textContent=m<1e-3?'ground is flat':('heading '+heading(dx,dy));
+}
+
+/* ---------------- orchestration ---------------- */
+function renderAll(){const ex=EX[cur];render3D();draw2D('slicex',ex,'x');draw2D('slicey',ex,'y');drawContour(ex);readout(ex);}
+
+const sx=document.getElementById('sx'),sy=document.getElementById('sy');
+function configSliders(ex){for(const s of[sx,sy]){s.min=-ex.r;s.max=ex.r;s.step=ex.step;}sx.value=ax;sy.value=ay;}
+sx.addEventListener('input',()=>{ax=+sx.value;renderAll();});
+sy.addEventListener('input',()=>{ay=+sy.value;renderAll();});
+for(const[id,key]of[['tSlice','slice'],['tTan','tan'],['tPlane','plane']])document.getElementById(id).addEventListener('change',e=>{show[key]=e.target.checked;render3D();});
+
+function buildChips(){const c=document.getElementById('chips');c.innerHTML='';EX.forEach((ex,i)=>{const b=document.createElement('button');b.className='chip'+(i===cur?' on':'');b.textContent=ex.sym;b.setAttribute('aria-pressed',i===cur);b.onclick=()=>{cur=i;loadExample();};c.appendChild(b);});}
+function loadExample(){const ex=EX[cur];ax=Math.max(-ex.r,Math.min(ex.r,ax));ay=Math.max(-ex.r,Math.min(ex.r,ay));configSliders(ex);document.getElementById('exnote').innerHTML='<b>'+ex.name+'.</b> '+ex.note;buildChips();buildMesh(ex);renderAll();}
+
+/* drag to orbit */
+let raf=false;
+const c3d=document.getElementById('c3d');
+function scheduleRender(){if(raf)return;raf=true;requestAnimationFrame(()=>{raf=false;render3D();});}
+const pts=new Map();let pinchD=0;
+function pinchDist(){const a=[...pts.values()];return Math.hypot(a[0].x-a[1].x,a[0].y-a[1].y);}
+c3d.addEventListener('pointerdown',e=>{c3d.setPointerCapture(e.pointerId);pts.set(e.pointerId,{x:e.clientX,y:e.clientY});if(pts.size===2)pinchD=pinchDist();});
+c3d.addEventListener('pointermove',e=>{
+  if(!pts.has(e.pointerId))return;
+  const prev=pts.get(e.pointerId);pts.set(e.pointerId,{x:e.clientX,y:e.clientY});
+  if(pts.size>=2){const d=pinchDist();if(pinchD>0)zoom=clamp(zoom*d/pinchD,0.45,3.5);pinchD=d;scheduleRender();return;}
+  yaw+=(e.clientX-prev.x)*0.01;
+  pitch=clamp(pitch+(e.clientY-prev.y)*0.007,0.05,1.5);
+  scheduleRender();
+});
+function endPt(e){pts.delete(e.pointerId);pinchD=0;}
+c3d.addEventListener('pointerup',endPt);
+c3d.addEventListener('pointercancel',endPt);
+c3d.addEventListener('wheel',e=>{e.preventDefault();zoom=clamp(zoom*(e.deltaY<0?1.12:0.9),0.45,3.5);scheduleRender();},{passive:false});
+
+let rt=false;
+window.addEventListener('resize',()=>{if(rt)return;rt=true;requestAnimationFrame(()=>{rt=false;contourCache={};renderAll();});});
+window.addEventListener('load',()=>{renderAll();});
+
+loadExample();
+}catch(err){
+  const b=document.getElementById('errbar');if(b){b.style.display='block';b.textContent='Something failed while loading the lab: '+err.message;}
+  console.error(err);
+}
+</script>
+</body>
+</html>
