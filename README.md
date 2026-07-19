@@ -11,6 +11,7 @@ self-contained HTML file. Fewer lessons, each finished — polish over quantity.
 |---|---|---|
 | 01 | Partial derivatives — slice curves, tangent lines, contour map, gradient arrow | [open](https://raw.githack.com/Somebody32x2/claude-calc-3/main/partial-derivatives-lab_1.html) |
 | 02 | Double integrals — Riemann columns, Fubini's sweeping blade, Type I/II regions | [open](https://raw.githack.com/Somebody32x2/claude-calc-3/main/double-integrals-lab_2.html) |
+| 03 | Directional derivatives — rotating cut plane, the circle of slopes, level-curve perpendicularity | [open](https://raw.githack.com/Somebody32x2/claude-calc-3/main/directional-derivatives-lab_3.html) |
 
 See [CURRICULUM.md](CURRICULUM.md) for the full nine-lab plan and the house rules
 every lab is built to.

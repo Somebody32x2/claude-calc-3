@@ -1,0 +1,718 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Directional Derivatives · A Field Lab</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#081416;--bg2:#0c1e22;--panel:#0f2429;--panel2:#123037;
+  --line:rgba(120,170,175,0.16);--line-strong:rgba(120,170,175,0.32);
+  --ink:#e7f2f0;--ink-dim:#9db3b3;--ink-faint:#6b8484;
+  --x:#ff7a5c;--x-soft:#ffab90;--y:#46c9d6;--y-soft:#8fe3ec;
+  --grad:#ffd15c;--grad-soft:#ffe4a1;--peak:#f0d79a;
+  --u:#b39dff;--u-soft:#d5c9ff;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font-family:'Inter',system-ui,sans-serif;font-size:16px;line-height:1.6;-webkit-font-smoothing:antialiased;
+  background-image:radial-gradient(1200px 500px at 80% -10%,rgba(179,157,255,0.06),transparent),radial-gradient(900px 400px at 0% 5%,rgba(255,209,92,0.05),transparent);}
+.wrap{max-width:1180px;margin:0 auto;padding:0 24px}
+h1,h2,h3{font-family:'Space Grotesk',sans-serif;font-weight:600;line-height:1.1;letter-spacing:-0.01em}
+.mono{font-family:'IBM Plex Mono',monospace}
+#errbar{display:none;background:#3a1414;border:1px solid #ff7a5c;color:#ffd9cf;padding:12px 16px;margin:16px 0;border-radius:10px;font-family:'IBM Plex Mono';font-size:13px}
+
+header{padding:64px 0 8px}
+.eyebrow{font-family:'IBM Plex Mono',monospace;font-size:12.5px;letter-spacing:0.28em;text-transform:uppercase;color:var(--ink-faint);display:flex;align-items:center;gap:12px}
+.eyebrow::before{content:"";width:34px;height:1px;background:var(--line-strong)}
+.eyebrow a{color:var(--ink-faint);text-decoration:none;border-bottom:1px solid var(--line-strong)}
+.eyebrow a:hover{color:var(--y)}
+h1{font-size:clamp(40px,7vw,76px);margin:18px 0 0;font-weight:700}
+h1 .accent{background:linear-gradient(100deg,var(--u),var(--grad) 55%,var(--x));-webkit-background-clip:text;background-clip:text;color:transparent}
+.lede{max-width:690px;color:var(--ink-dim);font-size:clamp(17px,2.2vw,20px);margin:22px 0 0}
+.lede b{color:var(--ink);font-weight:600}
+
+.idea{margin:52px 0;display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.idea>div{background:var(--bg2);padding:26px 24px}
+.idea .k{font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:0.14em;text-transform:uppercase;margin-bottom:10px}
+.idea .ku{color:var(--u)}.idea .kg{color:var(--grad)}.idea .kx{color:var(--x)}
+.idea p{margin:0;color:var(--ink-dim);font-size:15px}
+.idea .big{font-family:'Space Grotesk';font-size:19px;color:var(--ink);display:block;margin-bottom:6px;font-weight:500}
+
+section{padding:34px 0}
+.sec-head{display:flex;align-items:baseline;gap:16px;margin-bottom:22px;flex-wrap:wrap}
+.sec-num{font-family:'IBM Plex Mono',monospace;color:var(--ink-faint);font-size:14px;letter-spacing:0.1em}
+h2{font-size:clamp(26px,3.6vw,38px)}
+.sec-head p{margin:0;color:var(--ink-dim);font-size:15px;flex:1;min-width:240px}
+
+.lab{display:grid;grid-template-columns:1fr 356px;gap:20px;border:1px solid var(--line);border-radius:16px;background:var(--bg2);padding:20px}
+.viewport{position:relative;height:520px;border-radius:12px;overflow:hidden;background:linear-gradient(180deg,#0a1a1e,#081315);border:1px solid var(--line)}
+canvas.stage{width:100%;height:100%;display:block;touch-action:none;cursor:grab}
+canvas.stage:active{cursor:grabbing}
+.vhint{position:absolute;left:14px;bottom:12px;z-index:3;font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:0.12em;color:var(--ink-faint);text-transform:uppercase;pointer-events:none;background:rgba(8,20,22,0.55);padding:4px 9px;border-radius:6px}
+.rail{display:flex;flex-direction:column;gap:16px}
+.chips{display:flex;flex-wrap:wrap;gap:7px}
+.chip{font-family:'IBM Plex Mono',monospace;font-size:12.5px;padding:7px 12px;border-radius:8px;border:1px solid var(--line-strong);background:transparent;color:var(--ink-dim);cursor:pointer;transition:all .15s}
+.chip:hover{border-color:var(--y);color:var(--ink)}
+.chip.on{background:var(--panel2);border-color:var(--y);color:var(--ink)}
+.chip.on::before{content:"▸ "}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px}
+.card .lbl{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:var(--ink-faint);margin-bottom:12px}
+.sliderrow{margin-bottom:14px}.sliderrow:last-child{margin-bottom:0}
+.sliderrow .top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px}
+.sliderrow .name{font-family:'Space Grotesk';font-size:14px;font-weight:500}
+.sliderrow .name .sub{color:var(--ink-faint);font-size:12px;font-weight:400}
+.sliderrow .val{font-family:'IBM Plex Mono';font-size:14px}
+.dotx{color:var(--x)}.doty{color:var(--y)}.dotg{color:var(--grad)}.dotu{color:var(--u)}
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:4px;border-radius:4px;background:var(--line-strong);outline:none;margin:6px 0 2px}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:17px;height:17px;border-radius:50%;background:var(--ink);border:2px solid var(--bg);cursor:pointer;box-shadow:0 0 0 1px var(--line-strong)}
+input[type=range]::-moz-range-thumb{width:17px;height:17px;border-radius:50%;background:var(--ink);border:2px solid var(--bg);cursor:pointer}
+input#sx::-webkit-slider-thumb{background:var(--x)}input#sx::-moz-range-thumb{background:var(--x)}
+input#sy::-webkit-slider-thumb{background:var(--y)}input#sy::-moz-range-thumb{background:var(--y)}
+input#st::-webkit-slider-thumb{background:var(--u)}input#st::-moz-range-thumb{background:var(--u)}
+.readout .line{display:flex;justify-content:space-between;align-items:baseline;padding:9px 0;border-bottom:1px solid var(--line);gap:12px}
+.readout .line:last-child{border-bottom:none;padding-bottom:0}.readout .line:first-child{padding-top:0}
+.readout .rl{font-size:13.5px;color:var(--ink-dim)}
+.readout .rl .exp{font-family:'IBM Plex Mono';font-size:12px;color:var(--ink-faint);display:block}
+.readout .rv{font-family:'IBM Plex Mono';font-size:17px;font-weight:500;text-align:right;white-space:nowrap}
+.readout .walk{font-size:12px;color:var(--ink-faint);display:block;margin-top:2px}
+.rv.vx{color:var(--x)}.rv.vy{color:var(--y)}.rv.vg{color:var(--grad)}.rv.vu{color:var(--u)}
+.sub-calc{font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--ink-dim);background:rgba(179,157,255,0.07);border:1px solid rgba(179,157,255,0.22);border-radius:8px;padding:10px 12px;margin-top:12px;line-height:1.7;word-break:break-word}
+.sub-calc .cx{color:var(--x)}.sub-calc .cy{color:var(--y)}.sub-calc .cu{color:var(--u-soft)}.sub-calc .cg{color:var(--grad)}
+.seg{display:flex;gap:6px;flex-wrap:wrap}
+.seg button{flex:1;min-width:88px;font-family:'IBM Plex Mono',monospace;font-size:12px;padding:7px 4px;border-radius:8px;border:1px solid var(--line-strong);background:transparent;color:var(--ink-dim);cursor:pointer;transition:.15s}
+.seg button:hover{border-color:var(--u);color:var(--ink)}
+.toggles{display:flex;flex-direction:column;gap:9px}
+.tg{display:flex;align-items:center;gap:9px;font-size:13.5px;color:var(--ink-dim);cursor:pointer;user-select:none}
+.tg input{appearance:none;-webkit-appearance:none;width:34px;height:19px;border-radius:20px;background:var(--line-strong);position:relative;cursor:pointer;transition:.15s;flex:none}
+.tg input::after{content:"";position:absolute;top:2px;left:2px;width:15px;height:15px;border-radius:50%;background:var(--ink-faint);transition:.15s}
+.tg input:checked{background:var(--y)}
+.tg input:checked::after{background:var(--bg);transform:translateX(15px)}
+.note{border-left:2px solid var(--grad);background:rgba(255,209,92,0.06);padding:12px 14px;border-radius:0 8px 8px 0;font-size:13.5px;color:var(--ink-dim)}
+.note b{color:var(--grad-soft);font-weight:600}
+
+.panels{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:18px}
+.panel{border:1px solid var(--line);border-radius:14px;background:var(--bg2);padding:16px 16px 12px}
+.panel h3{font-size:16px;margin:0 0 2px;display:flex;align-items:center;gap:8px}
+.panel .cap{font-size:13px;color:var(--ink-dim);margin:0 0 8px}
+.panel .swatch{width:11px;height:11px;border-radius:3px;flex:none}
+.sw-u{background:var(--u)}.sw-g{background:var(--grad)}
+.plot2d{width:100%;height:238px;display:block}
+.pbadge{font-family:'IBM Plex Mono';font-size:13px;padding:2px 8px;border-radius:6px;margin-left:auto;white-space:nowrap}
+.badge-u{color:var(--u);background:rgba(179,157,255,0.12)}
+.badge-g{color:var(--grad);background:rgba(255,209,92,0.1)}
+
+.rose-grid{display:grid;grid-template-columns:1fr 1.05fr;gap:20px;align-items:center}
+.rose-box{border:1px solid var(--line);border-radius:14px;background:var(--bg2);padding:16px}
+#rose{width:100%;height:400px;display:block}
+.legend{display:flex;flex-direction:column;gap:14px}
+.legend .li{display:flex;gap:12px;align-items:flex-start}
+.legend .dot{width:14px;height:14px;border-radius:4px;flex:none;margin-top:4px}
+.legend .li b{font-family:'Space Grotesk';font-weight:600;color:var(--ink)}
+.legend .li p{margin:2px 0 0;font-size:14px;color:var(--ink-dim)}
+
+.map-grid{display:grid;grid-template-columns:1.15fr 1fr;gap:20px;align-items:center}
+.map-box{border:1px solid var(--line);border-radius:14px;background:var(--bg2);padding:16px}
+#map{width:100%;height:380px;display:block;border-radius:8px}
+
+.rule{font-size:17px;color:var(--ink);max-width:760px;margin:0 0 26px}
+.rule b{color:var(--y-soft)}
+.worked{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.wk{border:1px solid var(--line);border-radius:12px;background:var(--bg2);padding:18px}
+.wk .fn{font-family:'IBM Plex Mono';font-size:14.5px;color:var(--peak);margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid var(--line);line-height:1.5}
+.wk .step{display:flex;gap:10px;font-size:14px;margin-bottom:10px;align-items:baseline}
+.wk .step:last-child{margin-bottom:0}
+.wk .tag{font-family:'IBM Plex Mono';font-size:12px;padding:2px 6px;border-radius:5px;flex:none}
+.tag-u{color:var(--u);background:rgba(179,157,255,0.12)}
+.tag-g{color:var(--grad);background:rgba(255,209,92,0.1)}
+.tag-x{color:var(--x);background:rgba(255,122,92,0.1)}
+.wk .res{font-family:'IBM Plex Mono';color:var(--ink)}
+.wk .hint{color:var(--ink-faint);font-size:13px}
+.pitfall{margin-top:26px;border-left:2px solid var(--x);background:rgba(255,122,92,0.06);padding:14px 16px;border-radius:0 8px 8px 0;font-size:14.5px;color:var(--ink-dim);max-width:820px}
+.pitfall b{color:var(--x-soft);font-weight:600}
+footer{padding:48px 0 72px;border-top:1px solid var(--line);margin-top:36px;color:var(--ink-dim)}
+footer h3{font-size:20px;color:var(--ink);margin:0 0 14px}
+.next{display:flex;flex-wrap:wrap;gap:10px}
+.next span{font-family:'IBM Plex Mono';font-size:13px;padding:8px 12px;border:1px solid var(--line);border-radius:8px;color:var(--ink-dim)}
+.next span .n{color:var(--y)}
+.fine{font-size:13px;color:var(--ink-faint);margin-top:20px;max-width:820px}
+@media (max-width:920px){
+  .lab{grid-template-columns:1fr}.viewport{height:420px}
+  .idea,.worked{grid-template-columns:1fr}.panels{grid-template-columns:1fr}
+  .rose-grid,.map-grid{grid-template-columns:1fr}
+}
+@media (prefers-reduced-motion:no-preference){
+  .fade{opacity:0;transform:translateY(14px);animation:rise .7s cubic-bezier(.2,.7,.3,1) forwards}
+  @keyframes rise{to{opacity:1;transform:none}}
+}
+:focus-visible{outline:2px solid var(--y);outline-offset:2px;border-radius:4px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div id="errbar"></div>
+  <header>
+    <div class="eyebrow fade">Calc 3 · Field Lab 03 · <a href="index.html">all labs</a> · <a href="partial-derivatives-lab_1.html">← partial derivatives</a></div>
+    <h1 class="fade" style="animation-delay:.05s">Directional <span class="accent">derivatives</span></h1>
+    <p class="lede fade" style="animation-delay:.12s">
+      Lab 01 let you walk two directions: due east, due north. But you are standing on a hillside and
+      can face <b>any</b> way you like. Pick a heading, walk that way, and ask the same old question —
+      <b>how steep is it?</b> The surprise is that you never need to re-measure. Those two original
+      slopes already contain the answer for <b>every</b> direction at once.</p>
+  </header>
+
+  <div class="idea fade" style="animation-delay:.18s">
+    <div><div class="k ku">u = (cos θ, sin θ)</div><span class="big">Choose a heading</span>
+      <p>A direction is a <span class="mono">unit</span> vector — length exactly one. That length is not a formality: it is what makes the answer a slope rather than a slope times an arbitrary scale.</p></div>
+    <div><div class="k kg">D<sub>u</sub> f = ∇f · u</div><span class="big">Dot it with the gradient</span>
+      <p>One dot product and you are done. No new limit, no new slice to differentiate — the two partials you already computed do all the work.</p></div>
+    <div><div class="k kx">D<sub>u</sub> f = |∇f| cos φ</div><span class="big">It's just a cosine</span>
+      <p>Where φ is the angle between your heading and the gradient. Steepest when φ = 0, flat when φ = 90°, steepest descent at 180°. One formula explains all three.</p></div>
+  </div>
+
+  <section>
+    <div class="sec-head"><span class="sec-num">01</span><h2>The heading lab</h2>
+      <p>Same terrain as Lab 01 — new question. Spin the heading dial and watch the cutting plane rotate: it is no longer locked to the axes, and the tangent line tilts to match.</p></div>
+    <div class="lab">
+      <div class="viewport"><canvas class="stage" id="c3d"></canvas><div class="vhint">drag to orbit · scroll or pinch to zoom</div></div>
+      <div class="rail">
+        <div class="chips" id="chips"></div>
+        <div class="card">
+          <div class="lbl">Where you stand</div>
+          <div class="sliderrow"><div class="top"><span class="name"><span class="dotx">■</span> x</span><span class="val" id="valx">0.00</span></div><input type="range" id="sx"></div>
+          <div class="sliderrow"><div class="top"><span class="name"><span class="doty">■</span> y</span><span class="val" id="valy">0.00</span></div><input type="range" id="sy"></div>
+          <div class="lbl" style="margin:18px 0 8px">Which way you face</div>
+          <div class="sliderrow"><div class="top"><span class="name"><span class="dotu">■</span> θ <span class="sub">— compass heading</span></span><span class="val" id="valt">0°</span></div><input type="range" id="st" min="0" max="360" step="1" value="0"></div>
+          <div class="seg" id="segsnap">
+            <button data-s="up">steepest up</button>
+            <button data-s="level">level</button>
+            <button data-s="down">steepest down</button>
+          </div>
+        </div>
+        <div class="card readout">
+          <div class="lbl">Instruments</div>
+          <div class="line"><span class="rl">Slope on this heading <span class="exp mono">D<sub>u</sub> f = ∇f · u</span><span class="walk" id="wu">—</span></span><span class="rv vu" id="rdu">0.00</span></div>
+          <div class="line"><span class="rl">Steepest possible <span class="exp mono">|∇f|</span></span><span class="rv vg" id="rmag">0.00</span></div>
+          <div class="line"><span class="rl">Angle off the gradient <span class="exp mono">φ</span><span class="walk" id="wphi">—</span></span><span class="rv" id="rphi">0°</span></div>
+          <div class="sub-calc" id="subcalc">—</div>
+        </div>
+        <div class="card"><div class="lbl">Show on the surface</div>
+          <div class="toggles">
+            <label class="tg"><input type="checkbox" id="tPlane" checked> Cutting plane on your heading</label>
+            <label class="tg"><input type="checkbox" id="tPath" checked> The path you'd walk</label>
+            <label class="tg"><input type="checkbox" id="tTan" checked> Tangent line (the slope)</label>
+            <label class="tg"><input type="checkbox" id="tAxes" checked> Lab 01's two axis slices</label>
+          </div></div>
+        <div class="note" id="exnote"></div>
+      </div>
+    </div>
+    <div class="panels">
+      <div class="panel"><h3><span class="swatch sw-u"></span> The profile you walk<span class="pbadge badge-u" id="badgeP">—</span></h3>
+        <p class="cap">Step along your heading and record your height. The slope of this curve at the centre is D<sub>u</sub> f — an ordinary Calc 1 derivative again.</p>
+        <canvas class="plot2d" id="plotwalk"></canvas></div>
+      <div class="panel"><h3><span class="swatch sw-g"></span> Slope versus heading<span class="pbadge badge-g" id="badgeC">—</span></h3>
+        <p class="cap">Now sweep θ through a full turn and plot the slope you get. A pure cosine, riding between −|∇f| and +|∇f|.</p>
+        <canvas class="plot2d" id="plotcos"></canvas></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="sec-num">02</span><h2>Every direction at once</h2>
+      <p>Instead of plotting the slope against θ, lay each answer along the direction it belongs to. The shape that appears is not a coincidence.</p></div>
+    <div class="rose-grid">
+      <div class="rose-box"><canvas id="rose"></canvas></div>
+      <div class="legend">
+        <div class="li"><span class="dot" style="background:var(--u)"></span><div><b>Each violet spoke is one heading</b><p>Its length is the slope you get walking that way. Spokes past the halfway line are downhill — they carry a negative slope, drawn pointing backwards.</p></div></div>
+        <div class="li"><span class="dot" style="background:var(--grad)"></span><div><b>The tips trace a perfect circle</b><p>And the gradient is its <em>diameter</em>. That is the geometric content of D<sub>u</sub> f = ∇f · u: projecting one fixed vector onto every possible direction sweeps out a circle through the origin.</p></div></div>
+        <div class="li"><span class="dot" style="background:var(--y)"></span><div><b>The circle touches the origin twice</b><p>Those two headings are exactly perpendicular to the gradient, and they are the directions where the ground is level. Everything to one side climbs; everything to the other descends.</p></div></div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="sec-num">03</span><h2>Why level curves run perpendicular</h2>
+      <p>The map view makes the last claim visible. The level curve through your point is drawn in white — set your heading level and watch your arrow lie down flat along it.</p></div>
+    <div class="map-grid">
+      <div class="map-box"><canvas id="map"></canvas></div>
+      <div class="legend">
+        <div class="li"><span class="dot" style="background:#fff"></span><div><b>The white curve is your contour</b><p>Every point on it has exactly the height you are standing at. Walking along it, your altitude never changes — so the slope in that direction must be zero.</p></div></div>
+        <div class="li"><span class="dot" style="background:var(--grad)"></span><div><b>The gradient cuts it at a right angle</b><p>If D<sub>u</sub> f = ∇f · u is zero along the curve, then ∇f is perpendicular to the curve's tangent — that is what a zero dot product <em>means</em>. The gradient never runs along a contour; it always bolts straight across.</p></div></div>
+        <div class="li"><span class="dot" style="background:var(--u)"></span><div><b>Your heading, and its shadow</b><p>The faint violet line is your slope projected onto the gradient. When it collapses to nothing you are on the contour; when it reaches full length you are pointing straight uphill.</p></div></div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="sec-num">04</span><h2>Computing them by hand</h2></div>
+    <p class="rule">Three steps, always the same. Find <b>∇f</b> at the point. Turn your direction into a <b>unit</b> vector. Take the <b>dot product</b>. The only step anyone ever skips is the middle one.</p>
+    <div class="worked">
+      <div class="wk"><div class="fn">f = x² + xy,  at (1, 2)<br>toward v = (3, 4)</div>
+        <div class="step"><span class="tag tag-g">∇f</span><span class="hint">(2x + y, x) at (1,2)</span></div>
+        <div class="step">→ <span class="res">(4, 1)</span></div>
+        <div class="step"><span class="tag tag-u">unit</span><span class="hint">|v| = 5, so divide by 5</span></div>
+        <div class="step">→ <span class="res">u = (3/5, 4/5)</span></div>
+        <div class="step"><span class="tag tag-x">dot</span></div>
+        <div class="step">→ <span class="res">4·⅗ + 1·⅘ = 16/5</span></div></div>
+      <div class="wk"><div class="fn">f = sin(xy),  at (π, 1)<br>heading θ = 90°</div>
+        <div class="step"><span class="tag tag-g">∇f</span><span class="hint">(y cos xy, x cos xy) at (π,1)</span></div>
+        <div class="step">→ <span class="res">(cos π, π cos π) = (−1, −π)</span></div>
+        <div class="step"><span class="tag tag-u">unit</span><span class="hint">θ = 90° is already due north</span></div>
+        <div class="step">→ <span class="res">u = (0, 1)</span></div>
+        <div class="step"><span class="tag tag-x">dot</span><span class="hint">picks out the y-partial alone</span></div>
+        <div class="step">→ <span class="res">−π</span></div></div>
+      <div class="wk"><div class="fn">f = x² + y²,  at (3, 4)<br>steepest ascent?</div>
+        <div class="step"><span class="tag tag-g">∇f</span><span class="hint">(2x, 2y)</span></div>
+        <div class="step">→ <span class="res">(6, 8)</span></div>
+        <div class="step"><span class="tag tag-u">direction</span><span class="hint">the gradient itself, normalized</span></div>
+        <div class="step">→ <span class="res">u = (3/5, 4/5)</span></div>
+        <div class="step"><span class="tag tag-x">rate</span><span class="hint">no dot product needed — it's the length</span></div>
+        <div class="step">→ <span class="res">|∇f| = 10</span></div></div>
+    </div>
+    <p class="pitfall"><b>The mistake everyone makes once.</b> Forgetting to normalize. If you dot the gradient with a raw direction vector like <span class="mono">(3, 4)</span> instead of <span class="mono">(3/5, 4/5)</span>, you get an answer five times too large — and nothing in the arithmetic warns you. A directional derivative is a rate <em>per unit of distance travelled</em>; feeding in a vector of length 5 quietly measures five units of travel per step. Check <span class="mono">|u| = 1</span> before you dot, every time.</p>
+  </section>
+
+  <footer>
+    <h3>Where this goes next</h3>
+    <div class="next">
+      <span><span class="n">→</span> tangent planes &amp; linear approximation</span>
+      <span><span class="n">→</span> the gradient as a vector field</span>
+      <span><span class="n">→</span> critical points &amp; the second-derivative test</span>
+      <span><span class="n">→</span> Lagrange multipliers</span>
+      <span><span class="n">→</span> gradient descent</span>
+    </div>
+    <p class="fine">The gradient here is exact analytic partials, and the profile curve is the true restriction of f to your heading — so the tangent line you see really is the tangent, not a secant through nearby samples. Try this: park yourself on a saddle at the origin, then sweep θ and watch the slope pass through zero four times.</p>
+  </footer>
+</div>
+
+<script>
+try{
+/* ---------- the same surfaces as Lab 01, with exact partials ---------- */
+const EX=[
+ {id:'bowl',name:'Bowl',sym:'x² + y²',f:(x,y)=>x*x+y*y,fx:(x,y)=>2*x,fy:(x,y)=>2*y,fxs:'2x',fys:'2y',r:3,step:0.1,
+  note:'Every gradient points straight outward from the bottom. Stand anywhere off-centre and the level directions are the two that circle the valley — walk them and your height never changes.'},
+ {id:'saddle',name:'Saddle',sym:'x² − y²',f:(x,y)=>x*x-y*y,fx:(x,y)=>2*x,fy:(x,y)=>-2*y,fxs:'2x',fys:'−2y',r:3,step:0.1,
+  note:'At the origin the gradient vanishes, so every heading gives slope zero — the circle collapses to a point. Step away and the four level directions of the saddle reappear.'},
+ {id:'ripple',name:'Ripple',sym:'sin(x)·cos(y)',f:(x,y)=>Math.sin(x)*Math.cos(y),fx:(x,y)=>Math.cos(x)*Math.cos(y),fy:(x,y)=>-Math.sin(x)*Math.sin(y),fxs:'cos(x)·cos(y)',fys:'−sin(x)·sin(y)',r:Math.PI,step:0.05,
+  note:'Ridges and troughs, so the steepest direction swings hard as you move. A good place to notice that the gradient is a different vector at every single point.'},
+ {id:'hill',name:'Hill',sym:'e^−(x²+y²)/2',f:(x,y)=>Math.exp(-(x*x+y*y)/2),fx:(x,y)=>-x*Math.exp(-(x*x+y*y)/2),fy:(x,y)=>-y*Math.exp(-(x*x+y*y)/2),fxs:'−x·e^−(x²+y²)/2',fys:'−y·e^−(x²+y²)/2',r:3,step:0.1,
+  note:'The gradient always aims at the summit and the level curves are perfect circles around it. Far out on the flats the circle of slopes shrinks to almost nothing.'},
+ {id:'monkey',name:'Monkey saddle',sym:'x³ − 3xy²',f:(x,y)=>x*x*x-3*x*y*y,fx:(x,y)=>3*x*x-3*y*y,fy:(x,y)=>-6*x*y,fxs:'3x² − 3y²',fys:'−6xy',r:2,step:0.05,
+  note:'Three ridges and three valleys meeting at once. The steepest heading rotates a full turn faster than you circle the origin — worth sweeping θ slowly here.'},
+ {id:'ramp',name:'Ramp',sym:'0.7x + 0.4y',f:(x,y)=>0.7*x+0.4*y,fx:()=>0.7,fy:()=>0.4,fxs:'0.7',fys:'0.4',r:3,step:0.1,
+  note:'A flat tilted plane: the gradient is the same everywhere, so moving the point changes nothing and only the heading matters. The cleanest possible view of the cosine law.'}
+];
+
+const TERRAIN=[[0,10,46,51],[0.22,18,78,84],[0.45,47,125,107],[0.68,127,166,95],[0.85,217,180,91],[1,240,215,154]];
+function terrain(t){t=t<0?0:t>1?1:t;for(let k=1;k<TERRAIN.length;k++){if(t<=TERRAIN[k][0]){const a=TERRAIN[k-1],b=TERRAIN[k],f=(t-a[0])/((b[0]-a[0])||1);return[a[1]+(b[1]-a[1])*f,a[2]+(b[2]-a[2])*f,a[3]+(b[3]-a[3])*f];}}const l=TERRAIN[TERRAIN.length-1];return[l[1],l[2],l[3]];}
+
+const clamp=(v,a,b)=>v<a?a:v>b?b:v;
+const lin=(a,b,n)=>{const o=[];for(let i=0;i<n;i++)o.push(a+(b-a)*i/(n-1));return o;};
+const fmt=v=>{const a=Math.abs(v);return(v<0&&a>=5e-4?'−':' ')+a.toFixed(2);};
+const DEG=Math.PI/180;
+
+let cur=0,ax=0.9,ay=-0.6,theta=35;
+let show={plane:true,path:true,tan:true,axes:true};
+const cam={yaw:-0.62,pitch:0.58,zoom:1};
+const GV=36;
+let mesh=null,contourCache={},gmax=1;
+
+function buildMesh(ex){
+  const xs=lin(-ex.r,ex.r,GV),ys=lin(-ex.r,ex.r,GV),Z=[];
+  let zmin=Infinity,zmax=-Infinity;
+  for(let j=0;j<GV;j++){const row=[];for(let i=0;i<GV;i++){const v=ex.f(xs[i],ys[j]);row.push(v);if(v<zmin)zmin=v;if(v>zmax)zmax=v;}Z.push(row);}
+  const zmid=(zmin+zmax)/2,zhalf=((zmax-zmin)/2)||1;
+  mesh={xs,ys,Z,zmin,zmax,zmid,zhalf,r:ex.r};
+  /* the largest gradient length anywhere — fixes the rose/cosine scale so it means something */
+  let g=0;const S=48;
+  for(let j=0;j<=S;j++)for(let i=0;i<=S;i++){
+    const x=-ex.r+2*ex.r*i/S,y=-ex.r+2*ex.r*j/S;
+    g=Math.max(g,Math.hypot(ex.fx(x,y),ex.fy(x,y)));}
+  gmax=g||1;
+}
+function fit(cv){const dpr=window.devicePixelRatio||1;const rect=cv.getBoundingClientRect();const W=Math.max(1,rect.width),H=Math.max(1,rect.height);const bw=Math.round(W*dpr),bh=Math.round(H*dpr);if(cv.width!==bw||cv.height!==bh){cv.width=bw;cv.height=bh;}const ctx=cv.getContext('2d');ctx.setTransform(dpr,0,0,dpr,0,0);return{ctx,W,H};}
+function makeP(W,H){const S=Math.min(W/3.25,H/2.75)*cam.zoom;return{cy:Math.cos(cam.yaw),sy:Math.sin(cam.yaw),cp:Math.cos(cam.pitch),sp:Math.sin(cam.pitch),S,cx:W/2,cc:H*0.58};}
+function proj(wx,wy,wz,P){wz*=0.92;const xr=wx*P.cy-wy*P.sy,yr=wx*P.sy+wy*P.cy;const yp=yr*P.cp-wz*P.sp,zp=yr*P.sp+wz*P.cp;return{x:P.cx+xr*P.S,y:P.cc-zp*P.S,d:yp};}
+const NW=x=>x/mesh.r, NZ=z=>(z-mesh.zmid)/mesh.zhalf;
+
+/* current-state helpers */
+const U=()=>[Math.cos(theta*DEG),Math.sin(theta*DEG)];
+const G=()=>{const ex=EX[cur];return[ex.fx(ax,ay),ex.fy(ax,ay)];};
+const Du=()=>{const g=G(),u=U();return g[0]*u[0]+g[1]*u[1];};
+const gmag=()=>{const g=G();return Math.hypot(g[0],g[1]);};
+
+/* how far can we walk from (ax,ay) along u before leaving the square? */
+function walkRange(ex){
+  const u=U();let tmin=-1e9,tmax=1e9;
+  for(const[p,d]of[[ax,u[0]],[ay,u[1]]]){
+    if(Math.abs(d)<1e-9){if(p<-ex.r||p>ex.r)return[0,0];continue;}
+    let t0=(-ex.r-p)/d,t1=(ex.r-p)/d;
+    if(t0>t1){const s=t0;t0=t1;t1=s;}
+    tmin=Math.max(tmin,t0);tmax=Math.min(tmax,t1);
+  }
+  return[tmin,tmax];
+}
+
+/* ---------- 3D primitives ---------- */
+function line3(ctx,P,a,b,color,width){const p0=proj(a[0],a[1],a[2],P),p1=proj(b[0],b[1],b[2],P);ctx.strokeStyle=color;ctx.lineWidth=width;ctx.setLineDash([]);ctx.beginPath();ctx.moveTo(p0.x,p0.y);ctx.lineTo(p1.x,p1.y);ctx.stroke();}
+function poly3(ctx,P,w,fill,stroke,lw){const p=w.map(v=>proj(v[0],v[1],v[2],P));ctx.beginPath();ctx.moveTo(p[0].x,p[0].y);for(let k=1;k<p.length;k++)ctx.lineTo(p[k].x,p[k].y);ctx.closePath();if(fill){ctx.fillStyle=fill;ctx.fill();}if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=lw||1;ctx.setLineDash([]);ctx.stroke();}}
+function strokePath3(ctx,P,w,color,width,dash){if(w.length<2)return;const p=w.map(v=>proj(v[0],v[1],v[2],P));ctx.save();ctx.beginPath();ctx.moveTo(p[0].x,p[0].y);for(let k=1;k<p.length;k++)ctx.lineTo(p[k].x,p[k].y);ctx.strokeStyle=color;ctx.lineWidth=width;ctx.lineJoin='round';ctx.setLineDash(dash||[]);ctx.stroke();ctx.restore();}
+function text3(ctx,P,a,txt,color,dx,dy,font){const p=proj(a[0],a[1],a[2],P);ctx.fillStyle=color;ctx.font=font||'12px "IBM Plex Mono",monospace';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(txt,p.x+(dx||0),p.y+(dy||0));}
+function arrow3(ctx,P,a,b,color,width){const p0=proj(a[0],a[1],a[2],P),p1=proj(b[0],b[1],b[2],P);ctx.strokeStyle=color;ctx.fillStyle=color;ctx.lineWidth=width||1.7;ctx.setLineDash([]);ctx.beginPath();ctx.moveTo(p0.x,p0.y);ctx.lineTo(p1.x,p1.y);ctx.stroke();const ang=Math.atan2(p1.y-p0.y,p1.x-p0.x),h=9;ctx.beginPath();ctx.moveTo(p1.x,p1.y);ctx.lineTo(p1.x-h*Math.cos(ang-0.42),p1.y-h*Math.sin(ang-0.42));ctx.lineTo(p1.x-h*Math.cos(ang+0.42),p1.y-h*Math.sin(ang+0.42));ctx.closePath();ctx.fill();}
+function drawFrame(ctx,P){
+  const gc='rgba(120,170,175,0.11)',bc='rgba(120,170,175,0.22)';
+  for(const g of[-1,-0.5,0,0.5,1]){line3(ctx,P,[g,-1,-1],[g,1,-1],gc,1);line3(ctx,P,[-1,g,-1],[1,g,-1],gc,1);}
+  for(const c of[[-1,-1],[1,-1],[1,1],[-1,1]])line3(ctx,P,[c[0],c[1],-1],[c[0],c[1],1],bc,1);
+  const top=[[-1,-1,1],[1,-1,1],[1,1,1],[-1,1,1]],bot=[[-1,-1,-1],[1,-1,-1],[1,1,-1],[-1,1,-1]];
+  for(let k=0;k<4;k++){line3(ctx,P,top[k],top[(k+1)%4],bc,1);line3(ctx,P,bot[k],bot[(k+1)%4],bc,1);}
+}
+function axfmt(v){if(Math.abs(Math.abs(v)-Math.PI)<0.03)return(v<0?'−':'')+'π';const s=(v%1===0?v.toFixed(0):v.toFixed(1));return s.replace('-','−');}
+function drawAxes(ctx,P,ex){
+  const O=[-1,-1,-1];
+  arrow3(ctx,P,O,[1.18,-1,-1],'#ff9a80');arrow3(ctx,P,O,[-1,1.18,-1],'#7fdbe6');arrow3(ctx,P,O,[-1,-1,1.18],'#ffdd82');
+  const bf='600 14px "Space Grotesk",sans-serif';
+  text3(ctx,P,[1.34,-1,-1],'x','#ff9a80',0,0,bf);text3(ctx,P,[-1,1.34,-1],'y','#7fdbe6',0,0,bf);text3(ctx,P,[-1,-1,1.35],'z','#ffdd82',0,0,bf);
+  const tc='rgba(160,184,184,0.8)',fn='10px "IBM Plex Mono",monospace';
+  text3(ctx,P,[1,-1,-1],axfmt(ex.r),tc,0,13,fn);text3(ctx,P,[-1,1,-1],axfmt(ex.r),tc,0,13,fn);
+  text3(ctx,P,[-1,-1,1],axfmt(mesh.zmax),tc,-16,0,fn);text3(ctx,P,[-1,-1,-1],'0',tc,-9,11,fn);
+}
+function tanHalf(ex,slope){const zspan=(mesh.zmax-mesh.zmin)||1;let L=ex.r*0.32;const cap=0.42*zspan;if(Math.abs(slope)*L>cap)L=cap/(Math.abs(slope)+1e-9);return Math.max(L,ex.r*0.05);}
+
+/* ---------- the 3D stage ---------- */
+function render3D(){
+  const ex=EX[cur],cv=document.getElementById('c3d');const{ctx,W,H}=fit(cv);
+  ctx.clearRect(0,0,W,H);
+  const P=makeP(W,H);const{xs,ys,Z,zmin,zmax}=mesh;
+  drawFrame(ctx,P);
+  const L=[0.32,0.34,0.88],Ln=Math.hypot(L[0],L[1],L[2]);L[0]/=Ln;L[1]/=Ln;L[2]/=Ln;
+  const quads=[];
+  for(let j=0;j<GV-1;j++)for(let i=0;i<GV-1;i++){
+    const c=[[i,j],[i+1,j],[i+1,j+1],[i,j+1]];
+    const w=c.map(([ii,jj])=>[NW(xs[ii]),NW(ys[jj]),NZ(Z[jj][ii])]);
+    const p=w.map(v=>proj(v[0],v[1],v[2],P));
+    const za=(Z[j][i]+Z[j][i+1]+Z[j+1][i+1]+Z[j+1][i])/4;
+    const t=(za-zmin)/((zmax-zmin)||1);
+    const e1=[w[1][0]-w[0][0],w[1][1]-w[0][1],w[1][2]-w[0][2]],e2=[w[3][0]-w[0][0],w[3][1]-w[0][1],w[3][2]-w[0][2]];
+    let nv=[e1[1]*e2[2]-e1[2]*e2[1],e1[2]*e2[0]-e1[0]*e2[2],e1[0]*e2[1]-e1[1]*e2[0]];
+    const nl=Math.hypot(nv[0],nv[1],nv[2])||1;nv=[nv[0]/nl,nv[1]/nl,nv[2]/nl];if(nv[2]<0)nv=[-nv[0],-nv[1],-nv[2]];
+    const br=0.5+0.5*Math.max(0,nv[0]*L[0]+nv[1]*L[1]+nv[2]*L[2]);
+    const col=terrain(t);
+    quads.push({p,depth:(p[0].d+p[1].d+p[2].d+p[3].d)/4,col:'rgb('+(col[0]*br|0)+','+(col[1]*br|0)+','+(col[2]*br|0)+')'});
+  }
+  quads.sort((a,b)=>b.depth-a.depth);
+  for(const q of quads){ctx.beginPath();ctx.moveTo(q.p[0].x,q.p[0].y);for(let k=1;k<4;k++)ctx.lineTo(q.p[k].x,q.p[k].y);ctx.closePath();ctx.fillStyle=q.col;ctx.strokeStyle=q.col;ctx.lineWidth=1;ctx.fill();ctx.stroke();}
+
+  const z0=ex.f(ax,ay),u=U(),g=G(),du=Du();
+  const[t0,t1]=walkRange(ex);
+
+  /* Lab 01's two axis slices, kept faint for comparison */
+  if(show.axes){
+    strokePath3(ctx,P,xs.map(x=>[NW(x),NW(ay),NZ(ex.f(x,ay))]),'rgba(255,122,92,0.42)',2);
+    strokePath3(ctx,P,ys.map(y=>[NW(ax),NW(y),NZ(ex.f(ax,y))]),'rgba(70,201,214,0.42)',2);
+  }
+  /* the rotating cutting plane */
+  if(show.plane){
+    const A=[ax+u[0]*t0,ay+u[1]*t0],B=[ax+u[0]*t1,ay+u[1]*t1];
+    poly3(ctx,P,[[NW(A[0]),NW(A[1]),-1],[NW(B[0]),NW(B[1]),-1],[NW(B[0]),NW(B[1]),1],[NW(A[0]),NW(A[1]),1]],
+      'rgba(179,157,255,0.13)','rgba(179,157,255,0.42)',1);
+  }
+  /* the path along the surface */
+  if(show.path){
+    const N=90,pts=[];
+    for(let k=0;k<N;k++){const t=t0+(t1-t0)*k/(N-1),x=ax+u[0]*t,y=ay+u[1]*t;pts.push([NW(x),NW(y),NZ(ex.f(x,y))]);}
+    strokePath3(ctx,P,pts,'#b39dff',3.2);
+  }
+  /* tangent line in the heading direction */
+  if(show.tan){
+    const Lt=tanHalf(ex,du);
+    strokePath3(ctx,P,[
+      [NW(ax-u[0]*Lt),NW(ay-u[1]*Lt),NZ(z0-du*Lt)],
+      [NW(ax+u[0]*Lt),NW(ay+u[1]*Lt),NZ(z0+du*Lt)]],'#d5c9ff',4,[7,5]);
+  }
+  /* heading + gradient arrows, drawn on the floor */
+  const fl=-1+0.004,aL=ex.r*0.42;
+  arrow3(ctx,P,[NW(ax),NW(ay),fl],[NW(ax+u[0]*aL),NW(ay+u[1]*aL),fl],'#b39dff',2.6);
+  const m=Math.hypot(g[0],g[1]);
+  if(m>1e-4){const gu=[g[0]/m,g[1]/m];
+    arrow3(ctx,P,[NW(ax),NW(ay),fl],[NW(ax+gu[0]*aL),NW(ay+gu[1]*aL),fl],'#ffd15c',2.6);}
+  line3(ctx,P,[NW(ax),NW(ay),fl],[NW(ax),NW(ay),NZ(z0)],'rgba(231,242,240,0.30)',1.2);
+
+  const pp=proj(NW(ax),NW(ay),NZ(z0),P);
+  ctx.beginPath();ctx.arc(pp.x,pp.y,5.5,0,7);ctx.fillStyle='#fff';ctx.fill();ctx.lineWidth=2;ctx.strokeStyle='#081416';ctx.stroke();
+  drawAxes(ctx,P,ex);
+}
+
+/* ---------- 2D plot helpers ---------- */
+function plotFrame(cv,xlo,xhi,ylo,yhi,padFrac){
+  const{ctx,W,H}=fit(cv);ctx.clearRect(0,0,W,H);
+  const pL=42,pB=28,pT=12,pR=14;
+  const pad=((yhi-ylo)||1)*(padFrac==null?0.14:padFrac);const y0=ylo-pad,y1=yhi+pad;
+  const MX=v=>pL+(v-xlo)/((xhi-xlo)||1)*(W-pL-pR);
+  const MY=v=>pT+(y1-v)/((y1-y0)||1)*(H-pT-pB);
+  ctx.strokeStyle='rgba(120,170,175,0.12)';ctx.lineWidth=1;ctx.setLineDash([]);
+  return{ctx,W,H,MX,MY,pL,pB,pT,pR,y0,y1};
+}
+function zeroLine(g){const{ctx,MX,MY,W,pL,pR,y0,y1}=g;if(0>=y0&&0<=y1){ctx.strokeStyle='rgba(120,170,175,0.34)';ctx.setLineDash([]);ctx.beginPath();ctx.moveTo(pL,MY(0));ctx.lineTo(W-pR,MY(0));ctx.stroke();}}
+function curve(g,xs,vals,color,width,dash){const{ctx,MX,MY}=g;ctx.strokeStyle=color;ctx.lineWidth=width||2.5;ctx.lineJoin='round';ctx.setLineDash(dash||[]);ctx.beginPath();
+  for(let i=0;i<xs.length;i++){const px=MX(xs[i]),py=MY(vals[i]);i?ctx.lineTo(px,py):ctx.moveTo(px,py);}ctx.stroke();ctx.setLineDash([]);}
+function xlabel(g,txt){const{ctx,W,H}=g;ctx.fillStyle='#6b8484';ctx.font='11px "IBM Plex Mono",monospace';ctx.textAlign='center';ctx.fillText(txt,W/2,H-8);}
+
+function drawWalk(){
+  const ex=EX[cur],u=U(),du=Du(),z0=ex.f(ax,ay);
+  const[t0,t1]=walkRange(ex);
+  const ts=lin(t0,t1,160),vals=ts.map(t=>ex.f(ax+u[0]*t,ay+u[1]*t));
+  const g=plotFrame(document.getElementById('plotwalk'),t0,t1,Math.min(...vals),Math.max(...vals));
+  /* vertical marker at t = 0 */
+  const{ctx,MX,MY}=g;
+  ctx.strokeStyle='rgba(120,170,175,0.22)';ctx.setLineDash([]);ctx.beginPath();ctx.moveTo(MX(0),g.pT);ctx.lineTo(MX(0),g.H-g.pB);ctx.stroke();
+  zeroLine(g);
+  curve(g,ts,vals,'#b39dff',2.8);
+  /* the tangent, slope = D_u f */
+  const Lt=Math.min(Math.abs(t0),Math.abs(t1))*0.75||0.5;
+  curve(g,[-Lt,Lt],[z0-du*Lt,z0+du*Lt],'#d5c9ff',2,[6,5]);
+  ctx.beginPath();ctx.arc(MX(0),MY(z0),5,0,7);ctx.fillStyle='#fff';ctx.fill();ctx.lineWidth=2;ctx.strokeStyle='#b39dff';ctx.stroke();
+  xlabel(g,'t — steps along u   (θ = '+theta.toFixed(0)+'°)');
+  document.getElementById('badgeP').textContent='slope = '+du.toFixed(2);
+}
+function drawCos(){
+  const ex=EX[cur],g0=G(),du=Du();
+  const ts=lin(0,360,241),vals=ts.map(t=>g0[0]*Math.cos(t*DEG)+g0[1]*Math.sin(t*DEG));
+  const g=plotFrame(document.getElementById('plotcos'),0,360,-gmax,gmax,0.10);
+  const{ctx,MX,MY}=g;
+  /* the ±|∇f| envelope */
+  const m=Math.hypot(g0[0],g0[1]);
+  ctx.strokeStyle='rgba(255,209,92,0.30)';ctx.setLineDash([4,4]);ctx.lineWidth=1.2;
+  for(const v of[m,-m]){ctx.beginPath();ctx.moveTo(g.pL,MY(v));ctx.lineTo(g.W-g.pR,MY(v));ctx.stroke();}
+  ctx.setLineDash([]);
+  zeroLine(g);
+  curve(g,ts,vals,'#ffd15c',2.6);
+  /* current heading */
+  ctx.strokeStyle='rgba(179,157,255,0.85)';ctx.setLineDash([5,4]);ctx.lineWidth=1.6;
+  ctx.beginPath();ctx.moveTo(MX(theta),g.pT);ctx.lineTo(MX(theta),g.H-g.pB);ctx.stroke();ctx.setLineDash([]);
+  ctx.beginPath();ctx.arc(MX(theta),MY(du),5,0,7);ctx.fillStyle='#fff';ctx.fill();ctx.lineWidth=2;ctx.strokeStyle='#b39dff';ctx.stroke();
+  ctx.fillStyle='rgba(255,209,92,0.8)';ctx.font='10px "IBM Plex Mono",monospace';ctx.textAlign='left';
+  ctx.fillText('+|∇f|',g.pL+4,MY(m)-6);ctx.fillText('−|∇f|',g.pL+4,MY(-m)+14);
+  xlabel(g,'θ — heading in degrees');
+  document.getElementById('badgeC').textContent='amplitude = '+m.toFixed(2);
+}
+
+/* ---------- the compass rose ---------- */
+function drawRose(){
+  const cv=document.getElementById('rose');const{ctx,W,H}=fit(cv);
+  ctx.clearRect(0,0,W,H);
+  const cx=W/2,cy=H/2,R=Math.min(W,H)*0.40;
+  const g0=G(),m=Math.hypot(g0[0],g0[1]),S=R/gmax;
+  /* rings */
+  ctx.strokeStyle='rgba(120,170,175,0.13)';ctx.lineWidth=1;
+  for(const f of[0.25,0.5,0.75,1]){ctx.beginPath();ctx.arc(cx,cy,R*f,0,7);ctx.stroke();}
+  ctx.strokeStyle='rgba(120,170,175,0.22)';
+  ctx.beginPath();ctx.moveTo(cx-R,cy);ctx.lineTo(cx+R,cy);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(cx,cy-R);ctx.lineTo(cx,cy+R);ctx.stroke();
+  ctx.fillStyle='#6b8484';ctx.font='10px "IBM Plex Mono",monospace';ctx.textAlign='center';
+  ctx.fillText('0°',cx+R+14,cy+4);ctx.fillText('90°',cx,cy-R-8);
+  ctx.fillText('180°',cx-R-18,cy+4);ctx.fillText('270°',cx,cy+R+14);
+
+  /* spokes: each heading's projection (D_u f)·u */
+  for(let d=0;d<360;d+=6){
+    const t=d*DEG,ux=Math.cos(t),uy=Math.sin(t);
+    const v=g0[0]*ux+g0[1]*uy;
+    ctx.strokeStyle=v>=0?'rgba(179,157,255,0.34)':'rgba(255,122,92,0.28)';
+    ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(cx,cy);
+    ctx.lineTo(cx+v*ux*S,cy-v*uy*S);ctx.stroke();
+  }
+  /* the circle the tips trace: centre ∇f/2, radius |∇f|/2 */
+  if(m>1e-4){
+    ctx.strokeStyle='rgba(255,209,92,0.75)';ctx.lineWidth=2;
+    ctx.beginPath();ctx.arc(cx+g0[0]/2*S,cy-g0[1]/2*S,m/2*S,0,7);ctx.stroke();
+    /* the gradient itself — the diameter */
+    const gx=cx+g0[0]*S,gy=cy-g0[1]*S;
+    ctx.strokeStyle='#ffd15c';ctx.fillStyle='#ffd15c';ctx.lineWidth=3;ctx.lineCap='round';
+    ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(gx,gy);ctx.stroke();
+    const ang=Math.atan2(gy-cy,gx-cx),h=10;
+    ctx.beginPath();ctx.moveTo(gx,gy);ctx.lineTo(gx-h*Math.cos(ang-0.4),gy-h*Math.sin(ang-0.4));
+    ctx.lineTo(gx-h*Math.cos(ang+0.4),gy-h*Math.sin(ang+0.4));ctx.closePath();ctx.fill();
+    /* the level directions: perpendicular to ∇f, where the circle meets the origin */
+    ctx.strokeStyle='rgba(70,201,214,0.55)';ctx.lineWidth=1.6;ctx.setLineDash([6,5]);
+    const px=-g0[1]/m,py=g0[0]/m;
+    ctx.beginPath();ctx.moveTo(cx-px*R,cy+py*R);ctx.lineTo(cx+px*R,cy-py*R);ctx.stroke();ctx.setLineDash([]);
+  }
+  /* the current heading */
+  const u=U(),du=Du();
+  ctx.strokeStyle='rgba(179,157,255,0.45)';ctx.lineWidth=1.4;ctx.setLineDash([4,4]);
+  ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(cx+u[0]*R,cy-u[1]*R);ctx.stroke();ctx.setLineDash([]);
+  ctx.strokeStyle='#b39dff';ctx.fillStyle='#b39dff';ctx.lineWidth=3.4;ctx.lineCap='round';
+  ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(cx+du*u[0]*S,cy-du*u[1]*S);ctx.stroke();
+  ctx.beginPath();ctx.arc(cx+du*u[0]*S,cy-du*u[1]*S,5,0,7);ctx.fillStyle='#fff';ctx.fill();
+  ctx.lineWidth=2;ctx.strokeStyle='#b39dff';ctx.stroke();
+  ctx.beginPath();ctx.arc(cx,cy,3.5,0,7);ctx.fillStyle='rgba(231,242,240,0.85)';ctx.fill();
+}
+
+/* ---------- the map ---------- */
+function contourBase(ex,W,H){
+  const key=ex.id+'_'+W+'x'+H;if(contourCache[key])return contourCache[key];
+  const oc=document.createElement('canvas');oc.width=W;oc.height=H;const octx=oc.getContext('2d');
+  const img=octx.createImageData(W,H),d=img.data;const r=ex.r;
+  let zmin=Infinity,zmax=-Infinity;const Gr=40;
+  for(let j=0;j<=Gr;j++)for(let i=0;i<=Gr;i++){const v=ex.f(-r+2*r*i/Gr,-r+2*r*j/Gr);if(v<zmin)zmin=v;if(v>zmax)zmax=v;}
+  const span=(zmax-zmin)||1,BANDS=11;
+  for(let py=0;py<H;py++){const y=r-(py/H)*2*r;for(let px=0;px<W;px++){const x=-r+(px/W)*2*r;
+    let t=(ex.f(x,y)-zmin)/span;t=Math.floor(t*BANDS)/BANDS+0.5/BANDS;const c=terrain(t);
+    const o=(py*W+px)*4;d[o]=c[0];d[o+1]=c[1];d[o+2]=c[2];d[o+3]=255;}}
+  octx.putImageData(img,0,0);contourCache[key]={cv:oc};return contourCache[key];
+}
+/* marching squares for the single level curve through the current point */
+function levelSegments(ex,c,N){
+  const r=ex.r,segs=[],X=i=>-r+2*r*i/N,Y=j=>-r+2*r*j/N;
+  for(let j=0;j<N;j++)for(let i=0;i<N;i++){
+    const x0=X(i),x1=X(i+1),y0=Y(j),y1=Y(j+1);
+    const a=ex.f(x0,y0)-c,b=ex.f(x1,y0)-c,d=ex.f(x1,y1)-c,e=ex.f(x0,y1)-c;
+    const idx=(a>0?1:0)|(b>0?2:0)|(d>0?4:0)|(e>0?8:0);
+    if(idx===0||idx===15)continue;
+    const ip=(p,q,vp,vq)=>{const t=vp/((vp-vq)||1e-12);return[p[0]+(q[0]-p[0])*t,p[1]+(q[1]-p[1])*t];};
+    const P0=[x0,y0],Q=[x1,y0],R=[x1,y1],S=[x0,y1];
+    const eB=()=>ip(P0,Q,a,b),eR=()=>ip(Q,R,b,d),eT=()=>ip(R,S,d,e),eL=()=>ip(S,P0,e,a);
+    switch(idx){
+      case 1:case 14:segs.push([eL(),eB()]);break;
+      case 2:case 13:segs.push([eB(),eR()]);break;
+      case 3:case 12:segs.push([eL(),eR()]);break;
+      case 4:case 11:segs.push([eR(),eT()]);break;
+      case 6:case 9:segs.push([eB(),eT()]);break;
+      case 7:case 8:segs.push([eL(),eT()]);break;
+      case 5:segs.push([eL(),eT()]);segs.push([eB(),eR()]);break;
+      case 10:segs.push([eL(),eB()]);segs.push([eR(),eT()]);break;
+    }
+  }
+  return segs;
+}
+function drawMap(){
+  const ex=EX[cur],cv=document.getElementById('map');const{ctx,W,H}=fit(cv);
+  const base=contourBase(ex,Math.round(W),Math.round(H));
+  ctx.clearRect(0,0,W,H);ctx.drawImage(base.cv,0,0,W,H);
+  const r=ex.r,MX=v=>(v+r)/(2*r)*W,MY=v=>(r-v)/(2*r)*H;
+  /* the level curve through the point */
+  const segs=levelSegments(ex,ex.f(ax,ay),110);
+  ctx.strokeStyle='rgba(255,255,255,0.92)';ctx.lineWidth=2.2;ctx.lineCap='round';
+  ctx.beginPath();
+  for(const s of segs){ctx.moveTo(MX(s[0][0]),MY(s[0][1]));ctx.lineTo(MX(s[1][0]),MY(s[1][1]));}
+  ctx.stroke();
+
+  const g0=G(),m=Math.hypot(g0[0],g0[1]),u=U(),du=Du();
+  const x0=MX(ax),y0=MY(ay),len=r*0.36;
+  const arrow2=(dx,dy,color,width)=>{
+    const x1=MX(ax+dx),y1=MY(ay+dy);
+    ctx.strokeStyle=color;ctx.fillStyle=color;ctx.lineWidth=width;ctx.lineCap='round';
+    ctx.beginPath();ctx.moveTo(x0,y0);ctx.lineTo(x1,y1);ctx.stroke();
+    const ang=Math.atan2(y1-y0,x1-x0),h=9;
+    ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x1-h*Math.cos(ang-0.4),y1-h*Math.sin(ang-0.4));
+    ctx.lineTo(x1-h*Math.cos(ang+0.4),y1-h*Math.sin(ang+0.4));ctx.closePath();ctx.fill();
+    return[x1,y1];
+  };
+  /* heading, then its shadow on the gradient */
+  const uh=arrow2(u[0]*len,u[1]*len,'#b39dff',3);
+  if(m>1e-4){
+    const gu=[g0[0]/m,g0[1]/m];
+    arrow2(gu[0]*len,gu[1]*len,'#ffd15c',3);
+    const proj=(u[0]*gu[0]+u[1]*gu[1])*len;
+    ctx.strokeStyle='rgba(179,157,255,0.5)';ctx.lineWidth=1.5;ctx.setLineDash([4,4]);
+    ctx.beginPath();ctx.moveTo(uh[0],uh[1]);ctx.lineTo(MX(ax+gu[0]*proj),MY(ay+gu[1]*proj));ctx.stroke();ctx.setLineDash([]);
+    /* right-angle tick where gradient meets the contour */
+    const s=Math.min(W,H)*0.030,px=-gu[1],py=gu[0];
+    const pxs=v=>x0+(gu[0]*v[0]+px*v[1])*s,pys=v=>y0-(gu[1]*v[0]+py*v[1])*s;
+    ctx.strokeStyle='rgba(255,255,255,0.55)';ctx.lineWidth=1.4;
+    ctx.beginPath();ctx.moveTo(pxs([1,0]),pys([1,0]));ctx.lineTo(pxs([1,1]),pys([1,1]));ctx.lineTo(pxs([0,1]),pys([0,1]));ctx.stroke();
+  }
+  ctx.beginPath();ctx.arc(x0,y0,6,0,7);ctx.fillStyle='#fff';ctx.fill();ctx.lineWidth=2;ctx.strokeStyle='#081416';ctx.stroke();
+  ctx.fillStyle='rgba(155,179,179,0.9)';ctx.font='12px "IBM Plex Mono",monospace';ctx.textAlign='left';
+  ctx.fillText('x →',W-34,H-10);ctx.fillText('y ↑',8,18);
+}
+
+/* ---------- readouts ---------- */
+function readout(){
+  const ex=EX[cur],g0=G(),u=U(),du=Du(),m=Math.hypot(g0[0],g0[1]);
+  document.getElementById('valx').textContent=ax.toFixed(2);
+  document.getElementById('valy').textContent=ay.toFixed(2);
+  document.getElementById('valt').textContent=theta.toFixed(0)+'°';
+  document.getElementById('rdu').textContent=fmt(du);
+  document.getElementById('rmag').textContent=m.toFixed(2);
+  let phi=NaN;
+  if(m>1e-4){
+    const c=clamp(du/m,-1,1);phi=Math.acos(c)/DEG;
+    document.getElementById('rphi').textContent=phi.toFixed(0)+'°';
+  }else document.getElementById('rphi').textContent='—';
+  document.getElementById('wu').textContent=Math.abs(du)<1e-3?'level — height not changing'
+    :(du>0?'climbing on this heading':'descending on this heading');
+  document.getElementById('wphi').textContent=m<1e-4?'gradient is zero — every way is level'
+    :(phi<1?'pointing straight uphill':phi>179?'pointing straight downhill':
+      Math.abs(phi-90)<1?'exactly along the contour':'cos φ = '+(du/m).toFixed(2));
+  /* proper minus glyphs, and parenthesise negatives so the product reads as maths */
+  const n2=v=>{const s=Math.abs(v).toFixed(2);return(v<0&&+s!==0?'−':'')+s;};
+  const par=v=>{const s=n2(v);return s.charAt(0)==='−'?'('+s+')':s;};
+  document.getElementById('subcalc').innerHTML=
+    '<span class="cg">∇f</span> = (<span class="cx">'+n2(g0[0])+'</span>, <span class="cy">'+n2(g0[1])+'</span>)<br>'+
+    '<span class="cu">u</span> = (cos '+theta.toFixed(0)+'°, sin '+theta.toFixed(0)+'°) = (<span class="cu">'+n2(u[0])+'</span>, <span class="cu">'+n2(u[1])+'</span>)<br>'+
+    'D<sub>u</sub>f = <span class="cx">'+par(g0[0])+'</span>·<span class="cu">'+par(u[0])+'</span> + <span class="cy">'+par(g0[1])+'</span>·<span class="cu">'+par(u[1])+'</span> = <b>'+n2(du)+'</b>';
+}
+
+/* ---------- orchestration ---------- */
+function renderAll(){render3D();drawWalk();drawCos();drawRose();drawMap();readout();}
+
+const sx=document.getElementById('sx'),sy=document.getElementById('sy'),st=document.getElementById('st');
+function configSliders(ex){for(const s of[sx,sy]){s.min=-ex.r;s.max=ex.r;s.step=ex.step;}sx.value=ax;sy.value=ay;st.value=theta;}
+sx.addEventListener('input',()=>{ax=+sx.value;renderAll();});
+sy.addEventListener('input',()=>{ay=+sy.value;renderAll();});
+st.addEventListener('input',()=>{theta=+st.value;renderAll();});
+document.querySelectorAll('#segsnap button').forEach(b=>b.addEventListener('click',()=>{
+  const g0=G(),m=Math.hypot(g0[0],g0[1]);
+  if(m<1e-4)return;                               /* nothing to align to on flat ground */
+  let a=Math.atan2(g0[1],g0[0])/DEG;
+  if(b.dataset.s==='level')a+=90; else if(b.dataset.s==='down')a+=180;
+  theta=((a%360)+360)%360;st.value=theta;renderAll();
+}));
+for(const[id,key]of[['tPlane','plane'],['tPath','path'],['tTan','tan'],['tAxes','axes']])
+  document.getElementById(id).addEventListener('change',e=>{show[key]=e.target.checked;render3D();});
+
+function buildChips(){const c=document.getElementById('chips');c.innerHTML='';
+  EX.forEach((ex,i)=>{const b=document.createElement('button');b.className='chip'+(i===cur?' on':'');b.textContent=ex.sym;
+    b.setAttribute('aria-pressed',i===cur);b.onclick=()=>{cur=i;loadExample();};c.appendChild(b);});}
+function loadExample(){
+  const ex=EX[cur];
+  ax=clamp(ax,-ex.r,ex.r);ay=clamp(ay,-ex.r,ex.r);
+  configSliders(ex);
+  document.getElementById('exnote').innerHTML='<b>'+ex.name+'.</b> '+ex.note;
+  buildChips();buildMesh(ex);renderAll();
+}
+
+/* drag to orbit */
+let raf=false;
+const c3d=document.getElementById('c3d');
+function scheduleRender(){if(raf)return;raf=true;requestAnimationFrame(()=>{raf=false;render3D();});}
+const pts=new Map();let pinchD=0;
+function pinchDist(){const a=[...pts.values()];return Math.hypot(a[0].x-a[1].x,a[0].y-a[1].y);}
+c3d.addEventListener('pointerdown',e=>{c3d.setPointerCapture(e.pointerId);pts.set(e.pointerId,{x:e.clientX,y:e.clientY});if(pts.size===2)pinchD=pinchDist();});
+c3d.addEventListener('pointermove',e=>{
+  if(!pts.has(e.pointerId))return;
+  const prev=pts.get(e.pointerId);pts.set(e.pointerId,{x:e.clientX,y:e.clientY});
+  if(pts.size>=2){const d=pinchDist();if(pinchD>0)cam.zoom=clamp(cam.zoom*d/pinchD,0.45,3.5);pinchD=d;scheduleRender();return;}
+  cam.yaw+=(e.clientX-prev.x)*0.01;
+  cam.pitch=clamp(cam.pitch+(e.clientY-prev.y)*0.007,0.05,1.5);
+  scheduleRender();
+});
+function endPt(e){pts.delete(e.pointerId);pinchD=0;}
+c3d.addEventListener('pointerup',endPt);c3d.addEventListener('pointercancel',endPt);
+c3d.addEventListener('wheel',e=>{e.preventDefault();cam.zoom=clamp(cam.zoom*(e.deltaY<0?1.12:0.9),0.45,3.5);scheduleRender();},{passive:false});
+
+let rt=false;
+window.addEventListener('resize',()=>{if(rt)return;rt=true;requestAnimationFrame(()=>{rt=false;contourCache={};renderAll();});});
+window.addEventListener('load',()=>{renderAll();});
+
+loadExample();
+}catch(err){
+  const b=document.getElementById('errbar');if(b){b.style.display='block';b.textContent='Something failed while loading the lab: '+err.message;}
+  console.error(err);
+}
+</script>
+</body>
+</html>

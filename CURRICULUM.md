@@ -34,11 +34,15 @@ needs nothing from Track A beyond reading `f(x,y)`, which keeps the two tracks
 independent for a reader who jumps around.
 Riemann columns converging, Fubini's sweeping slab, Type I/II regions.
 
-**03 · Directional derivatives & the gradient**
+**03 · Directional derivatives & the gradient** ✅ *shipped*
 Any compass heading, not just the two axes. `D_u f = ∇f · u` as a dot product;
-the cosine dial; why the gradient is the maximizer; level curves are exactly the
-directions where the dot product vanishes. *Builds directly on 01 and reuses its
-contour renderer.*
+the cosine law; why the gradient is the maximizer; level curves are exactly the
+directions where the dot product vanishes. Reuses Lab 01's six surfaces verbatim —
+same terrain, new question — so the generalisation from two axis slices to a freely
+rotating cut plane is felt rather than asserted. The compass rose (every direction's
+slope laid along its own heading, tips tracing a circle whose diameter is ∇f) is the
+lesson's centrepiece. Adds marching squares for the single level curve through the
+current point.
 
 **04 · Tangent planes & linearization**
 The plane through a point with the two partial slopes as its tilt. Zoom in until
