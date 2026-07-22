@@ -1,0 +1,676 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Optimization: Critical Points · A Field Lab</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#081416;--bg2:#0c1e22;--panel:#0f2429;--panel2:#123037;
+  --line:rgba(120,170,175,0.16);--line-strong:rgba(120,170,175,0.32);
+  --ink:#e7f2f0;--ink-dim:#9db3b3;--ink-faint:#6b8484;
+  --x:#ff7a5c;--x-soft:#ffab90;--y:#46c9d6;--y-soft:#8fe3ec;
+  --grad:#ffd15c;--grad-soft:#ffe4a1;--peak:#f0d79a;
+  --u:#b39dff;--u-soft:#d5c9ff;
+  --min:#46c9d6;--max:#ff7a5c;--sad:#ffd15c;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font-family:'Inter',system-ui,sans-serif;font-size:16px;line-height:1.6;-webkit-font-smoothing:antialiased;
+  background-image:radial-gradient(1200px 500px at 80% -10%,rgba(255,209,92,0.06),transparent),radial-gradient(900px 400px at 0% 5%,rgba(70,201,214,0.05),transparent);}
+.wrap{max-width:1180px;margin:0 auto;padding:0 24px}
+h1,h2,h3{font-family:'Space Grotesk',sans-serif;font-weight:600;line-height:1.1;letter-spacing:-0.01em}
+.mono{font-family:'IBM Plex Mono',monospace}
+#errbar{display:none;background:#3a1414;border:1px solid #ff7a5c;color:#ffd9cf;padding:12px 16px;margin:16px 0;border-radius:10px;font-family:'IBM Plex Mono';font-size:13px}
+
+header{padding:64px 0 8px}
+.eyebrow{font-family:'IBM Plex Mono',monospace;font-size:12.5px;letter-spacing:0.28em;text-transform:uppercase;color:var(--ink-faint);display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.eyebrow::before{content:"";width:34px;height:1px;background:var(--line-strong)}
+.eyebrow a{color:var(--ink-faint);text-decoration:none;border-bottom:1px solid var(--line-strong)}
+.eyebrow a:hover{color:var(--y)}
+h1{font-size:clamp(38px,6.4vw,70px);margin:18px 0 0;font-weight:700}
+h1 .accent{background:linear-gradient(100deg,var(--min),var(--sad) 50%,var(--max));-webkit-background-clip:text;background-clip:text;color:transparent}
+.lede{max-width:700px;color:var(--ink-dim);font-size:clamp(17px,2.2vw,20px);margin:22px 0 0}
+.lede b{color:var(--ink);font-weight:600}
+
+.idea{margin:52px 0;display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.idea>div{background:var(--bg2);padding:26px 24px}
+.idea .k{font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:0.14em;text-transform:uppercase;margin-bottom:10px}
+.idea .kmin{color:var(--min)}.idea .ksad{color:var(--sad)}.idea .kmax{color:var(--max)}
+.idea p{margin:0;color:var(--ink-dim);font-size:15px}
+.idea .big{font-family:'Space Grotesk';font-size:19px;color:var(--ink);display:block;margin-bottom:6px;font-weight:500}
+
+section{padding:34px 0}
+.sec-head{display:flex;align-items:baseline;gap:16px;margin-bottom:22px;flex-wrap:wrap}
+.sec-num{font-family:'IBM Plex Mono',monospace;color:var(--ink-faint);font-size:14px;letter-spacing:0.1em}
+h2{font-size:clamp(26px,3.6vw,38px)}
+.sec-head p{margin:0;color:var(--ink-dim);font-size:15px;flex:1;min-width:240px}
+.prose{max-width:770px;color:var(--ink-dim);font-size:15.5px;margin:0 0 22px}
+.prose b{color:var(--ink);font-weight:600}
+.prose .mono{color:var(--grad-soft)}
+.prose.eqn{font-family:'IBM Plex Mono',monospace;font-size:15px;color:var(--ink);background:var(--bg2);border:1px solid var(--line);border-radius:10px;padding:14px 16px;text-align:center;letter-spacing:0.01em}
+
+.lab{display:grid;grid-template-columns:1fr 356px;gap:20px;border:1px solid var(--line);border-radius:16px;background:var(--bg2);padding:20px}
+.viewport{position:relative;height:500px;border-radius:12px;overflow:hidden;background:linear-gradient(180deg,#0a1a1e,#081315);border:1px solid var(--line)}
+canvas.stage{width:100%;height:100%;display:block;touch-action:none;cursor:grab}
+canvas.stage:active{cursor:grabbing}
+canvas.flat2d{width:100%;height:100%;display:block;cursor:crosshair}
+.vhint{position:absolute;left:14px;bottom:12px;z-index:3;font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:0.12em;color:var(--ink-faint);text-transform:uppercase;pointer-events:none;background:rgba(8,20,22,0.55);padding:4px 9px;border-radius:6px}
+.rail{display:flex;flex-direction:column;gap:16px}
+.chips{display:flex;flex-wrap:wrap;gap:7px}
+.chip{font-family:'IBM Plex Mono',monospace;font-size:12px;padding:7px 11px;border-radius:8px;border:1px solid var(--line-strong);background:transparent;color:var(--ink-dim);cursor:pointer;transition:all .15s}
+.chip:hover{border-color:var(--y);color:var(--ink)}
+.chip.on{background:var(--panel2);border-color:var(--y);color:var(--ink)}
+.chip.on::before{content:"▸ "}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px}
+.card .lbl{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:var(--ink-faint);margin-bottom:12px}
+.cplist{display:flex;flex-direction:column;gap:7px}
+.cpbtn{display:flex;align-items:center;gap:10px;text-align:left;font-family:'IBM Plex Mono',monospace;font-size:12.5px;padding:9px 11px;border-radius:8px;border:1px solid var(--line-strong);background:transparent;color:var(--ink-dim);cursor:pointer;transition:.15s}
+.cpbtn:hover{border-color:var(--ink-faint);color:var(--ink)}
+.cpbtn.on{background:var(--panel2);color:var(--ink)}
+.cpbtn .swatch{width:10px;height:10px;border-radius:50%;flex:none}
+.cpbtn .verd{margin-left:auto;font-size:11px;opacity:.85}
+.k-min{color:var(--min)}.k-max{color:var(--max)}.k-sad{color:var(--sad)}.k-deg{color:var(--ink-faint)}
+.sw-min{background:var(--min)}.sw-max{background:var(--max)}.sw-sad{background:var(--sad)}.sw-deg{background:var(--ink-faint)}
+.readout .line{display:flex;justify-content:space-between;align-items:baseline;padding:9px 0;border-bottom:1px solid var(--line);gap:12px}
+.readout .line:last-child{border-bottom:none;padding-bottom:0}.readout .line:first-child{padding-top:0}
+.readout .rl{font-size:13.5px;color:var(--ink-dim)}
+.readout .rl .exp{font-family:'IBM Plex Mono';font-size:12px;color:var(--ink-faint);display:block}
+.readout .rv{font-family:'IBM Plex Mono';font-size:17px;font-weight:500;text-align:right;white-space:nowrap}
+.rv.vg{color:var(--grad)}.rv.vu{color:var(--u)}
+.hessgrid{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;align-items:center;font-family:'IBM Plex Mono',monospace;font-size:13px;margin-top:4px}
+.hessgrid .hl{color:var(--ink-faint);font-size:12px}
+.matrix{display:inline-grid;grid-template-columns:auto auto;gap:4px 14px;border-left:2px solid var(--line-strong);border-right:2px solid var(--line-strong);padding:6px 12px;font-family:'IBM Plex Mono';font-size:14px}
+.verdict{margin-top:14px;border-radius:10px;padding:14px 16px;text-align:center;font-family:'Space Grotesk';font-weight:600;font-size:20px;border:1px solid}
+.v-min{color:var(--min);background:rgba(70,201,214,0.10);border-color:rgba(70,201,214,0.4)}
+.v-max{color:var(--max);background:rgba(255,122,92,0.10);border-color:rgba(255,122,92,0.4)}
+.v-sad{color:var(--sad);background:rgba(255,209,92,0.10);border-color:rgba(255,209,92,0.4)}
+.v-deg{color:var(--ink-dim);background:rgba(120,170,175,0.08);border-color:var(--line-strong)}
+.verdict .why{display:block;font-family:'Inter';font-weight:400;font-size:13px;color:var(--ink-dim);margin-top:6px}
+.sliderrow{margin-bottom:14px}.sliderrow:last-child{margin-bottom:0}
+.sliderrow .top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px}
+.sliderrow .name{font-family:'Space Grotesk';font-size:14px;font-weight:500}
+.sliderrow .val{font-family:'IBM Plex Mono';font-size:14px}
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:4px;border-radius:4px;background:var(--line-strong);outline:none;margin:6px 0 2px}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:17px;height:17px;border-radius:50%;background:var(--u);border:2px solid var(--bg);cursor:pointer;box-shadow:0 0 0 1px var(--line-strong)}
+input[type=range]::-moz-range-thumb{width:17px;height:17px;border-radius:50%;background:var(--u);border:2px solid var(--bg);cursor:pointer}
+.seg{display:flex;gap:6px;flex-wrap:wrap}
+.seg button{flex:1;min-width:80px;font-family:'IBM Plex Mono',monospace;font-size:12px;padding:7px 4px;border-radius:8px;border:1px solid var(--line-strong);background:transparent;color:var(--ink-dim);cursor:pointer;transition:.15s}
+.seg button:hover{border-color:var(--u);color:var(--ink)}
+.toggles{display:flex;flex-direction:column;gap:9px}
+.tg{display:flex;align-items:center;gap:9px;font-size:13.5px;color:var(--ink-dim);cursor:pointer;user-select:none}
+.tg input{appearance:none;-webkit-appearance:none;width:34px;height:19px;border-radius:20px;background:var(--line-strong);position:relative;cursor:pointer;transition:.15s;flex:none}
+.tg input::after{content:"";position:absolute;top:2px;left:2px;width:15px;height:15px;border-radius:50%;background:var(--ink-faint);transition:.15s}
+.tg input:checked{background:var(--y)}
+.tg input:checked::after{background:var(--bg);transform:translateX(15px)}
+.note{border-left:2px solid var(--grad);background:rgba(255,209,92,0.06);padding:12px 14px;border-radius:0 8px 8px 0;font-size:13.5px;color:var(--ink-dim)}
+.note b{color:var(--grad-soft);font-weight:600}
+.fullmap{margin-top:18px;border:1px solid var(--line);border-radius:14px;background:var(--bg2);padding:16px}
+.fullmap h3{font-size:16px;margin:0 0 2px}
+.fullmap .cap{font-size:13px;color:var(--ink-dim);margin:0 0 10px}
+#quiver{width:100%;height:340px;display:block;border-radius:8px;cursor:crosshair}
+
+.shapebox{border:1px solid var(--line);border-radius:14px;background:var(--bg2);padding:16px}
+#shape{width:100%;height:300px;display:block;border-radius:8px}
+.shapelegend{display:flex;gap:16px;margin-top:12px;flex-wrap:wrap;font-size:12.5px;color:var(--ink-dim)}
+.shapelegend span{display:flex;align-items:center;gap:6px}
+.shapelegend i{width:11px;height:11px;border-radius:3px;display:inline-block}
+
+.rule{font-size:17px;color:var(--ink);max-width:780px;margin:0 0 26px}
+.rule b{color:var(--grad-soft)}
+.worked{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}
+.wk{border:1px solid var(--line);border-radius:12px;background:var(--bg2);padding:20px}
+.wk .fn{font-family:'IBM Plex Mono';font-size:15px;color:var(--peak);margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid var(--line);line-height:1.5}
+.wk .step{display:flex;gap:10px;font-size:14px;margin-bottom:10px;align-items:baseline}
+.wk .step:last-child{margin-bottom:0}
+.wk .tag{font-family:'IBM Plex Mono';font-size:12px;padding:2px 6px;border-radius:5px;flex:none}
+.tag-g{color:var(--grad);background:rgba(255,209,92,0.1)}
+.tag-u{color:var(--u);background:rgba(179,157,255,0.12)}
+.wk .res{font-family:'IBM Plex Mono';color:var(--ink)}
+.wk .hint{color:var(--ink-faint);font-size:13px}
+.wk table{border-collapse:collapse;width:100%;font-family:'IBM Plex Mono';font-size:12.5px;margin-top:6px}
+.wk td,.wk th{border:1px solid var(--line);padding:5px 8px;text-align:center}
+.wk th{color:var(--ink-faint);font-weight:400}
+.pitfall{margin-top:26px;border-left:2px solid var(--x);background:rgba(255,122,92,0.06);padding:14px 16px;border-radius:0 8px 8px 0;font-size:14.5px;color:var(--ink-dim);max-width:820px}
+.pitfall b{color:var(--x-soft);font-weight:600}
+footer{padding:48px 0 72px;border-top:1px solid var(--line);margin-top:36px;color:var(--ink-dim)}
+footer h3{font-size:20px;color:var(--ink);margin:0 0 14px}
+.next{display:flex;flex-wrap:wrap;gap:10px}
+.next span{font-family:'IBM Plex Mono';font-size:13px;padding:8px 12px;border:1px solid var(--line);border-radius:8px;color:var(--ink-dim)}
+.next span .n{color:var(--y)}
+.fine{font-size:13px;color:var(--ink-faint);margin-top:20px;max-width:820px}
+@media (max-width:920px){
+  .lab{grid-template-columns:1fr}.viewport{height:400px}
+  .idea,.worked{grid-template-columns:1fr}
+}
+@media (prefers-reduced-motion:no-preference){
+  .fade{opacity:0;transform:translateY(14px);animation:rise .7s cubic-bezier(.2,.7,.3,1) forwards}
+  @keyframes rise{to{opacity:1;transform:none}}
+}
+:focus-visible{outline:2px solid var(--y);outline-offset:2px;border-radius:4px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div id="errbar"></div>
+  <header>
+    <div class="eyebrow fade">Calc 3 · Field Lab 05 · <a href="index.html">all labs</a> · <a href="tangent-planes-lab_4.html">← tangent planes</a></div>
+    <h1 class="fade" style="animation-delay:.05s">Hills, valleys &amp; <span class="accent">saddles</span></h1>
+    <p class="lede fade" style="animation-delay:.12s">
+      To find the highest and lowest points of a landscape, you look for where the ground goes
+      <b>flat</b> — where every partial derivative is zero. But flat is a trap: the top of a hill, the
+      bottom of a valley, and the middle of a saddle are <b>all</b> flat. The whole art is telling them
+      apart, and there is one clean number that does it.</p>
+  </header>
+
+  <div class="idea fade" style="animation-delay:.18s">
+    <div><div class="k kmin">∇f = 0</div><span class="big">Find the flat spots</span>
+      <p>A high or low point can't be tilted — if it were, you could step uphill or downhill and do better. So every interior extremum has <span class="mono">f<sub>x</sub> = f<sub>y</sub> = 0</span>. Solve that to get your candidates.</p></div>
+    <div><div class="k ksad">flat ≠ extreme</div><span class="big">But flat isn't enough</span>
+      <p>A saddle is flat too, and it is neither a max nor a min. Zero gradient only makes a point a <em>suspect</em>. You still need to look at how the surface <em>curves</em> away.</p></div>
+    <div><div class="k kmax">D = f<sub>xx</sub>f<sub>yy</sub> − f<sub>xy</sub>²</div><span class="big">One number decides</span>
+      <p>The discriminant reads the curvature in every direction at once. Its sign — together with the sign of <span class="mono">f<sub>xx</sub></span> — sorts every flat spot into peak, pit, or pass.</p></div>
+  </div>
+
+  <section>
+    <div class="sec-head"><span class="sec-num">01</span><h2>Where the ground goes flat</h2>
+      <p>The dots mark every critical point — every place ∇f = 0. On the map below they're exactly where the little gradient arrows shrink to nothing. Pick one; its horizontal tangent plane shows just how flat it is.</p></div>
+    <p class="prose">Why must an extremum sit at <span class="mono">∇f = 0</span>? Freeze <span class="mono">y</span> and
+      you have an ordinary one-variable function of <span class="mono">x</span>; at its peak, its derivative
+      <span class="mono">f<sub>x</sub></span> is zero — that's Calc 1. The same holds freezing
+      <span class="mono">x</span>, forcing <span class="mono">f<sub>y</sub> = 0</span>. So at any interior high
+      or low point, <b>both</b> partials vanish and the tangent plane lies perfectly horizontal. The catch,
+      which the next section fixes, is that plenty of <em>non</em>-extreme points satisfy this too.</p>
+    <div class="lab">
+      <div class="viewport"><canvas class="stage" id="c3d"></canvas><div class="vhint">drag to orbit · dots are critical points</div></div>
+      <div class="rail">
+        <div class="chips" id="chips"></div>
+        <div class="card">
+          <div class="lbl">Critical points — click to inspect</div>
+          <div class="cplist" id="cplist"></div>
+        </div>
+        <div class="card readout">
+          <div class="line"><span class="rl">At this point <span class="exp mono" id="cpxy">(0, 0)</span></span><span class="rv" id="cpf">0.00</span></div>
+          <div class="line"><span class="rl">Gradient here <span class="exp mono">(f_x, f_y)</span></span><span class="rv vg" id="cpgrad">(0, 0)</span></div>
+        </div>
+        <div class="note" id="exnote"></div>
+      </div>
+    </div>
+    <div class="fullmap">
+      <h3>The same points, from directly above</h3>
+      <p class="cap">Contour map with the gradient field drawn on top. Follow the arrows and they die exactly at the critical points — a peak and a pit both sit in a calm eye where the field vanishes, and so does a saddle.</p>
+      <canvas id="quiver"></canvas>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="sec-num">02</span><h2>The test that tells them apart</h2>
+      <p>Zoom in on a critical point and the surface looks like a bowl, an upside-down bowl, or a saddle — decided entirely by its second derivatives. The discriminant packages that decision into arithmetic.</p></div>
+    <p class="prose">Near a flat point the linear part is gone (that was the whole point of ∇f = 0), so the
+      surface's shape is set by the <b>quadratic</b> term of its Taylor expansion:
+      <span class="mono">½(f<sub>xx</sub>h² + 2f<sub>xy</sub>hk + f<sub>yy</sub>k²)</span> for a small step
+      <span class="mono">(h,k)</span>. That expression is a quadratic form, and whether it opens up, opens
+      down, or does both at once is governed by the matrix of second partials — the <b>Hessian</b>.</p>
+    <p class="prose eqn">H = [ f<sub>xx</sub>&nbsp; f<sub>xy</sub> ; f<sub>xy</sub>&nbsp; f<sub>yy</sub> ]&nbsp;&nbsp;&nbsp; D = det H = f<sub>xx</sub>f<sub>yy</sub> − f<sub>xy</sub>²</p>
+    <p class="prose">Read it like this. If <span class="mono">D &gt; 0</span> the surface curves the <em>same way</em>
+      in every direction — a genuine bowl — and the sign of <span class="mono">f<sub>xx</sub></span> says which
+      way up: positive is a <b class="k-min">minimum</b>, negative a <b class="k-max">maximum</b>. If
+      <span class="mono">D &lt; 0</span> it curves up one way and down another — a <b class="k-sad">saddle</b>.
+      And if <span class="mono">D = 0</span> the test is blind: the curvature is too flat in some direction
+      to call, and you need more than second derivatives. The equivalent, deeper statement is about the
+      Hessian's two eigenvalues — the curvatures along its special perpendicular axes — whose signs are what
+      <span class="mono">D</span> and <span class="mono">f<sub>xx</sub></span> are really reporting.</p>
+    <div class="lab">
+      <div class="viewport" style="height:340px"><canvas class="flat2d" id="shape"></canvas><div class="vhint">local shape · dashed lines are the Hessian's axes</div></div>
+      <div class="rail">
+        <div class="card">
+          <div class="lbl">Second derivatives at the selected point</div>
+          <div class="hessgrid">
+            <span class="hl">Hessian</span>
+            <span class="matrix"><span id="hxx">0</span><span id="hxy">0</span><span id="hxy2">0</span><span id="hyy">0</span></span>
+          </div>
+          <div class="readout" style="margin-top:12px">
+            <div class="line"><span class="rl">Discriminant <span class="exp mono">D = f_xx·f_yy − f_xy²</span></span><span class="rv vg" id="Dval">0.00</span></div>
+            <div class="line"><span class="rl">Curvatures <span class="exp mono">eigenvalues λ₁, λ₂</span></span><span class="rv vu" id="eigs">0, 0</span></div>
+          </div>
+          <div class="verdict v-min" id="verdict">local minimum<span class="why" id="verwhy"></span></div>
+        </div>
+        <div class="shapelegend">
+          <span><i style="background:rgba(255,122,92,0.6)"></i> curves up (q &gt; 0)</span>
+          <span><i style="background:rgba(90,150,230,0.6)"></i> curves down (q &lt; 0)</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="sec-num">03</span><h2>Optimizing on a leash: Lagrange</h2>
+      <p>Often you can't roam the whole plane — you're pinned to a curve, like "spend exactly this budget." The extrema then land where a level curve of f is <em>tangent</em> to the constraint, and that tangency has a tidy algebraic form.</p></div>
+    <p class="prose">Walk along the white constraint curve <span class="mono">g = 0</span> and watch the coloured
+      contours of <span class="mono">f</span> slide past. While you're cutting <em>across</em> contours your
+      value is still changing, so you're not done. You stop changing only at the instant the constraint runs
+      <b>along</b> a contour — tangent to it. There, the two gradients line up:
+      <span class="mono">∇f = λ∇g</span>. That is the whole method of Lagrange — the mysterious multiplier
+      <span class="mono">λ</span> is just the ratio of the two aligned arrows.</p>
+    <div class="lab">
+      <div class="viewport" style="height:420px"><canvas class="flat2d" id="lag"></canvas><div class="vhint">gold = ∇f · violet = ∇g · aligned at the answer</div></div>
+      <div class="rail">
+        <div class="card">
+          <div class="lbl">f = x² + 2y²  on the circle  x² + y² = 1</div>
+          <div class="sliderrow"><div class="top"><span class="name">position on the circle</span><span class="val" id="lagt">0°</span></div><input type="range" id="slag" min="0" max="360" step="1" value="35"></div>
+          <div class="seg" id="lagsnap">
+            <button data-a="0">snap to a min</button>
+            <button data-a="90">snap to a max</button>
+          </div>
+        </div>
+        <div class="card readout">
+          <div class="line"><span class="rl">Value here <span class="exp mono">f on the curve</span></span><span class="rv" id="lagf">0.00</span></div>
+          <div class="line"><span class="rl">∇f vs ∇g <span class="exp mono">alignment</span></span><span class="rv vu" id="lagalign">—</span></div>
+          <div class="line"><span class="rl">Multiplier <span class="exp mono">λ (when aligned)</span></span><span class="rv vg" id="laglam">—</span></div>
+        </div>
+        <div class="note">The circle's lowest-<span class="mono">f</span> points are <span class="mono">(±1, 0)</span> with <span class="mono">f = 1</span>; its highest are <span class="mono">(0, ±1)</span> with <span class="mono">f = 2</span>. Every one is a spot where the gold and violet arrows point along the same line.</div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="sec-num">04</span><h2>Computing them by hand</h2></div>
+    <p class="rule">Two moves. First <b>set ∇f = 0</b> and solve the system for every candidate point. Then, at
+      each one, <b>compute D</b> and read off the verdict. Do it once on a function with all four outcomes
+      and the pattern sticks for good.</p>
+    <div class="worked">
+      <div class="wk"><div class="fn">Classify every critical point of<br>f = x³ − 3x + y³ − 3y</div>
+        <div class="step"><span class="tag tag-g">∇f = 0</span><span class="hint">f_x = 3x²−3 = 0 → x = ±1;&nbsp; f_y = 3y²−3 = 0 → y = ±1</span></div>
+        <div class="step"><span class="res">four points: (±1, ±1)</span></div>
+        <div class="step"><span class="tag tag-u">second partials</span><span class="hint">f_xx = 6x,&nbsp; f_yy = 6y,&nbsp; f_xy = 0,&nbsp; so D = 36xy</span></div>
+        <table>
+          <tr><th>point</th><th>f_xx</th><th>D = 36xy</th><th>verdict</th></tr>
+          <tr><td>(1, 1)</td><td>+6</td><td>+36</td><td class="k-min">minimum</td></tr>
+          <tr><td>(−1, −1)</td><td>−6</td><td>+36</td><td class="k-max">maximum</td></tr>
+          <tr><td>(1, −1)</td><td>+6</td><td>−36</td><td class="k-sad">saddle</td></tr>
+          <tr><td>(−1, 1)</td><td>−6</td><td>−36</td><td class="k-sad">saddle</td></tr>
+        </table></div>
+      <div class="wk"><div class="fn">Extremes of f = x² + 2y²<br>on the circle x² + y² = 1  (Lagrange)</div>
+        <div class="step"><span class="tag tag-g">∇f = λ∇g</span><span class="hint">(2x, 4y) = λ(2x, 2y)</span></div>
+        <div class="step"><span class="hint">x-eqn: 2x = 2λx → x = 0 or λ = 1</span></div>
+        <div class="step"><span class="hint">y-eqn: 4y = 2λy → y = 0 or λ = 2</span></div>
+        <div class="step"><span class="tag tag-u">case λ=1</span><span class="hint">then y = 0, and the circle gives x = ±1</span></div>
+        <div class="step">→ <span class="res">(±1, 0), f = 1</span> <span class="hint">the minima</span></div>
+        <div class="step"><span class="tag tag-u">case λ=2</span><span class="hint">then x = 0, circle gives y = ±1</span></div>
+        <div class="step">→ <span class="res">(0, ±1), f = 2</span> <span class="hint">the maxima</span></div></div>
+    </div>
+    <p class="pitfall"><b>The mistake everyone makes once.</b> Reading <span class="mono">D = 0</span> as "it's a
+      saddle" or "it's nothing." It means neither — it means <em>this test has no opinion</em>. The surface
+      <span class="mono">x⁴ + y⁴</span> has a clear minimum at the origin yet <span class="mono">D = 0</span>
+      there; the monkey saddle has <span class="mono">D = 0</span> too and is genuinely a saddle. Same number,
+      opposite truths. When <span class="mono">D = 0</span> you have to go back to the function itself — higher
+      derivatives, or just checking values along a few directions — because second-order information has run
+      out.</p>
+  </section>
+
+  <footer>
+    <h3>Where this goes next</h3>
+    <div class="next">
+      <span><span class="n">→</span> Lagrange with several constraints</span>
+      <span><span class="n">→</span> gradient descent &amp; Newton's method</span>
+      <span><span class="n">→</span> global extrema on closed regions</span>
+      <span><span class="n">→</span> the Hessian &amp; convexity</span>
+      <span><span class="n">→</span> least squares &amp; regression</span>
+    </div>
+    <p class="fine">Every critical point here is placed at its exact analytic location, and each verdict is
+      computed live from the true second partials — so the classifications are the real ones, not lookups. Try
+      the monkey saddle: the discriminant reads exactly zero, and the panel refuses to guess, which is the
+      honest answer.</p>
+  </footer>
+</div>
+
+<script>
+try{
+/* ---------- surfaces with exact 1st + 2nd partials and their critical points ---------- */
+const EX=[
+ {id:'four',name:'Four corners',sym:'x³−3x + y³−3y',r:2,
+  f:(x,y)=>x*x*x-3*x+y*y*y-3*y,fx:(x,y)=>3*x*x-3,fy:(x,y)=>3*y*y-3,
+  fxx:(x,y)=>6*x,fyy:(x,y)=>6*y,fxy:()=>0,
+  cps:[[1,1],[-1,-1],[1,-1],[-1,1]],
+  note:'One surface with all four verdicts at once — a min, a max, and two saddles. The single most useful picture in the whole lesson: flatness is common, and its meaning is entirely local curvature.'},
+ {id:'bowl',name:'Bowl',sym:'x² + y²',r:2.4,
+  f:(x,y)=>x*x+y*y,fx:(x,y)=>2*x,fy:(x,y)=>2*y,fxx:()=>2,fyy:()=>2,fxy:()=>0,
+  cps:[[0,0]],
+  note:'The cleanest minimum. Curvature is +2 in every direction, D = 4 > 0, and nothing else is flat. The gradient field points outward everywhere, dying only at the centre.'},
+ {id:'dome',name:'Dome',sym:'4 − x² − y²',r:2.4,
+  f:(x,y)=>4-x*x-y*y,fx:(x,y)=>-2*x,fy:(x,y)=>-2*y,fxx:()=>-2,fyy:()=>-2,fxy:()=>0,
+  cps:[[0,0]],
+  note:'The bowl turned over. Same D = 4 > 0, but now f_xx = −2 < 0, so the verdict flips to maximum. The discriminant alone can’t tell max from min — that’s f_xx’s job.'},
+ {id:'saddle',name:'Saddle',sym:'x² − y²',r:2.4,
+  f:(x,y)=>x*x-y*y,fx:(x,y)=>2*x,fy:(x,y)=>-2*y,fxx:()=>2,fyy:()=>-2,fxy:()=>0,
+  cps:[[0,0]],
+  note:'Curves up along x, down along y, so D = (2)(−2) = −4 < 0. Flat at the origin, yet neither a peak nor a pit — the canonical reason ∇f = 0 is not enough.'},
+ {id:'monkey',name:'Monkey saddle',sym:'x³ − 3xy²',r:2,
+  f:(x,y)=>x*x*x-3*x*y*y,fx:(x,y)=>3*x*x-3*y*y,fy:(x,y)=>-6*x*y,
+  fxx:(x,y)=>6*x,fyy:(x,y)=>-6*x,fxy:(x,y)=>-6*y,
+  cps:[[0,0]],
+  note:'At the origin every second partial is zero, so D = 0 and the test genuinely cannot decide. It happens to be a saddle — but you can only know that by looking past second derivatives.'},
+ {id:'well',name:'Double well',sym:'(x²−1)² + y²',r:1.9,
+  f:(x,y)=>(x*x-1)*(x*x-1)+y*y,fx:(x,y)=>4*x*(x*x-1),fy:(x,y)=>2*y,
+  fxx:(x,y)=>12*x*x-4,fyy:()=>2,fxy:()=>0,
+  cps:[[1,0],[-1,0],[0,0]],
+  note:'Two valleys separated by a ridge. The minima sit at (±1, 0); between them at the origin is a saddle you must cross to get from one basin to the other — the shape behind every "two stable states" system.'}
+];
+
+const TERRAIN=[[0,10,46,51],[0.22,18,78,84],[0.45,47,125,107],[0.68,127,166,95],[0.85,217,180,91],[1,240,215,154]];
+function terrain(t){t=t<0?0:t>1?1:t;for(let k=1;k<TERRAIN.length;k++){if(t<=TERRAIN[k][0]){const a=TERRAIN[k-1],b=TERRAIN[k],f=(t-a[0])/((b[0]-a[0])||1);return[a[1]+(b[1]-a[1])*f,a[2]+(b[2]-a[2])*f,a[3]+(b[3]-a[3])*f];}}const l=TERRAIN[TERRAIN.length-1];return[l[1],l[2],l[3]];}
+const clamp=(v,a,b)=>v<a?a:v>b?b:v;
+const lin=(a,b,n)=>{const o=[];for(let i=0;i<n;i++)o.push(a+(b-a)*i/(n-1));return o;};
+const fmt=v=>{const a=Math.abs(v);return(v<0&&a>=5e-4?'−':' ')+a.toFixed(2);};
+
+/* ---------- classification from the exact second partials ---------- */
+function classify(a,b,c){ /* a=fxx, b=fxy, c=fyy */
+  const D=a*c-b*b, T=a+c;
+  const disc=Math.sqrt(Math.max(0,T*T-4*D));
+  const l1=(T+disc)/2, l2=(T-disc)/2;
+  let kind,label,why;
+  if(Math.abs(D)<1e-9){kind='deg';label='test inconclusive';why='D = 0 — second derivatives can’t decide; look further.';}
+  else if(D<0){kind='sad';label='saddle point';why='D < 0 — curves up one way, down another.';}
+  else if(a>0){kind='min';label='local minimum';why='D > 0 and f_xx > 0 — a bowl opening upward.';}
+  else{kind='max';label='local maximum';why='D > 0 and f_xx < 0 — a bowl opening downward.';}
+  return {D,l1,l2,kind,label,why};
+}
+
+/* ---------- shared 3D core ---------- */
+function fit(cv){const dpr=window.devicePixelRatio||1;const rect=cv.getBoundingClientRect();const W=Math.max(1,rect.width),H=Math.max(1,rect.height);const bw=Math.round(W*dpr),bh=Math.round(H*dpr);if(cv.width!==bw||cv.height!==bh){cv.width=bw;cv.height=bh;}const ctx=cv.getContext('2d');ctx.setTransform(dpr,0,0,dpr,0,0);return{ctx,W,H};}
+/* paint a full-canvas heatmap at CSS resolution, then let drawImage scale it under the DPR transform.
+   (putImageData ignores the transform, so writing straight to the main canvas only fills a corner on HiDPI.) */
+function heatmap(ctx,W,H,paint){
+  const off=document.createElement('canvas');off.width=Math.round(W);off.height=Math.round(H);
+  const octx=off.getContext('2d');const img=octx.createImageData(off.width,off.height);
+  paint(img.data,off.width,off.height);octx.putImageData(img,0,0);ctx.drawImage(off,0,0,W,H);
+}
+function makeP(W,H,cam){const S=Math.min(W/3.25,H/2.75)*cam.zoom;return{cy:Math.cos(cam.yaw),sy:Math.sin(cam.yaw),cp:Math.cos(cam.pitch),sp:Math.sin(cam.pitch),S,cx:W/2,cc:H*0.58};}
+function proj(wx,wy,wz,P){wz*=0.92;const xr=wx*P.cy-wy*P.sy,yr=wx*P.sy+wy*P.cy;const yp=yr*P.cp-wz*P.sp,zp=yr*P.sp+wz*P.cp;return{x:P.cx+xr*P.S,y:P.cc-zp*P.S,d:yp};}
+const LIGHT=(()=>{const L=[0.32,0.34,0.88],m=Math.hypot(L[0],L[1],L[2]);return[L[0]/m,L[1]/m,L[2]/m];})();
+function line3(ctx,P,a,b,color,width){const p0=proj(a[0],a[1],a[2],P),p1=proj(b[0],b[1],b[2],P);ctx.strokeStyle=color;ctx.lineWidth=width;ctx.setLineDash([]);ctx.beginPath();ctx.moveTo(p0.x,p0.y);ctx.lineTo(p1.x,p1.y);ctx.stroke();}
+function text3(ctx,P,a,txt,color,dx,dy,font){const p=proj(a[0],a[1],a[2],P);ctx.fillStyle=color;ctx.font=font||'12px "IBM Plex Mono",monospace';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(txt,p.x+(dx||0),p.y+(dy||0));}
+function arrow3(ctx,P,a,b,color,width){const p0=proj(a[0],a[1],a[2],P),p1=proj(b[0],b[1],b[2],P);ctx.strokeStyle=color;ctx.fillStyle=color;ctx.lineWidth=width||1.7;ctx.setLineDash([]);ctx.beginPath();ctx.moveTo(p0.x,p0.y);ctx.lineTo(p1.x,p1.y);ctx.stroke();const ang=Math.atan2(p1.y-p0.y,p1.x-p0.x),h=9;ctx.beginPath();ctx.moveTo(p1.x,p1.y);ctx.lineTo(p1.x-h*Math.cos(ang-0.42),p1.y-h*Math.sin(ang-0.42));ctx.lineTo(p1.x-h*Math.cos(ang+0.42),p1.y-h*Math.sin(ang+0.42));ctx.closePath();ctx.fill();}
+function drawFrame(ctx,P){
+  const gc='rgba(120,170,175,0.11)',bc='rgba(120,170,175,0.22)';
+  for(const g of[-1,-0.5,0,0.5,1]){line3(ctx,P,[g,-1,-1],[g,1,-1],gc,1);line3(ctx,P,[-1,g,-1],[1,g,-1],gc,1);}
+  for(const c of[[-1,-1],[1,-1],[1,1],[-1,1]])line3(ctx,P,[c[0],c[1],-1],[c[0],c[1],1],bc,1);
+  const top=[[-1,-1,1],[1,-1,1],[1,1,1],[-1,1,1]],bot=[[-1,-1,-1],[1,-1,-1],[1,1,-1],[-1,1,-1]];
+  for(let k=0;k<4;k++){line3(ctx,P,top[k],top[(k+1)%4],bc,1);line3(ctx,P,bot[k],bot[(k+1)%4],bc,1);}
+}
+const CPCOL={min:'#46c9d6',max:'#ff7a5c',sad:'#ffd15c',deg:'#9db3b3'};
+
+/* ================= state ================= */
+let cur=0, sel=0;
+const cam={yaw:-0.6,pitch:0.5,zoom:1};
+const GV=40;
+let mesh=null;
+
+function buildMesh(ex){
+  const xs=lin(-ex.r,ex.r,GV),ys=lin(-ex.r,ex.r,GV),Z=[];
+  let zmin=Infinity,zmax=-Infinity;
+  for(let j=0;j<GV;j++){const row=[];for(let i=0;i<GV;i++){const v=ex.f(xs[i],ys[j]);row.push(v);if(v<zmin)zmin=v;if(v>zmax)zmax=v;}Z.push(row);}
+  const zmid=(zmin+zmax)/2,zhalf=((zmax-zmin)/2)||1;
+  mesh={xs,ys,Z,zmin,zmax,zmid,zhalf,r:ex.r};
+}
+const NW=x=>x/mesh.r, NZ=z=>(z-mesh.zmid)/mesh.zhalf;
+
+/* ---------- section 1: the surface with critical markers ---------- */
+function render3D(){
+  const ex=EX[cur],cv=document.getElementById('c3d');const{ctx,W,H}=fit(cv);
+  ctx.clearRect(0,0,W,H);
+  const P=makeP(W,H,cam);const{xs,ys,Z,zmin,zmax}=mesh;
+  drawFrame(ctx,P);
+  const quads=[];
+  for(let j=0;j<GV-1;j++)for(let i=0;i<GV-1;i++){
+    const c=[[i,j],[i+1,j],[i+1,j+1],[i,j+1]];
+    const w=c.map(([ii,jj])=>[NW(xs[ii]),NW(ys[jj]),NZ(Z[jj][ii])]);
+    const p=w.map(v=>proj(v[0],v[1],v[2],P));
+    const za=(Z[j][i]+Z[j][i+1]+Z[j+1][i+1]+Z[j+1][i])/4,t=(za-zmin)/((zmax-zmin)||1);
+    const e1=[w[1][0]-w[0][0],w[1][1]-w[0][1],w[1][2]-w[0][2]],e2=[w[3][0]-w[0][0],w[3][1]-w[0][1],w[3][2]-w[0][2]];
+    let nv=[e1[1]*e2[2]-e1[2]*e2[1],e1[2]*e2[0]-e1[0]*e2[2],e1[0]*e2[1]-e1[1]*e2[0]];
+    const nl=Math.hypot(nv[0],nv[1],nv[2])||1;nv=[nv[0]/nl,nv[1]/nl,nv[2]/nl];if(nv[2]<0)nv=[-nv[0],-nv[1],-nv[2]];
+    const br=0.5+0.5*Math.max(0,nv[0]*LIGHT[0]+nv[1]*LIGHT[1]+nv[2]*LIGHT[2]);
+    const col=terrain(t);
+    quads.push({p,depth:(p[0].d+p[1].d+p[2].d+p[3].d)/4,col:'rgb('+(col[0]*br|0)+','+(col[1]*br|0)+','+(col[2]*br|0)+')'});
+  }
+  quads.sort((a,b)=>b.depth-a.depth);
+  for(const q of quads){ctx.beginPath();ctx.moveTo(q.p[0].x,q.p[0].y);for(let k=1;k<4;k++)ctx.lineTo(q.p[k].x,q.p[k].y);ctx.closePath();ctx.fillStyle=q.col;ctx.strokeStyle=q.col;ctx.lineWidth=1;ctx.fill();ctx.stroke();}
+  /* critical markers (painter-sorted with the point depth) */
+  const marks=ex.cps.map((cp,i)=>{
+    const kind=classify(ex.fxx(cp[0],cp[1]),ex.fxy(cp[0],cp[1]),ex.fyy(cp[0],cp[1])).kind;
+    const z=ex.f(cp[0],cp[1]);const pp=proj(NW(cp[0]),NW(cp[1]),NZ(z),P);
+    return {cp,i,kind,pp,z};
+  }).sort((a,b)=>b.pp.d-a.pp.d);
+  for(const m of marks){
+    if(m.i===sel){
+      /* horizontal tangent plane at the selected point */
+      const q=ex.r*0.34, GG=2;
+      const px=[clamp(m.cp[0]-q,-ex.r,ex.r),clamp(m.cp[0]+q,-ex.r,ex.r)],py=[clamp(m.cp[1]-q,-ex.r,ex.r),clamp(m.cp[1]+q,-ex.r,ex.r)];
+      const w=[[px[0],py[0]],[px[1],py[0]],[px[1],py[1]],[px[0],py[1]]].map(u=>proj(NW(u[0]),NW(u[1]),NZ(m.z),P));
+      ctx.save();ctx.globalAlpha=0.30;ctx.fillStyle='#e7f2f0';ctx.beginPath();ctx.moveTo(w[0].x,w[0].y);for(let k=1;k<4;k++)ctx.lineTo(w[k].x,w[k].y);ctx.closePath();ctx.fill();ctx.restore();
+      ctx.strokeStyle='rgba(231,242,240,0.7)';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(w[0].x,w[0].y);for(let k=1;k<4;k++)ctx.lineTo(w[k].x,w[k].y);ctx.closePath();ctx.stroke();
+    }
+    ctx.beginPath();ctx.arc(m.pp.x,m.pp.y,m.i===sel?7:5,0,7);ctx.fillStyle=CPCOL[m.kind];ctx.fill();
+    ctx.lineWidth=m.i===sel?2.5:1.5;ctx.strokeStyle=m.i===sel?'#fff':'#081416';ctx.stroke();
+  }
+  const O=[-1,-1,-1];
+  arrow3(ctx,P,O,[1.18,-1,-1],'#ff9a80');arrow3(ctx,P,O,[-1,1.18,-1],'#7fdbe6');arrow3(ctx,P,O,[-1,-1,1.18],'#ffdd82');
+  const bf='600 14px "Space Grotesk",sans-serif';
+  text3(ctx,P,[1.34,-1,-1],'x','#ff9a80',0,0,bf);text3(ctx,P,[-1,1.34,-1],'y','#7fdbe6',0,0,bf);text3(ctx,P,[-1,-1,1.35],'z','#ffdd82',0,0,bf);
+}
+
+/* ---------- the quiver / contour map ---------- */
+let quiverBox=null;
+function drawQuiver(){
+  const ex=EX[cur],cv=document.getElementById('quiver');const{ctx,W,H}=fit(cv);
+  ctx.clearRect(0,0,W,H);
+  const r=ex.r;
+  /* contour image */
+  const G=46;let zmin=Infinity,zmax=-Infinity;
+  for(let j=0;j<=G;j++)for(let i=0;i<=G;i++){const v=ex.f(-r+2*r*i/G,-r+2*r*j/G);if(v<zmin)zmin=v;if(v>zmax)zmax=v;}
+  const span=(zmax-zmin)||1,BANDS=12;
+  heatmap(ctx,W,H,(d,IW,IH)=>{
+    for(let py=0;py<IH;py++){const y=r-(py/IH)*2*r;for(let px=0;px<IW;px++){const x=-r+(px/IW)*2*r;
+      let t=(ex.f(x,y)-zmin)/span;t=Math.floor(t*BANDS)/BANDS+0.5/BANDS;const c=terrain(t);
+      const o=(py*IW+px)*4;d[o]=c[0];d[o+1]=c[1];d[o+2]=c[2];d[o+3]=255;}}
+  });
+  const MX=x=>(x+r)/(2*r)*W, MY=y=>(r-y)/(2*r)*H;
+  quiverBox={MX,MY,r,W,H};
+  /* gradient arrows on a grid, length grows with magnitude but capped */
+  const NX=15,NY=Math.round(NX*H/W);
+  let mmax=1e-6;const gs=[];
+  for(let j=0;j<=NY;j++)for(let i=0;i<=NX;i++){
+    const x=-r+2*r*i/NX,y=-r+2*r*j/NY,gx=ex.fx(x,y),gy=ex.fy(x,y),m=Math.hypot(gx,gy);
+    gs.push({x,y,gx,gy,m});mmax=Math.max(mmax,m);
+  }
+  const cell=Math.min(W/(NX+1),H/(NY+1))*0.46;
+  for(const g of gs){
+    if(g.m<1e-9)continue;
+    const s=cell*(g.m/(g.m+mmax*0.35));         /* saturating scale — long arrows don't dominate */
+    const ux=g.gx/g.m,uy=g.gy/g.m;
+    const x0=MX(g.x),y0=MY(g.y),x1=x0+ux*s,y1=y0-uy*s;
+    const al=clamp(0.25+0.6*g.m/mmax,0.2,0.9);
+    ctx.strokeStyle='rgba(231,242,240,'+al+')';ctx.lineWidth=1.4;ctx.beginPath();ctx.moveTo(x0,y0);ctx.lineTo(x1,y1);ctx.stroke();
+    const ang=Math.atan2(y1-y0,x1-x0),h=4.5;
+    ctx.fillStyle='rgba(231,242,240,'+al+')';ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x1-h*Math.cos(ang-0.5),y1-h*Math.sin(ang-0.5));ctx.lineTo(x1-h*Math.cos(ang+0.5),y1-h*Math.sin(ang+0.5));ctx.closePath();ctx.fill();
+  }
+  /* critical markers */
+  ex.cps.forEach((cp,i)=>{
+    const kind=classify(ex.fxx(cp[0],cp[1]),ex.fxy(cp[0],cp[1]),ex.fyy(cp[0],cp[1])).kind;
+    const x=MX(cp[0]),y=MY(cp[1]);
+    ctx.beginPath();ctx.arc(x,y,i===sel?9:7,0,7);ctx.fillStyle=CPCOL[kind];ctx.fill();
+    ctx.lineWidth=i===sel?3:1.6;ctx.strokeStyle=i===sel?'#fff':'#081416';ctx.stroke();
+  });
+  ctx.fillStyle='rgba(155,179,179,0.9)';ctx.font='12px "IBM Plex Mono",monospace';ctx.textAlign='left';
+  ctx.fillText('x →',W-34,H-10);ctx.fillText('y ↑',8,18);
+}
+
+/* ---------- section 2: the local quadratic shape ---------- */
+function drawShape(){
+  const ex=EX[cur],cp=ex.cps[sel];
+  const a=ex.fxx(cp[0],cp[1]),b=ex.fxy(cp[0],cp[1]),c=ex.fyy(cp[0],cp[1]);
+  const cv=document.getElementById('shape');const{ctx,W,H}=fit(cv);ctx.clearRect(0,0,W,H);
+  const q=(h,k)=>0.5*(a*h*h+2*b*h*k+c*k*k);
+  /* find scale */
+  let mx=1e-9;for(let i=-10;i<=10;i++)for(let j=-10;j<=10;j++)mx=Math.max(mx,Math.abs(q(i/10,j/10)));
+  heatmap(ctx,W,H,(d,IW,IH)=>{
+    for(let py=0;py<IH;py++){const k=1-2*py/IH;for(let px=0;px<IW;px++){const h=-1+2*px/IW;
+      const t=clamp(q(h,k)/mx,-1,1),o=(py*IW+px)*4;
+      const up=[255,122,92],dn=[90,150,230],mid=[16,32,36];
+      const base=t>=0?up:dn,a2=Math.abs(t);
+      d[o]=mid[0]+(base[0]-mid[0])*a2;d[o+1]=mid[1]+(base[1]-mid[1])*a2;d[o+2]=mid[2]+(base[2]-mid[2])*a2;d[o+3]=255;}}
+  });
+  /* a few contour rings of q via coarse marching (levels) */
+  const MX=h=>(h+1)/2*W,MY=k=>(1-k)/2*H;
+  /* Hessian eigen-axes through the centre */
+  const T=a+c,disc=Math.sqrt(Math.max(0,T*T-4*(a*c-b*b)));
+  const l1=(T+disc)/2,l2=(T-disc)/2;
+  function evec(l){ /* (b, l-a) unless b≈0 */
+    if(Math.abs(b)>1e-9){const vx=b,vy=l-a,n=Math.hypot(vx,vy);return[vx/n,vy/n];}
+    return Math.abs(a-l)<Math.abs(c-l)?[1,0]:[0,1];
+  }
+  const axes=[{v:evec(l1),l:l1},{v:evec(l2),l:l2}];
+  for(const A of axes){
+    ctx.strokeStyle='rgba(231,242,240,0.55)';ctx.lineWidth=1.5;ctx.setLineDash([6,5]);
+    ctx.beginPath();ctx.moveTo(MX(-A.v[0]),MY(-A.v[1]));ctx.lineTo(MX(A.v[0]),MY(A.v[1]));ctx.stroke();ctx.setLineDash([]);
+  }
+  /* centre dot */
+  ctx.beginPath();ctx.arc(MX(0),MY(0),5,0,7);ctx.fillStyle='#fff';ctx.fill();ctx.lineWidth=2;ctx.strokeStyle='#081416';ctx.stroke();
+  ctx.fillStyle='rgba(213,201,255,0.9)';ctx.font='11px "IBM Plex Mono",monospace';ctx.textAlign='left';
+  ctx.fillText('λ₁ = '+l1.toFixed(1),10,20);ctx.fillText('λ₂ = '+l2.toFixed(1),10,36);
+}
+
+/* ---------- section 3: Lagrange ---------- */
+let lagT=35;
+function lagF(x,y){return x*x+2*y*y;}
+function drawLag(){
+  const cv=document.getElementById('lag');const{ctx,W,H}=fit(cv);ctx.clearRect(0,0,W,H);
+  const r=1.5;
+  /* contour image of f */
+  let zmin=0,zmax=r*r+2*r*r;const span=(zmax-zmin)||1,BANDS=12;
+  heatmap(ctx,W,H,(d,IW,IH)=>{
+    for(let py=0;py<IH;py++){const y=r-(py/IH)*2*r;for(let px=0;px<IW;px++){const x=-r+(px/IW)*2*r;
+      let t=(lagF(x,y)-zmin)/span;t=Math.floor(t*BANDS)/BANDS+0.5/BANDS;const c=terrain(t);
+      const o=(py*IW+px)*4;d[o]=c[0];d[o+1]=c[1];d[o+2]=c[2];d[o+3]=255;}}
+  });
+  const MX=x=>(x+r)/(2*r)*W,MY=y=>(r-y)/(2*r)*H;
+  /* constraint circle */
+  ctx.strokeStyle='rgba(255,255,255,0.92)';ctx.lineWidth=2.4;ctx.beginPath();
+  for(let i=0;i<=120;i++){const t=i/120*2*Math.PI,x=Math.cos(t),y=Math.sin(t);const px=MX(x),py=MY(y);i?ctx.lineTo(px,py):ctx.moveTo(px,py);}
+  ctx.closePath();ctx.stroke();
+  /* the point */
+  const th=lagT*Math.PI/180,x=Math.cos(th),y=Math.sin(th);
+  /* level curve of f through the point: ellipse x²+2y²=f0 */
+  const f0=lagF(x,y);
+  ctx.strokeStyle='rgba(231,242,240,0.45)';ctx.lineWidth=1.4;ctx.setLineDash([5,4]);ctx.beginPath();
+  for(let i=0;i<=140;i++){const t=i/140*2*Math.PI;const ex2=Math.sqrt(f0)*Math.cos(t),ey=Math.sqrt(f0/2)*Math.sin(t);const px=MX(ex2),py=MY(ey);i?ctx.lineTo(px,py):ctx.moveTo(px,py);}
+  ctx.closePath();ctx.stroke();ctx.setLineDash([]);
+  /* gradients */
+  const gfx=2*x,gfy=4*y, ggx=2*x,ggy=2*y;
+  const sc=0.16;
+  const arrow=(gx,gy,col)=>{const x0=MX(x),y0=MY(y),x1=MX(x+gx*sc),y1=MY(y+gy*sc);
+    ctx.strokeStyle=col;ctx.fillStyle=col;ctx.lineWidth=3;ctx.lineCap='round';ctx.beginPath();ctx.moveTo(x0,y0);ctx.lineTo(x1,y1);ctx.stroke();
+    const ang=Math.atan2(y1-y0,x1-x0),h=9;ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x1-h*Math.cos(ang-0.4),y1-h*Math.sin(ang-0.4));ctx.lineTo(x1-h*Math.cos(ang+0.4),y1-h*Math.sin(ang+0.4));ctx.closePath();ctx.fill();};
+  arrow(ggx,ggy,'#b39dff');arrow(gfx,gfy,'#ffd15c');
+  ctx.beginPath();ctx.arc(MX(x),MY(y),6,0,7);ctx.fillStyle='#fff';ctx.fill();ctx.lineWidth=2;ctx.strokeStyle='#081416';ctx.stroke();
+  ctx.fillStyle='rgba(155,179,179,0.9)';ctx.font='12px "IBM Plex Mono",monospace';ctx.textAlign='left';
+  ctx.fillText('x →',W-34,H-10);ctx.fillText('y ↑',8,18);
+  /* readouts */
+  const cross=gfx*ggy-gfy*ggx, m1=Math.hypot(gfx,gfy),m2=Math.hypot(ggx,ggy);
+  const sinA=Math.abs(cross)/((m1*m2)||1);
+  document.getElementById('lagt').textContent=lagT.toFixed(0)+'°';
+  document.getElementById('lagf').textContent=f0.toFixed(3);
+  document.getElementById('lagalign').textContent=sinA<0.02?'aligned ✓':(sinA).toFixed(2)+' off';
+  const lam=(Math.abs(ggx)>1e-6?gfx/ggx:(Math.abs(ggy)>1e-6?gfy/ggy:NaN));
+  document.getElementById('laglam').textContent=sinA<0.05&&isFinite(lam)?lam.toFixed(2):'—';
+}
+
+/* ================= readouts ================= */
+function readoutSel(){
+  const ex=EX[cur],cp=ex.cps[sel];
+  const a=ex.fxx(cp[0],cp[1]),b=ex.fxy(cp[0],cp[1]),c=ex.fyy(cp[0],cp[1]);
+  const info=classify(a,b,c);
+  document.getElementById('cpxy').textContent='('+(+cp[0].toFixed(2))+', '+(+cp[1].toFixed(2))+')';
+  document.getElementById('cpf').textContent=fmt(ex.f(cp[0],cp[1]));
+  document.getElementById('cpgrad').textContent='('+ex.fx(cp[0],cp[1]).toFixed(2)+', '+ex.fy(cp[0],cp[1]).toFixed(2)+')';
+  document.getElementById('hxx').textContent=(+a.toFixed(2));
+  document.getElementById('hxy').textContent=(+b.toFixed(2));
+  document.getElementById('hxy2').textContent=(+b.toFixed(2));
+  document.getElementById('hyy').textContent=(+c.toFixed(2));
+  document.getElementById('Dval').textContent=fmt(info.D);
+  document.getElementById('eigs').textContent=info.l1.toFixed(2)+',  '+info.l2.toFixed(2);
+  const v=document.getElementById('verdict');
+  v.className='verdict v-'+info.kind;
+  v.childNodes[0].nodeValue=info.label;   /* the leading text node, leaving the .why span intact */
+  document.getElementById('verwhy').textContent=info.why;
+}
+function buildCPList(){
+  const ex=EX[cur],box=document.getElementById('cplist');box.innerHTML='';
+  ex.cps.forEach((cp,i)=>{
+    const info=classify(ex.fxx(cp[0],cp[1]),ex.fxy(cp[0],cp[1]),ex.fyy(cp[0],cp[1]));
+    const b=document.createElement('button');b.className='cpbtn'+(i===sel?' on':'');
+    b.innerHTML='<span class="swatch sw-'+info.kind+'"></span>('+(+cp[0].toFixed(2))+', '+(+cp[1].toFixed(2))+')<span class="verd k-'+info.kind+'">'+info.label.replace('local ','').replace(' point','')+'</span>';
+    b.onclick=()=>{sel=i;refreshSel();};
+    box.appendChild(b);
+  });
+}
+
+/* ================= orchestration ================= */
+function refreshSel(){render3D();drawQuiver();drawShape();readoutSel();buildCPList();}
+
+function buildChips(){const c=document.getElementById('chips');c.innerHTML='';
+  EX.forEach((ex,i)=>{const b=document.createElement('button');b.className='chip'+(i===cur?' on':'');b.textContent=ex.sym;
+    b.setAttribute('aria-pressed',i===cur);b.onclick=()=>{cur=i;sel=0;loadExample();};c.appendChild(b);});}
+function loadExample(){
+  const ex=EX[cur];
+  document.getElementById('exnote').innerHTML='<b>'+ex.name+'.</b> '+ex.note;
+  buildChips();buildMesh(ex);refreshSel();
+}
+
+/* click-to-select on the quiver + 3D */
+document.getElementById('quiver').addEventListener('click',e=>{
+  if(!quiverBox)return;const ex=EX[cur],rect=e.target.getBoundingClientRect();
+  const px=(e.clientX-rect.left)/rect.width*quiverBox.W,py=(e.clientY-rect.top)/rect.height*quiverBox.H;
+  let best=-1,bd=1e9;
+  ex.cps.forEach((cp,i)=>{const dx=quiverBox.MX(cp[0])-px,dy=quiverBox.MY(cp[1])-py,d=dx*dx+dy*dy;if(d<bd){bd=d;best=i;}});
+  if(best>=0&&bd<900){sel=best;refreshSel();}
+});
+
+/* Lagrange controls */
+const slag=document.getElementById('slag');
+slag.addEventListener('input',()=>{lagT=+slag.value;drawLag();});
+document.querySelectorAll('#lagsnap button').forEach(b=>b.addEventListener('click',()=>{lagT=+b.dataset.a;slag.value=lagT;drawLag();}));
+
+/* orbit for the 3D */
+(function(cv){
+  let raf=false;const pts=new Map();let pinchD=0;
+  const sched=()=>{if(raf)return;raf=true;requestAnimationFrame(()=>{raf=false;render3D();});};
+  const dist=()=>{const a=[...pts.values()];return Math.hypot(a[0].x-a[1].x,a[0].y-a[1].y);};
+  cv.addEventListener('pointerdown',e=>{cv.setPointerCapture(e.pointerId);pts.set(e.pointerId,{x:e.clientX,y:e.clientY});if(pts.size===2)pinchD=dist();});
+  cv.addEventListener('pointermove',e=>{
+    if(!pts.has(e.pointerId))return;const prev=pts.get(e.pointerId);pts.set(e.pointerId,{x:e.clientX,y:e.clientY});
+    if(pts.size>=2){const d=dist();if(pinchD>0)cam.zoom=clamp(cam.zoom*d/pinchD,0.45,3.5);pinchD=d;sched();return;}
+    cam.yaw+=(e.clientX-prev.x)*0.01;cam.pitch=clamp(cam.pitch+(e.clientY-prev.y)*0.007,0.05,1.5);sched();
+  });
+  const end=e=>{pts.delete(e.pointerId);pinchD=0;};
+  cv.addEventListener('pointerup',end);cv.addEventListener('pointercancel',end);
+  cv.addEventListener('wheel',e=>{e.preventDefault();cam.zoom=clamp(cam.zoom*(e.deltaY<0?1.12:0.9),0.45,3.5);sched();},{passive:false});
+})(document.getElementById('c3d'));
+
+let rt=false;
+window.addEventListener('resize',()=>{if(rt)return;rt=true;requestAnimationFrame(()=>{rt=false;refreshSel();drawLag();});});
+window.addEventListener('load',()=>{refreshSel();drawLag();});
+
+loadExample();drawLag();
+}catch(err){
+  const b=document.getElementById('errbar');if(b){b.style.display='block';b.textContent='Something failed while loading the lab: '+err.message;}
+  console.error(err);
+}
+</script>
+</body>
+</html>

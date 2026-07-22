@@ -44,24 +44,37 @@ slope laid along its own heading, tips tracing a circle whose diameter is ∇f) 
 lesson's centrepiece. Adds marching squares for the single level curve through the
 current point.
 
-**04 · Tangent planes & linearization**
-The plane through a point with the two partial slopes as its tilt. Zoom in until
-surface and plane are indistinguishable — local linearity is the whole of
-differentiability. Error surface `f − L` shown separately so the second-order
-gap is visible.
+**04 · Tangent planes & linearization** ✅ *shipped*
+The plane through a point with the two partial slopes as its tilt. A zoom window
+with a fixed-tilt plane and a peeling surface makes "differentiable = locally
+linear" literally watchable; the signed-error colouring and a diagonal error-slice
+show the gap collapsing as the square of the window. Closes with the differential
+`dz = fx dx + fy dy` as an estimation tool. Verified: partials exact, and the
+max error falls ~16× per 4× zoom on every surface.
 
-**05 · Optimization: critical points & the second-derivative test**
-Where both partials vanish, and why that isn't enough. The Hessian discriminant
-as a classifier, demonstrated on the bowl / saddle / monkey-saddle already built
-in Lab 01. Constrained optimization (Lagrange) as the closing act: the level
-curve tangent to the constraint curve.
+**05 · Optimization: critical points & the second-derivative test** ✅ *shipped*
+Where both partials vanish, and why that isn't enough. A gradient vector field
+where the arrows die at the critical points; the Hessian discriminant
+`D = fxx fyy − fxy²` with the eigenvalues it stands for; a live local-shape panel
+(ellipse vs hyperbola) with the Hessian's eigen-axes. Features `x³−3x+y³−3y`, which
+carries a min, a max, and two saddles at once. Lagrange multipliers close it as an
+interactive: a point walking a constraint circle, extremal exactly where ∇f ∥ ∇g.
+Every one of the eleven critical points verified against a 48-direction numerical
+probe. *(Fixed in build: a HiDPI `putImageData` bug that left the heatmap panels
+painting only a corner.)*
 
 ### Track B — Integral (the accumulated picture)
 
-**06 · Polar double integrals & change of variables**
-Why `dA = r dr dθ`. The Jacobian shown as the literal area-stretch factor of a
-distorted grid — animate the map from `(u,v)` space to `(x,y)` space and watch
-cell areas change.
+**06 · Polar double integrals & change of variables** ✅ *shipped*
+Why `dA = r dr dθ`. The polar grid with a movable tile that visibly grows with r;
+the single sector whose exact area `½[(r+dr)²−r²]dθ` limits to `r dr dθ`; the
+Jacobian shown as a measured area ratio between a uniform `(r,θ)` grid and its
+warped `(x,y)` image (the ratio lands on the mid-radius = |J| = r); and a polar
+Riemann sum over a disk with a "without the r" row that goes visibly wrong.
+Verified: sector gap = ½dr/r exactly, area ratio = r to four places, and all disk
+integrals converge to their closed forms. *(Design note: the disk radius and
+integrand set were chosen to avoid the R = 2 coincidence where a constant
+integrand's wrong-sum accidentally equals the right answer.)*
 
 **07 · Triple integrals, cylindrical & spherical**
 Same slicing logic one dimension up. Solid region + sweeping cross-sectional
@@ -81,7 +94,11 @@ the three theorems read as one theorem.
 ## Supporting work (not lessons)
 
 - `index.html` — landing grid of lesson cards with progress state in `localStorage`.
-- Shared `lab.css` / `lab.js` extraction — **deferred on purpose.** Duplicating the
-  render core is cheap; a premature shared runtime would couple lessons that still
-  need to diverge. Revisit after Lab 04, when three labs have proven what is
-  genuinely common.
+- Shared `lab.css` / `lab.js` extraction — **still deferred, now with evidence.**
+  Six labs in, the genuinely common core is small and stable: the CSS design tokens,
+  the 3D projection (`fit`/`makeP`/`proj`), the `terrain` ramp, the orbit handler, and
+  the `heatmap` DPR-safe fill helper (added in Lab 05, and the exact thing whose
+  absence caused a corner-only-render bug). Everything else — surfaces, readouts,
+  section logic — is per-lab and rightly so. A shared `lab-core.js` holding just those
+  five primitives is now worth doing; it would also have prevented duplicating the
+  heatmap bug fix across labs. Good candidate for the next housekeeping pass.

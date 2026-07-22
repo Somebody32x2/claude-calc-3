@@ -1,0 +1,693 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tangent Planes & Linearization · A Field Lab</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#081416;--bg2:#0c1e22;--panel:#0f2429;--panel2:#123037;
+  --line:rgba(120,170,175,0.16);--line-strong:rgba(120,170,175,0.32);
+  --ink:#e7f2f0;--ink-dim:#9db3b3;--ink-faint:#6b8484;
+  --x:#ff7a5c;--x-soft:#ffab90;--y:#46c9d6;--y-soft:#8fe3ec;
+  --grad:#ffd15c;--grad-soft:#ffe4a1;--peak:#f0d79a;
+  --pl:#7ee0a8;--pl-soft:#b4f0cf;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font-family:'Inter',system-ui,sans-serif;font-size:16px;line-height:1.6;-webkit-font-smoothing:antialiased;
+  background-image:radial-gradient(1200px 500px at 80% -10%,rgba(126,224,168,0.06),transparent),radial-gradient(900px 400px at 0% 5%,rgba(70,201,214,0.05),transparent);}
+.wrap{max-width:1180px;margin:0 auto;padding:0 24px}
+h1,h2,h3{font-family:'Space Grotesk',sans-serif;font-weight:600;line-height:1.1;letter-spacing:-0.01em}
+.mono{font-family:'IBM Plex Mono',monospace}
+#errbar{display:none;background:#3a1414;border:1px solid #ff7a5c;color:#ffd9cf;padding:12px 16px;margin:16px 0;border-radius:10px;font-family:'IBM Plex Mono';font-size:13px}
+
+header{padding:64px 0 8px}
+.eyebrow{font-family:'IBM Plex Mono',monospace;font-size:12.5px;letter-spacing:0.28em;text-transform:uppercase;color:var(--ink-faint);display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.eyebrow::before{content:"";width:34px;height:1px;background:var(--line-strong)}
+.eyebrow a{color:var(--ink-faint);text-decoration:none;border-bottom:1px solid var(--line-strong)}
+.eyebrow a:hover{color:var(--y)}
+h1{font-size:clamp(38px,6.4vw,70px);margin:18px 0 0;font-weight:700}
+h1 .accent{background:linear-gradient(100deg,var(--y),var(--pl) 55%,var(--grad));-webkit-background-clip:text;background-clip:text;color:transparent}
+.lede{max-width:700px;color:var(--ink-dim);font-size:clamp(17px,2.2vw,20px);margin:22px 0 0}
+.lede b{color:var(--ink);font-weight:600}
+
+.idea{margin:52px 0;display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.idea>div{background:var(--bg2);padding:26px 24px}
+.idea .k{font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:0.14em;text-transform:uppercase;margin-bottom:10px}
+.idea .kp{color:var(--pl)}.idea .kg{color:var(--grad)}.idea .kx{color:var(--x)}
+.idea p{margin:0;color:var(--ink-dim);font-size:15px}
+.idea .big{font-family:'Space Grotesk';font-size:19px;color:var(--ink);display:block;margin-bottom:6px;font-weight:500}
+
+section{padding:34px 0}
+.sec-head{display:flex;align-items:baseline;gap:16px;margin-bottom:22px;flex-wrap:wrap}
+.sec-num{font-family:'IBM Plex Mono',monospace;color:var(--ink-faint);font-size:14px;letter-spacing:0.1em}
+h2{font-size:clamp(26px,3.6vw,38px)}
+.sec-head p{margin:0;color:var(--ink-dim);font-size:15px;flex:1;min-width:240px}
+.prose{max-width:760px;color:var(--ink-dim);font-size:15.5px;margin:0 0 22px}
+.prose b{color:var(--ink);font-weight:600}
+.prose .mono{color:var(--pl-soft)}
+
+.lab{display:grid;grid-template-columns:1fr 356px;gap:20px;border:1px solid var(--line);border-radius:16px;background:var(--bg2);padding:20px}
+.viewport{position:relative;height:520px;border-radius:12px;overflow:hidden;background:linear-gradient(180deg,#0a1a1e,#081315);border:1px solid var(--line)}
+.viewport.short{height:440px}
+canvas.stage{width:100%;height:100%;display:block;touch-action:none;cursor:grab}
+canvas.stage:active{cursor:grabbing}
+.vhint{position:absolute;left:14px;bottom:12px;z-index:3;font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:0.12em;color:var(--ink-faint);text-transform:uppercase;pointer-events:none;background:rgba(8,20,22,0.55);padding:4px 9px;border-radius:6px}
+.rail{display:flex;flex-direction:column;gap:16px}
+.chips{display:flex;flex-wrap:wrap;gap:7px}
+.chip{font-family:'IBM Plex Mono',monospace;font-size:12.5px;padding:7px 12px;border-radius:8px;border:1px solid var(--line-strong);background:transparent;color:var(--ink-dim);cursor:pointer;transition:all .15s}
+.chip:hover{border-color:var(--y);color:var(--ink)}
+.chip.on{background:var(--panel2);border-color:var(--y);color:var(--ink)}
+.chip.on::before{content:"▸ "}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px}
+.card .lbl{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:var(--ink-faint);margin-bottom:12px}
+.sliderrow{margin-bottom:14px}.sliderrow:last-child{margin-bottom:0}
+.sliderrow .top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px}
+.sliderrow .name{font-family:'Space Grotesk';font-size:14px;font-weight:500}
+.sliderrow .name .sub{color:var(--ink-faint);font-size:12px;font-weight:400}
+.sliderrow .val{font-family:'IBM Plex Mono';font-size:14px}
+.dotx{color:var(--x)}.doty{color:var(--y)}.dotp{color:var(--pl)}
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:4px;border-radius:4px;background:var(--line-strong);outline:none;margin:6px 0 2px}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:17px;height:17px;border-radius:50%;background:var(--ink);border:2px solid var(--bg);cursor:pointer;box-shadow:0 0 0 1px var(--line-strong)}
+input[type=range]::-moz-range-thumb{width:17px;height:17px;border-radius:50%;background:var(--ink);border:2px solid var(--bg);cursor:pointer}
+input#sx::-webkit-slider-thumb,input#dx::-webkit-slider-thumb{background:var(--x)}input#sx::-moz-range-thumb,input#dx::-moz-range-thumb{background:var(--x)}
+input#sy::-webkit-slider-thumb,input#dy::-webkit-slider-thumb{background:var(--y)}input#sy::-moz-range-thumb,input#dy::-moz-range-thumb{background:var(--y)}
+input#sw::-webkit-slider-thumb{background:var(--pl)}input#sw::-moz-range-thumb{background:var(--pl)}
+.readout .line{display:flex;justify-content:space-between;align-items:baseline;padding:9px 0;border-bottom:1px solid var(--line);gap:12px}
+.readout .line:last-child{border-bottom:none;padding-bottom:0}.readout .line:first-child{padding-top:0}
+.readout .rl{font-size:13.5px;color:var(--ink-dim)}
+.readout .rl .exp{font-family:'IBM Plex Mono';font-size:12px;color:var(--ink-faint);display:block}
+.readout .rv{font-family:'IBM Plex Mono';font-size:17px;font-weight:500;text-align:right;white-space:nowrap}
+.readout .walk{font-size:12px;color:var(--ink-faint);display:block;margin-top:2px}
+.rv.vx{color:var(--x)}.rv.vy{color:var(--y)}.rv.vp{color:var(--pl)}.rv.vg{color:var(--grad)}
+.eqbox{font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--ink-dim);background:rgba(126,224,168,0.07);border:1px solid rgba(126,224,168,0.22);border-radius:8px;padding:10px 12px;margin-top:12px;line-height:1.7;word-break:break-word}
+.eqbox .cx{color:var(--x)}.eqbox .cy{color:var(--y)}.eqbox .cp{color:var(--pl-soft)}.eqbox b{color:var(--ink)}
+.seg{display:flex;gap:6px;flex-wrap:wrap}
+.seg button{flex:1;min-width:60px;font-family:'IBM Plex Mono',monospace;font-size:12px;padding:7px 4px;border-radius:8px;border:1px solid var(--line-strong);background:transparent;color:var(--ink-dim);cursor:pointer;transition:.15s}
+.seg button:hover{border-color:var(--pl);color:var(--ink)}
+.seg button.on{background:var(--panel2);border-color:var(--pl);color:var(--ink)}
+.toggles{display:flex;flex-direction:column;gap:9px}
+.tg{display:flex;align-items:center;gap:9px;font-size:13.5px;color:var(--ink-dim);cursor:pointer;user-select:none}
+.tg input{appearance:none;-webkit-appearance:none;width:34px;height:19px;border-radius:20px;background:var(--line-strong);position:relative;cursor:pointer;transition:.15s;flex:none}
+.tg input::after{content:"";position:absolute;top:2px;left:2px;width:15px;height:15px;border-radius:50%;background:var(--ink-faint);transition:.15s}
+.tg input:checked{background:var(--pl)}
+.tg input:checked::after{background:var(--bg);transform:translateX(15px)}
+.note{border-left:2px solid var(--pl);background:rgba(126,224,168,0.06);padding:12px 14px;border-radius:0 8px 8px 0;font-size:13.5px;color:var(--ink-dim)}
+.note b{color:var(--pl-soft);font-weight:600}
+
+.panels{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:18px}
+.panel{border:1px solid var(--line);border-radius:14px;background:var(--bg2);padding:16px 16px 12px}
+.panel h3{font-size:16px;margin:0 0 2px;display:flex;align-items:center;gap:8px}
+.panel .cap{font-size:13px;color:var(--ink-dim);margin:0 0 8px}
+.panel .swatch{width:11px;height:11px;border-radius:3px;flex:none}
+.sw-p{background:var(--pl)}.sw-e{background:var(--x)}
+.plot2d{width:100%;height:236px;display:block}
+.pbadge{font-family:'IBM Plex Mono';font-size:13px;padding:2px 8px;border-radius:6px;margin-left:auto;white-space:nowrap}
+.badge-p{color:var(--pl);background:rgba(126,224,168,0.12)}
+.badge-e{color:var(--x);background:rgba(255,122,92,0.1)}
+
+.rule{font-size:17px;color:var(--ink);max-width:760px;margin:0 0 26px}
+.rule b{color:var(--pl-soft)}
+.worked{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.wk{border:1px solid var(--line);border-radius:12px;background:var(--bg2);padding:18px}
+.wk .fn{font-family:'IBM Plex Mono';font-size:14px;color:var(--peak);margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid var(--line);line-height:1.5}
+.wk .step{display:flex;gap:10px;font-size:14px;margin-bottom:10px;align-items:baseline}
+.wk .step:last-child{margin-bottom:0}
+.wk .tag{font-family:'IBM Plex Mono';font-size:12px;padding:2px 6px;border-radius:5px;flex:none}
+.tag-p{color:var(--pl);background:rgba(126,224,168,0.12)}
+.tag-g{color:var(--grad);background:rgba(255,209,92,0.1)}
+.tag-x{color:var(--x);background:rgba(255,122,92,0.1)}
+.wk .res{font-family:'IBM Plex Mono';color:var(--ink)}
+.wk .hint{color:var(--ink-faint);font-size:13px}
+.pitfall{margin-top:26px;border-left:2px solid var(--x);background:rgba(255,122,92,0.06);padding:14px 16px;border-radius:0 8px 8px 0;font-size:14.5px;color:var(--ink-dim);max-width:820px}
+.pitfall b{color:var(--x-soft);font-weight:600}
+footer{padding:48px 0 72px;border-top:1px solid var(--line);margin-top:36px;color:var(--ink-dim)}
+footer h3{font-size:20px;color:var(--ink);margin:0 0 14px}
+.next{display:flex;flex-wrap:wrap;gap:10px}
+.next span{font-family:'IBM Plex Mono';font-size:13px;padding:8px 12px;border:1px solid var(--line);border-radius:8px;color:var(--ink-dim)}
+.next span .n{color:var(--y)}
+.fine{font-size:13px;color:var(--ink-faint);margin-top:20px;max-width:820px}
+@media (max-width:920px){
+  .lab{grid-template-columns:1fr}.viewport{height:420px}
+  .idea,.worked{grid-template-columns:1fr}.panels{grid-template-columns:1fr}
+}
+@media (prefers-reduced-motion:no-preference){
+  .fade{opacity:0;transform:translateY(14px);animation:rise .7s cubic-bezier(.2,.7,.3,1) forwards}
+  @keyframes rise{to{opacity:1;transform:none}}
+}
+:focus-visible{outline:2px solid var(--y);outline-offset:2px;border-radius:4px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div id="errbar"></div>
+  <header>
+    <div class="eyebrow fade">Calc 3 · Field Lab 04 · <a href="index.html">all labs</a> · <a href="directional-derivatives-lab_3.html">← directional derivatives</a></div>
+    <h1 class="fade" style="animation-delay:.05s">Tangent planes &amp; <span class="accent">linearization</span></h1>
+    <p class="lede fade" style="animation-delay:.12s">
+      Here is the idea the whole of differential calculus is built on: <b>up close, every smooth surface
+      looks flat.</b> A curved graph, seen through a strong enough magnifier, is indistinguishable from a
+      plane — and that plane is completely determined by the two partial slopes you already know how to
+      find. Replace the surface by its plane and hard questions about <span class="mono">f</span> turn
+      into arithmetic.</p>
+  </header>
+
+  <div class="idea fade" style="animation-delay:.18s">
+    <div><div class="k kp">z = f(a,b) + f<sub>x</sub>(x−a) + f<sub>y</sub>(y−b)</div><span class="big">One plane, two slopes</span>
+      <p>Start at the height <span class="mono">f(a,b)</span>. Tilt east by the x-slope, tilt north by the y-slope. That single tilted plane is the tangent plane — nothing else is needed to pin it down.</p></div>
+    <div><div class="k kg">f ≈ L near (a, b)</div><span class="big">Trade curve for line</span>
+      <p>Call the plane's height <span class="mono">L(x,y)</span>, the <em>linearization</em>. Near the point it stands in for <span class="mono">f</span> so well that you can compute with it by hand and barely notice the difference.</p></div>
+    <div><div class="k kx">error ∝ (distance)²</div><span class="big">Why it works</span>
+      <p>Step away and the gap between surface and plane grows only as the <em>square</em> of your distance. Halve the distance and the error drops fourfold — so close in, it is negligible.</p></div>
+  </div>
+
+  <section>
+    <div class="sec-head"><span class="sec-num">01</span><h2>The plane that just touches</h2>
+      <p>Move the point and watch the mint plane re-tilt to rest flush against the surface. Its two tilts are exactly ∂f/∂x and ∂f/∂y — the coral and teal tangent lines you met in Lab 01 lie inside it.</p></div>
+    <p class="prose">Where does the formula come from? A plane through the point <span class="mono">(a, b, f(a,b))</span>
+      is <span class="mono">z = f(a,b) + M(x−a) + N(y−b)</span> for some tilts <b>M</b> and <b>N</b>. For the
+      plane to <b>touch</b> the surface — to share its slope, not just its height — walking east along the
+      plane must climb at the same rate as walking east along the surface. Walking east on the plane gives
+      slope <span class="mono">M</span>; walking east on the surface gives <span class="mono">∂f/∂x</span>.
+      So <span class="mono">M = f<sub>x</sub></span>, and likewise <span class="mono">N = f<sub>y</sub></span>.
+      The tangent plane is just the two Calc-1 tangent lines, stitched into one flat sheet.</p>
+    <div class="lab">
+      <div class="viewport"><canvas class="stage" id="c3d"></canvas><div class="vhint">drag to orbit · scroll or pinch to zoom</div></div>
+      <div class="rail">
+        <div class="chips" id="chips"></div>
+        <div class="card">
+          <div class="lbl">Point of tangency</div>
+          <div class="sliderrow"><div class="top"><span class="name"><span class="dotx">■</span> a <span class="sub">— x of the point</span></span><span class="val" id="valx">0.00</span></div><input type="range" id="sx"></div>
+          <div class="sliderrow"><div class="top"><span class="name"><span class="doty">■</span> b <span class="sub">— y of the point</span></span><span class="val" id="valy">0.00</span></div><input type="range" id="sy"></div>
+        </div>
+        <div class="card readout">
+          <div class="lbl">The plane, numerically</div>
+          <div class="line"><span class="rl">Height <span class="exp mono">f(a, b)</span></span><span class="rv" id="rf">0.00</span></div>
+          <div class="line"><span class="rl">East tilt <span class="exp mono" id="efx">f_x</span></span><span class="rv vx" id="rfx">0.00</span></div>
+          <div class="line"><span class="rl">North tilt <span class="exp mono" id="efy">f_y</span></span><span class="rv vy" id="rfy">0.00</span></div>
+          <div class="eqbox" id="planeeq">—</div>
+        </div>
+        <div class="card"><div class="lbl">Show on the surface</div>
+          <div class="toggles">
+            <label class="tg"><input type="checkbox" id="tPlane" checked> The tangent plane</label>
+            <label class="tg"><input type="checkbox" id="tLines" checked> The two partial tangent lines</label>
+            <label class="tg"><input type="checkbox" id="tSurf" checked> The surface itself</label>
+          </div></div>
+        <div class="note" id="exnote"></div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="sec-num">02</span><h2>Zoom in until it's flat</h2>
+      <p>This is the payoff. Shrink the window around the point and the surface visibly settles onto the plane. The claim "differentiable = locally linear" is not a slogan here — it is a thing you can watch happen.</p></div>
+    <p class="prose">Keep your eye on the mint plane: as you zoom, <b>it never changes</b> — its tilt is fixed by
+      the two slopes at the centre. What changes is the <span class="mono">surface</span>, which peels down
+      toward the plane. The colour shows the signed gap <span class="mono">f − L</span>: coral where the
+      surface rides above the plane, blue where it dips below. Watch the readout — each time you zoom in by
+      4×, the largest gap shrinks by roughly <b>16×</b>. That factor-of-square is the whole reason
+      linearization is worth anything.</p>
+    <div class="lab">
+      <div class="viewport short"><canvas class="stage" id="c3dz"></canvas><div class="vhint">a tiny window, blown up to fill the box</div></div>
+      <div class="rail">
+        <div class="card">
+          <div class="lbl">Magnification</div>
+          <div class="seg" id="segzoom">
+            <button data-z="1" class="on">×1</button>
+            <button data-z="4">×4</button>
+            <button data-z="16">×16</button>
+            <button data-z="64">×64</button>
+          </div>
+          <div class="sliderrow" style="margin-top:14px"><div class="top"><span class="name"><span class="dotp">■</span> window <span class="sub">— half-width</span></span><span class="val" id="valw">1.80</span></div><input type="range" id="sw"></div>
+        </div>
+        <div class="card readout">
+          <div class="line"><span class="rl">Window half-width <span class="exp mono">h</span></span><span class="rv vp" id="rw">0.00</span></div>
+          <div class="line"><span class="rl">Largest gap in view <span class="exp mono">max |f − L|</span></span><span class="rv vx" id="rmax">0.00</span></div>
+          <div class="line"><span class="rl">Gap ÷ window <span class="walk">flatness ratio — falls to 0</span></span><span class="rv" id="rratio">0.00</span></div>
+        </div>
+        <div class="panel" style="margin:0"><h3><span class="swatch sw-e"></span> The gap across the window<span class="pbadge badge-e" id="badgeE">—</span></h3>
+          <p class="cap">A slice of <span class="mono">f − L</span> straight through the point. A little parabola of error, sitting on zero — and collapsing as the window tightens.</p>
+          <canvas class="plot2d" id="ploterr"></canvas></div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="sec-num">03</span><h2>Using it to estimate</h2>
+      <p>Now the point of it all. To guess <span class="mono">f</span> at a nearby spot, don't touch <span class="mono">f</span> — evaluate the plane instead. That is linear approximation, and the shortcut has a name: the differential.</p></div>
+    <p class="prose">Rearrange the linearization into the change it predicts. Moving by
+      <span class="mono">(dx, dy)</span> from the point, the plane rises by
+      <span class="mono">dz = f<sub>x</sub> dx + f<sub>y</sub> dy</span>. That is the <b>differential</b> — the
+      linear estimate of the true change <span class="mono">Δf = f(a+dx, b+dy) − f(a,b)</span>. It is the
+      same tool an engineer uses to turn "my radius is off by a millimetre" into "so my volume is off by
+      this much," without recomputing anything. Nudge the offset and compare the estimate against the truth.</p>
+    <div class="lab">
+      <div class="viewport short"><canvas class="stage" id="c3de"></canvas><div class="vhint">white curve = true f · mint line = the plane's estimate</div></div>
+      <div class="rail">
+        <div class="chips" id="chips3"></div>
+        <div class="card">
+          <div class="lbl">Step to a nearby point</div>
+          <div class="sliderrow"><div class="top"><span class="name"><span class="dotx">■</span> dx</span><span class="val" id="valdx">0.00</span></div><input type="range" id="dx"></div>
+          <div class="sliderrow"><div class="top"><span class="name"><span class="doty">■</span> dy</span><span class="val" id="valdy">0.00</span></div><input type="range" id="dy"></div>
+        </div>
+        <div class="card readout">
+          <div class="line"><span class="rl">Linear estimate <span class="exp mono">dz = f_x·dx + f_y·dy</span></span><span class="rv vp" id="rdz">0.00</span></div>
+          <div class="line"><span class="rl">True change <span class="exp mono">Δf</span></span><span class="rv" id="rdf">0.00</span></div>
+          <div class="line"><span class="rl">Error <span class="walk" id="werr">estimate − truth</span></span><span class="rv vx" id="rerr">0.00</span></div>
+          <div class="eqbox" id="diffeq">—</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="sec-num">04</span><h2>Computing them by hand</h2></div>
+    <p class="rule">The recipe never changes. Pick a nearby point <b>(a, b)</b> where <span class="mono">f</span> is
+      easy. Find <b>f(a,b)</b>, <b>f<sub>x</sub></b>, <b>f<sub>y</sub></b>. Then
+      <b>L = f(a,b) + f<sub>x</sub>(x−a) + f<sub>y</sub>(y−b)</b>, and plug in your actual point.</p>
+    <div class="worked">
+      <div class="wk"><div class="fn">Estimate √(3.98² + 3.03²)<br>f = √(x² + y²),  base (4, 3)</div>
+        <div class="step"><span class="tag tag-p">base</span><span class="hint">f(4,3) = √25 = 5, a round anchor</span></div>
+        <div class="step"><span class="tag tag-g">∇f</span><span class="hint">(x/f, y/f) = (4/5, 3/5)</span></div>
+        <div class="step"><span class="tag tag-x">plug</span><span class="hint">dx = −0.02, dy = +0.03</span></div>
+        <div class="step">→ <span class="res">5 + 0.8(−0.02) + 0.6(0.03)</span></div>
+        <div class="step">→ <span class="res">5.002</span> <span class="hint">(true: 5.00213…)</span></div></div>
+      <div class="wk"><div class="fn">Estimate f(2.05, 2.97)<br>f = x²y,  base (2, 3)</div>
+        <div class="step"><span class="tag tag-p">base</span><span class="hint">f(2,3) = 4·3 = 12</span></div>
+        <div class="step"><span class="tag tag-g">∇f</span><span class="hint">(2xy, x²) = (12, 4)</span></div>
+        <div class="step"><span class="tag tag-x">plug</span><span class="hint">dx = 0.05, dy = −0.03</span></div>
+        <div class="step">→ <span class="res">12 + 12(0.05) + 4(−0.03)</span></div>
+        <div class="step">→ <span class="res">12.48</span> <span class="hint">(true: 12.481…)</span></div></div>
+      <div class="wk"><div class="fn">Error propagation<br>V = πr²h,  r = 5±0.1, h = 10</div>
+        <div class="step"><span class="tag tag-g">differential</span><span class="hint">dV = 2πrh·dr + πr²·dh</span></div>
+        <div class="step"><span class="tag tag-x">only r wobbles</span><span class="hint">dh = 0, dr = 0.1</span></div>
+        <div class="step">→ <span class="res">dV = 2π(5)(10)(0.1)</span></div>
+        <div class="step">→ <span class="res">= 10π ≈ 31.4</span></div>
+        <div class="step"><span class="hint">a 2% radius error → a 4% volume error, since dV/V = 2 dr/r</span></div></div>
+    </div>
+    <p class="pitfall"><b>The mistake everyone makes once.</b> Trusting the linearization too far from the base
+      point. The estimate is only as good as the surface is flat, and "flat enough" depends on how sharply
+      <span class="mono">f</span> curves — a gentle plane stays accurate for a long way, a tight ripple goes
+      wrong almost immediately. When an estimate has to be trusted, the honest question is never "is
+      <span class="mono">L</span> close?" but "how big is the <em>second</em> derivative I'm ignoring?" That
+      curvature term is exactly what the next lab turns into a tool.</p>
+  </section>
+
+  <footer>
+    <h3>Where this goes next</h3>
+    <div class="next">
+      <span><span class="n">→</span> critical points &amp; the second-derivative test</span>
+      <span><span class="n">→</span> the Hessian &amp; local curvature</span>
+      <span><span class="n">→</span> Taylor polynomials in two variables</span>
+      <span><span class="n">→</span> Newton's method &amp; optimization</span>
+      <span><span class="n">→</span> Lagrange multipliers</span>
+    </div>
+    <p class="fine">The plane here is built from exact analytic partials, and the error surface is the true
+      difference <span class="mono">f − L</span> — so the flatness you watch emerge is real, not staged. Try
+      the ramp: a linear function is its own linearization, so the error is exactly zero at every zoom, and
+      the surface and plane are the same object.</p>
+  </footer>
+</div>
+
+<script>
+try{
+/* ---------- surfaces: f, exact first partials, second partials (for prose/accuracy) ---------- */
+const EX=[
+ {id:'bowl',name:'Bowl',sym:'x² + y²',f:(x,y)=>x*x+y*y,fx:(x,y)=>2*x,fy:(x,y)=>2*y,fxs:'2a',fys:'2b',r:3,step:0.1,
+  note:'A gentle valley. The tangent plane sits under the bowl and only touches at one point; the surface curves up away from it in every direction, so the error is always positive.'},
+ {id:'saddle',name:'Saddle',sym:'x² − y²',f:(x,y)=>x*x-y*y,fx:(x,y)=>2*x,fy:(x,y)=>-2*y,fxs:'2a',fys:'−2b',r:3,step:0.1,
+  note:'The plane cuts through the surface rather than resting against it: coral on the uphill axis, blue on the downhill one. Tangency does not mean the surface stays on one side.'},
+ {id:'ripple',name:'Ripple',sym:'sin(x)·cos(y)',f:(x,y)=>Math.sin(x)*Math.cos(y),fx:(x,y)=>Math.cos(x)*Math.cos(y),fy:(x,y)=>-Math.sin(x)*Math.sin(y),fxs:'cos(a)·cos(b)',fys:'−sin(a)·sin(b)',r:Math.PI,step:0.05,
+  note:'Sharp curvature, so the plane is trustworthy only very close in. A good place to watch the error grow fast the moment you widen the window.'},
+ {id:'hill',name:'Hill',sym:'e^−(x²+y²)/2',f:(x,y)=>Math.exp(-(x*x+y*y)/2),fx:(x,y)=>-x*Math.exp(-(x*x+y*y)/2),fy:(x,y)=>-y*Math.exp(-(x*x+y*y)/2),fxs:'−a·e^−(a²+b²)/2',fys:'−b·e^−(a²+b²)/2',r:3,step:0.1,
+  note:'On the flat outskirts the plane is nearly perfect; right at the summit it becomes horizontal and the surface bends away below it on all sides.'},
+ {id:'monkey',name:'Monkey saddle',sym:'x³ − 3xy²',f:(x,y)=>x*x*x-3*x*y*y,fx:(x,y)=>3*x*x-3*y*y,fy:(x,y)=>-6*x*y,fxs:'3a² − 3b²',fys:'−6ab',r:2,step:0.05,
+  note:'At the origin every first partial is zero, so the tangent plane is perfectly horizontal — yet the surface pours away through three troughs. Flat plane, unflat surface.'},
+ {id:'ramp',name:'Ramp',sym:'0.7x + 0.4y',f:(x,y)=>0.7*x+0.4*y,fx:()=>0.7,fy:()=>0.4,fxs:'0.7',fys:'0.4',r:3,step:0.1,
+  note:'A flat plane to begin with, so its tangent plane is itself. The error is exactly zero everywhere and at every zoom — the degenerate case that proves the rule.'}
+];
+
+const TERRAIN=[[0,10,46,51],[0.22,18,78,84],[0.45,47,125,107],[0.68,127,166,95],[0.85,217,180,91],[1,240,215,154]];
+function terrain(t){t=t<0?0:t>1?1:t;for(let k=1;k<TERRAIN.length;k++){if(t<=TERRAIN[k][0]){const a=TERRAIN[k-1],b=TERRAIN[k],f=(t-a[0])/((b[0]-a[0])||1);return[a[1]+(b[1]-a[1])*f,a[2]+(b[2]-a[2])*f,a[3]+(b[3]-a[3])*f];}}const l=TERRAIN[TERRAIN.length-1];return[l[1],l[2],l[3]];}
+const clamp=(v,a,b)=>v<a?a:v>b?b:v;
+const lin=(a,b,n)=>{const o=[];for(let i=0;i<n;i++)o.push(a+(b-a)*i/(n-1));return o;};
+const fmt=v=>{const a=Math.abs(v);return(v<0&&a>=5e-4?'−':' ')+a.toFixed(2);};
+const fmt3=v=>{const a=Math.abs(v);return(v<0&&a>=5e-5?'−':' ')+a.toFixed(3);};
+
+/* ---------- shared 3D core ---------- */
+function fit(cv){const dpr=window.devicePixelRatio||1;const rect=cv.getBoundingClientRect();const W=Math.max(1,rect.width),H=Math.max(1,rect.height);const bw=Math.round(W*dpr),bh=Math.round(H*dpr);if(cv.width!==bw||cv.height!==bh){cv.width=bw;cv.height=bh;}const ctx=cv.getContext('2d');ctx.setTransform(dpr,0,0,dpr,0,0);return{ctx,W,H};}
+function makeP(W,H,cam){const S=Math.min(W/3.25,H/2.75)*cam.zoom;return{cy:Math.cos(cam.yaw),sy:Math.sin(cam.yaw),cp:Math.cos(cam.pitch),sp:Math.sin(cam.pitch),S,cx:W/2,cc:H*0.58};}
+function proj(wx,wy,wz,P){wz*=0.92;const xr=wx*P.cy-wy*P.sy,yr=wx*P.sy+wy*P.cy;const yp=yr*P.cp-wz*P.sp,zp=yr*P.sp+wz*P.cp;return{x:P.cx+xr*P.S,y:P.cc-zp*P.S,d:yp};}
+const LIGHT=(()=>{const L=[0.32,0.34,0.88],m=Math.hypot(L[0],L[1],L[2]);return[L[0]/m,L[1]/m,L[2]/m];})();
+function line3(ctx,P,a,b,color,width){const p0=proj(a[0],a[1],a[2],P),p1=proj(b[0],b[1],b[2],P);ctx.strokeStyle=color;ctx.lineWidth=width;ctx.setLineDash([]);ctx.beginPath();ctx.moveTo(p0.x,p0.y);ctx.lineTo(p1.x,p1.y);ctx.stroke();}
+function strokePath3(ctx,P,w,color,width,dash){if(w.length<2)return;const p=w.map(v=>proj(v[0],v[1],v[2],P));ctx.save();ctx.beginPath();ctx.moveTo(p[0].x,p[0].y);for(let k=1;k<p.length;k++)ctx.lineTo(p[k].x,p[k].y);ctx.strokeStyle=color;ctx.lineWidth=width;ctx.lineJoin='round';ctx.setLineDash(dash||[]);ctx.stroke();ctx.restore();}
+function text3(ctx,P,a,txt,color,dx,dy,font){const p=proj(a[0],a[1],a[2],P);ctx.fillStyle=color;ctx.font=font||'12px "IBM Plex Mono",monospace';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(txt,p.x+(dx||0),p.y+(dy||0));}
+function arrow3(ctx,P,a,b,color,width){const p0=proj(a[0],a[1],a[2],P),p1=proj(b[0],b[1],b[2],P);ctx.strokeStyle=color;ctx.fillStyle=color;ctx.lineWidth=width||1.7;ctx.setLineDash([]);ctx.beginPath();ctx.moveTo(p0.x,p0.y);ctx.lineTo(p1.x,p1.y);ctx.stroke();const ang=Math.atan2(p1.y-p0.y,p1.x-p0.x),h=9;ctx.beginPath();ctx.moveTo(p1.x,p1.y);ctx.lineTo(p1.x-h*Math.cos(ang-0.42),p1.y-h*Math.sin(ang-0.42));ctx.lineTo(p1.x-h*Math.cos(ang+0.42),p1.y-h*Math.sin(ang+0.42));ctx.closePath();ctx.fill();}
+function drawFrame(ctx,P){
+  const gc='rgba(120,170,175,0.11)',bc='rgba(120,170,175,0.22)';
+  for(const g of[-1,-0.5,0,0.5,1]){line3(ctx,P,[g,-1,-1],[g,1,-1],gc,1);line3(ctx,P,[-1,g,-1],[1,g,-1],gc,1);}
+  for(const c of[[-1,-1],[1,-1],[1,1],[-1,1]])line3(ctx,P,[c[0],c[1],-1],[c[0],c[1],1],bc,1);
+  const top=[[-1,-1,1],[1,-1,1],[1,1,1],[-1,1,1]],bot=[[-1,-1,-1],[1,-1,-1],[1,1,-1],[-1,1,-1]];
+  for(let k=0;k<4;k++){line3(ctx,P,top[k],top[(k+1)%4],bc,1);line3(ctx,P,bot[k],bot[(k+1)%4],bc,1);}
+}
+function axfmt(v){if(Math.abs(Math.abs(v)-Math.PI)<0.03)return(v<0?'−':'')+'π';const s=(v%1===0?v.toFixed(0):v.toFixed(1));return s.replace('-','−');}
+
+/* ================= state ================= */
+let cur=0,ax=0.8,ay=-0.7;
+let show={plane:true,lines:true,surf:true};
+let zoomW=1.8, cur3=0, ddx=0.4, ddy=0.3;
+const camA={yaw:-0.62,pitch:0.56,zoom:1};
+const camZ={yaw:-0.6,pitch:0.5,zoom:1};
+const camE={yaw:-0.62,pitch:0.52,zoom:1};
+const GV=36;
+let mesh=null;
+
+function buildMesh(ex){
+  const xs=lin(-ex.r,ex.r,GV),ys=lin(-ex.r,ex.r,GV),Z=[];
+  let zmin=Infinity,zmax=-Infinity;
+  for(let j=0;j<GV;j++){const row=[];for(let i=0;i<GV;i++){const v=ex.f(xs[i],ys[j]);row.push(v);if(v<zmin)zmin=v;if(v>zmax)zmax=v;}Z.push(row);}
+  const zmid=(zmin+zmax)/2,zhalf=((zmax-zmin)/2)||1;
+  mesh={xs,ys,Z,zmin,zmax,zmid,zhalf,r:ex.r};
+}
+const NW=x=>x/mesh.r, NZ=z=>(z-mesh.zmid)/mesh.zhalf;
+const L_at=(ex,x,y)=>ex.f(ax,ay)+ex.fx(ax,ay)*(x-ax)+ex.fy(ax,ay)*(y-ay);
+
+/* ---------- section 1: surface + tangent plane ---------- */
+function render3D(){
+  const ex=EX[cur],cv=document.getElementById('c3d');const{ctx,W,H}=fit(cv);
+  ctx.clearRect(0,0,W,H);
+  const P=makeP(W,H,camA);const{xs,ys,Z,zmin,zmax}=mesh;
+  drawFrame(ctx,P);
+  if(show.surf){
+    const quads=[];
+    for(let j=0;j<GV-1;j++)for(let i=0;i<GV-1;i++){
+      const c=[[i,j],[i+1,j],[i+1,j+1],[i,j+1]];
+      const w=c.map(([ii,jj])=>[NW(xs[ii]),NW(ys[jj]),NZ(Z[jj][ii])]);
+      const p=w.map(v=>proj(v[0],v[1],v[2],P));
+      const za=(Z[j][i]+Z[j][i+1]+Z[j+1][i+1]+Z[j+1][i])/4;
+      const t=(za-zmin)/((zmax-zmin)||1);
+      const e1=[w[1][0]-w[0][0],w[1][1]-w[0][1],w[1][2]-w[0][2]],e2=[w[3][0]-w[0][0],w[3][1]-w[0][1],w[3][2]-w[0][2]];
+      let nv=[e1[1]*e2[2]-e1[2]*e2[1],e1[2]*e2[0]-e1[0]*e2[2],e1[0]*e2[1]-e1[1]*e2[0]];
+      const nl=Math.hypot(nv[0],nv[1],nv[2])||1;nv=[nv[0]/nl,nv[1]/nl,nv[2]/nl];if(nv[2]<0)nv=[-nv[0],-nv[1],-nv[2]];
+      const br=0.5+0.5*Math.max(0,nv[0]*LIGHT[0]+nv[1]*LIGHT[1]+nv[2]*LIGHT[2]);
+      const col=terrain(t);
+      quads.push({p,depth:(p[0].d+p[1].d+p[2].d+p[3].d)/4,col:'rgb('+(col[0]*br|0)+','+(col[1]*br|0)+','+(col[2]*br|0)+')'});
+    }
+    quads.sort((a,b)=>b.depth-a.depth);
+    for(const q of quads){ctx.beginPath();ctx.moveTo(q.p[0].x,q.p[0].y);for(let k=1;k<4;k++)ctx.lineTo(q.p[k].x,q.p[k].y);ctx.closePath();ctx.fillStyle=q.col;ctx.strokeStyle=q.col;ctx.lineWidth=1;ctx.fill();ctx.stroke();}
+  }
+  const z0=ex.f(ax,ay),dx=ex.fx(ax,ay),dy=ex.fy(ax,ay);
+  /* the tangent plane, a translucent patch around the point */
+  if(show.plane){
+    const q=ex.r*0.6, GG=8;
+    const px=lin(clamp(ax-q,-ex.r,ex.r),clamp(ax+q,-ex.r,ex.r),GG),py=lin(clamp(ay-q,-ex.r,ex.r),clamp(ay+q,-ex.r,ex.r),GG);
+    /* fill */
+    ctx.save();ctx.globalAlpha=0.34;ctx.fillStyle='#7ee0a8';
+    for(let j=0;j<GG-1;j++)for(let i=0;i<GG-1;i++){
+      const w=[[px[i],py[j]],[px[i+1],py[j]],[px[i+1],py[j+1]],[px[i],py[j+1]]].map(u=>proj(NW(u[0]),NW(u[1]),NZ(L_at(ex,u[0],u[1])),P));
+      ctx.beginPath();ctx.moveTo(w[0].x,w[0].y);for(let k=1;k<4;k++)ctx.lineTo(w[k].x,w[k].y);ctx.closePath();ctx.fill();
+    }
+    ctx.restore();
+    /* grid lines on the plane */
+    ctx.save();ctx.globalAlpha=0.5;
+    for(const xv of px)strokePath3(ctx,P,py.map(yv=>[NW(xv),NW(yv),NZ(L_at(ex,xv,yv))]),'rgba(126,224,168,0.8)',1);
+    for(const yv of py)strokePath3(ctx,P,px.map(xv=>[NW(xv),NW(yv),NZ(L_at(ex,xv,yv))]),'rgba(126,224,168,0.8)',1);
+    ctx.restore();
+  }
+  /* the two partial tangent lines from Lab 01 */
+  if(show.lines){
+    const Lx=ex.r*0.34, Ly=ex.r*0.34;
+    strokePath3(ctx,P,[[NW(ax-Lx),NW(ay),NZ(z0-dx*Lx)],[NW(ax+Lx),NW(ay),NZ(z0+dx*Lx)]],'#ff7a5c',3.4);
+    strokePath3(ctx,P,[[NW(ax),NW(ay-Ly),NZ(z0-dy*Ly)],[NW(ax),NW(ay+Ly),NZ(z0+dy*Ly)]],'#46c9d6',3.4);
+  }
+  const pp=proj(NW(ax),NW(ay),NZ(z0),P);
+  ctx.beginPath();ctx.arc(pp.x,pp.y,5.5,0,7);ctx.fillStyle='#fff';ctx.fill();ctx.lineWidth=2;ctx.strokeStyle='#081416';ctx.stroke();
+  /* axes */
+  const O=[-1,-1,-1];
+  arrow3(ctx,P,O,[1.18,-1,-1],'#ff9a80');arrow3(ctx,P,O,[-1,1.18,-1],'#7fdbe6');arrow3(ctx,P,O,[-1,-1,1.18],'#ffdd82');
+  const bf='600 14px "Space Grotesk",sans-serif';
+  text3(ctx,P,[1.34,-1,-1],'x','#ff9a80',0,0,bf);text3(ctx,P,[-1,1.34,-1],'y','#7fdbe6',0,0,bf);text3(ctx,P,[-1,-1,1.35],'z','#ffdd82',0,0,bf);
+}
+
+/* ---------- section 2: the zoom window ---------- */
+function zoomGain(ex){const dx=Math.abs(ex.fx(ax,ay)),dy=Math.abs(ex.fy(ax,ay));return Math.min(0.62,0.82/(dx+dy+1e-3));}
+function windowStats(ex,w){
+  const N=26;let mx=0;
+  for(let j=0;j<=N;j++)for(let i=0;i<=N;i++){
+    const x=ax-w+2*w*i/N,y=ay-w+2*w*j/N;
+    mx=Math.max(mx,Math.abs(ex.f(x,y)-L_at(ex,x,y)));
+  }
+  return mx;
+}
+function renderZoom(){
+  const ex=EX[cur],cv=document.getElementById('c3dz');const{ctx,W,H}=fit(cv);
+  ctx.clearRect(0,0,W,H);
+  const P=makeP(W,H,camZ);
+  drawFrame(ctx,P);
+  const w=zoomW,f0=ex.f(ax,ay),dx=ex.fx(ax,ay),dy=ex.fy(ax,ay),s=zoomGain(ex);
+  const GZ=30;
+  const H2=lin(-w,w,GZ);              /* h = x - a */
+  const K2=lin(-w,w,GZ);              /* k = y - b */
+  const NXl=h=>h/w, NZl=z=>clamp((z-f0)/w*s,-1.15,1.15);
+  /* signed-error surface */
+  const quads=[];
+  let emax=0;
+  for(let j=0;j<GZ-1;j++)for(let i=0;i<GZ-1;i++){
+    const cc=[[i,j],[i+1,j],[i+1,j+1],[i,j+1]];
+    const w4=cc.map(([ii,jj])=>{const x=ax+H2[ii],y=ay+K2[jj];return[NXl(H2[ii]),NXl(K2[jj]),NZl(ex.f(x,y))];});
+    const p=w4.map(v=>proj(v[0],v[1],v[2],P));
+    /* signed error at centre of cell -> colour */
+    const xc=ax+(H2[i]+H2[i+1])/2, yc=ay+(K2[j]+K2[j+1])/2;
+    const e=ex.f(xc,yc)-L_at(ex,xc,yc); emax=Math.max(emax,Math.abs(e));
+    const e1=[w4[1][0]-w4[0][0],w4[1][1]-w4[0][1],w4[1][2]-w4[0][2]],e2=[w4[3][0]-w4[0][0],w4[3][1]-w4[0][1],w4[3][2]-w4[0][2]];
+    let nv=[e1[1]*e2[2]-e1[2]*e2[1],e1[2]*e2[0]-e1[0]*e2[2],e1[0]*e2[1]-e1[1]*e2[0]];
+    const nl=Math.hypot(nv[0],nv[1],nv[2])||1;nv=[nv[0]/nl,nv[1]/nl,nv[2]/nl];if(nv[2]<0)nv=[-nv[0],-nv[1],-nv[2]];
+    const br=0.55+0.45*Math.max(0,nv[0]*LIGHT[0]+nv[1]*LIGHT[1]+nv[2]*LIGHT[2]);
+    quads.push({p,depth:(p[0].d+p[1].d+p[2].d+p[3].d)/4,e,br});
+  }
+  const scale=emax>1e-9?emax:1;
+  quads.sort((a,b)=>b.depth-a.depth);
+  for(const q of quads){
+    const t=clamp(q.e/scale,-1,1);
+    /* coral where the surface rides above the plane, blue where it dips below, pale at zero */
+    const up=[255,122,92], dn=[90,150,230], mid=[150,170,175];
+    const a=Math.abs(t), base=t>=0?up:dn;
+    const col=[mid[0]+(base[0]-mid[0])*a, mid[1]+(base[1]-mid[1])*a, mid[2]+(base[2]-mid[2])*a];
+    ctx.beginPath();ctx.moveTo(q.p[0].x,q.p[0].y);for(let k=1;k<4;k++)ctx.lineTo(q.p[k].x,q.p[k].y);ctx.closePath();
+    ctx.fillStyle='rgb('+(col[0]*q.br|0)+','+(col[1]*q.br|0)+','+(col[2]*q.br|0)+')';
+    ctx.strokeStyle=ctx.fillStyle;ctx.lineWidth=1;ctx.fill();ctx.stroke();
+  }
+  /* the tangent plane: fixed tilt, drawn as a mint grid */
+  ctx.save();ctx.globalAlpha=0.9;
+  const planeZ=(h,k)=>clamp((dx*h+dy*k)/w*s,-1.15,1.15);
+  for(const h of lin(-w,w,9))strokePath3(ctx,P,lin(-w,w,9).map(k=>[NXl(h),NXl(k),planeZ(h,k)]),'rgba(126,224,168,0.85)',1);
+  for(const k of lin(-w,w,9))strokePath3(ctx,P,lin(-w,w,9).map(h=>[NXl(h),NXl(k),planeZ(h,k)]),'rgba(126,224,168,0.85)',1);
+  ctx.restore();
+  /* the point */
+  const pp=proj(0,0,planeZ(0,0),P);
+  ctx.beginPath();ctx.arc(pp.x,pp.y,5,0,7);ctx.fillStyle='#fff';ctx.fill();ctx.lineWidth=2;ctx.strokeStyle='#081416';ctx.stroke();
+}
+
+function drawErrPlot(){
+  const ex=EX[cur],w=zoomW;
+  const N=121,ts=lin(-w,w,N);
+  /* slice along the diagonal direction (1,1)/√2 */
+  const ux=1/Math.SQRT2,uy=1/Math.SQRT2;
+  const vals=ts.map(t=>{const x=ax+ux*t,y=ay+uy*t;return ex.f(x,y)-L_at(ex,x,y);});
+  const cv=document.getElementById('ploterr');const{ctx,W,H}=fit(cv);ctx.clearRect(0,0,W,H);
+  const pL=48,pB=26,pT=12,pR=12;
+  let lo=Math.min(0,...vals),hi=Math.max(0,...vals);const pad=((hi-lo)||1)*0.16;lo-=pad;hi+=pad;
+  const MX=v=>pL+(v+w)/(2*w)*(W-pL-pR),MY=v=>pT+(hi-v)/((hi-lo)||1)*(H-pT-pB);
+  ctx.strokeStyle='rgba(120,170,175,0.14)';ctx.lineWidth=1;
+  ctx.beginPath();ctx.moveTo(MX(0),pT);ctx.lineTo(MX(0),H-pB);ctx.stroke();
+  ctx.strokeStyle='rgba(120,170,175,0.34)';ctx.beginPath();ctx.moveTo(pL,MY(0));ctx.lineTo(W-pR,MY(0));ctx.stroke();
+  /* filled error */
+  ctx.beginPath();ctx.moveTo(MX(-w),MY(0));
+  for(let i=0;i<N;i++)ctx.lineTo(MX(ts[i]),MY(vals[i]));
+  ctx.lineTo(MX(w),MY(0));ctx.closePath();ctx.fillStyle='rgba(255,122,92,0.16)';ctx.fill();
+  ctx.strokeStyle='#ff7a5c';ctx.lineWidth=2.4;ctx.lineJoin='round';ctx.beginPath();
+  for(let i=0;i<N;i++){const px=MX(ts[i]),py=MY(vals[i]);i?ctx.lineTo(px,py):ctx.moveTo(px,py);}ctx.stroke();
+  ctx.beginPath();ctx.arc(MX(0),MY(0),4,0,7);ctx.fillStyle='#fff';ctx.fill();ctx.lineWidth=2;ctx.strokeStyle='#ff7a5c';ctx.stroke();
+  ctx.fillStyle='#6b8484';ctx.font='11px "IBM Plex Mono",monospace';ctx.textAlign='center';
+  ctx.fillText('distance from the point, along (1,1)',W/2,H-8);
+  const mx=Math.max.apply(null,vals.map(Math.abs));
+  document.getElementById('badgeE').textContent='peak |f−L| = '+mx.toFixed(mx<0.1?4:2);
+}
+
+/* ---------- section 3: estimate ---------- */
+function renderEst(){
+  const ex=EX[cur3],cv=document.getElementById('c3de');const{ctx,W,H}=fit(cv);
+  ctx.clearRect(0,0,W,H);
+  const P=makeP(W,H,camE);
+  drawFrame(ctx,P);
+  /* base point fixed at a nice spot for this surface */
+  const a=est_a(ex),b=est_b(ex),f0=ex.f(a,b),fxv=ex.fx(a,b),fyv=ex.fy(a,b);
+  /* mesh (local build in this normalization) */
+  const xs=lin(-ex.r,ex.r,GV),ys=lin(-ex.r,ex.r,GV),Z=[];
+  let zmin=Infinity,zmax=-Infinity;
+  for(let j=0;j<GV;j++){const row=[];for(let i=0;i<GV;i++){const v=ex.f(xs[i],ys[j]);row.push(v);if(v<zmin)zmin=v;if(v>zmax)zmax=v;}Z.push(row);}
+  const zmid=(zmin+zmax)/2,zhalf=((zmax-zmin)/2)||1;
+  const nw=x=>x/ex.r,nz=z=>(z-zmid)/zhalf;
+  const quads=[];
+  for(let j=0;j<GV-1;j++)for(let i=0;i<GV-1;i++){
+    const c=[[i,j],[i+1,j],[i+1,j+1],[i,j+1]];
+    const w=c.map(([ii,jj])=>[nw(xs[ii]),nw(ys[jj]),nz(Z[jj][ii])]);
+    const p=w.map(v=>proj(v[0],v[1],v[2],P));
+    const za=(Z[j][i]+Z[j][i+1]+Z[j+1][i+1]+Z[j+1][i])/4,t=(za-zmin)/((zmax-zmin)||1);
+    const e1=[w[1][0]-w[0][0],w[1][1]-w[0][1],w[1][2]-w[0][2]],e2=[w[3][0]-w[0][0],w[3][1]-w[0][1],w[3][2]-w[0][2]];
+    let nv=[e1[1]*e2[2]-e1[2]*e2[1],e1[2]*e2[0]-e1[0]*e2[2],e1[0]*e2[1]-e1[1]*e2[0]];
+    const nl=Math.hypot(nv[0],nv[1],nv[2])||1;nv=[nv[0]/nl,nv[1]/nl,nv[2]/nl];if(nv[2]<0)nv=[-nv[0],-nv[1],-nv[2]];
+    const br=0.5+0.5*Math.max(0,nv[0]*LIGHT[0]+nv[1]*LIGHT[1]+nv[2]*LIGHT[2]);
+    const col=terrain(t);
+    quads.push({p,depth:(p[0].d+p[1].d+p[2].d+p[3].d)/4,col:'rgb('+(col[0]*br|0)+','+(col[1]*br|0)+','+(col[2]*br|0)+')'});
+  }
+  quads.sort((a,b)=>b.depth-a.depth);
+  for(const q of quads){ctx.beginPath();ctx.moveTo(q.p[0].x,q.p[0].y);for(let k=1;k<4;k++)ctx.lineTo(q.p[k].x,q.p[k].y);ctx.closePath();ctx.globalAlpha=0.9;ctx.fillStyle=q.col;ctx.strokeStyle=q.col;ctx.lineWidth=1;ctx.fill();ctx.stroke();}
+  ctx.globalAlpha=1;
+  /* the straight step from base to target, drawn on the surface (white) and along the plane (mint) */
+  const N=60,surf=[],planePts=[];
+  for(let s=0;s<=N;s++){const t=s/N,x=a+ddx*t,y=b+ddy*t;
+    surf.push([nw(x),nw(y),nz(ex.f(x,y))]);
+    planePts.push([nw(x),nw(y),nz(f0+fxv*(x-a)+fyv*(y-b))]);}
+  strokePath3(ctx,P,surf,'#ffffff',3);
+  strokePath3(ctx,P,planePts,'#7ee0a8',3,[6,5]);
+  /* base + target markers */
+  const pb=proj(nw(a),nw(b),nz(f0),P);
+  ctx.beginPath();ctx.arc(pb.x,pb.y,5,0,7);ctx.fillStyle='#fff';ctx.fill();ctx.lineWidth=2;ctx.strokeStyle='#081416';ctx.stroke();
+  const tx=a+ddx,ty=b+ddy;
+  const ptrue=proj(nw(tx),nw(ty),nz(ex.f(tx,ty)),P),pest=proj(nw(tx),nw(ty),nz(f0+fxv*ddx+fyv*ddy),P);
+  /* the error gap as a vertical segment */
+  line3(ctx,P,[nw(tx),nw(ty),nz(ex.f(tx,ty))],[nw(tx),nw(ty),nz(f0+fxv*ddx+fyv*ddy)],'#ff7a5c',2.5);
+  ctx.beginPath();ctx.arc(ptrue.x,ptrue.y,4.5,0,7);ctx.fillStyle='#fff';ctx.fill();ctx.lineWidth=1.8;ctx.strokeStyle='#333';ctx.stroke();
+  ctx.beginPath();ctx.arc(pest.x,pest.y,4.5,0,7);ctx.fillStyle='#7ee0a8';ctx.fill();ctx.lineWidth=1.8;ctx.strokeStyle='#081416';ctx.stroke();
+  const O=[-1,-1,-1];
+  arrow3(ctx,P,O,[1.18,-1,-1],'#ff9a80');arrow3(ctx,P,O,[-1,1.18,-1],'#7fdbe6');arrow3(ctx,P,O,[-1,-1,1.18],'#ffdd82');
+}
+function est_a(ex){return clamp(ex.id==='ramp'?-0.6:(ex.id==='hill'?0.8:0.7),-ex.r,ex.r);}
+function est_b(ex){return clamp(ex.id==='ramp'? 0.4:(ex.id==='hill'?0.6:-0.6),-ex.r,ex.r);}
+
+/* ================= readouts ================= */
+function readout1(){
+  const ex=EX[cur],z0=ex.f(ax,ay),dx=ex.fx(ax,ay),dy=ex.fy(ax,ay);
+  document.getElementById('valx').textContent=ax.toFixed(2);
+  document.getElementById('valy').textContent=ay.toFixed(2);
+  document.getElementById('rf').textContent=fmt(z0);
+  document.getElementById('rfx').textContent=fmt(dx);
+  document.getElementById('rfy').textContent=fmt(dy);
+  document.getElementById('efx').textContent=ex.fxs;
+  document.getElementById('efy').textContent=ex.fys;
+  const s=(v,plus)=>{const a=Math.abs(v).toFixed(2);return(v<0?' − ':(plus?' + ':' '))+a;};
+  /* render (x − a) but collapse the double sign when a is negative → (x + |a|) */
+  const shift=(vn,c)=>c>=0?'('+vn+' − '+c.toFixed(2)+')':'('+vn+' + '+Math.abs(c).toFixed(2)+')';
+  document.getElementById('planeeq').innerHTML=
+    '<b>z</b> = '+fmt(z0).trim()+
+    ' <span class="cx">'+s(dx,true)+'·'+shift('x',ax)+'</span>'+
+    ' <span class="cy">'+s(dy,true)+'·'+shift('y',ay)+'</span>';
+}
+function readout2(){
+  const ex=EX[cur],w=zoomW,mx=windowStats(ex,w);
+  document.getElementById('valw').textContent=w.toFixed(2);
+  document.getElementById('rw').textContent=w.toFixed(3);
+  document.getElementById('rmax').textContent=mx<0.1?mx.toFixed(4):mx.toFixed(2);
+  const grad=Math.hypot(ex.fx(ax,ay),ex.fy(ax,ay));
+  const ratio=mx/(w||1);
+  document.getElementById('rratio').textContent=ratio<0.1?ratio.toFixed(4):ratio.toFixed(3);
+}
+function readout3(){
+  const ex=EX[cur3],a=est_a(ex),b=est_b(ex),fxv=ex.fx(a,b),fyv=ex.fy(a,b);
+  const dz=fxv*ddx+fyv*ddy, df=ex.f(a+ddx,b+ddy)-ex.f(a,b), err=dz-df;
+  document.getElementById('valdx').textContent=(ddx>=0?'+':'−')+Math.abs(ddx).toFixed(2);
+  document.getElementById('valdy').textContent=(ddy>=0?'+':'−')+Math.abs(ddy).toFixed(2);
+  document.getElementById('rdz').textContent=fmt3(dz);
+  document.getElementById('rdf').textContent=fmt3(df);
+  document.getElementById('rerr').textContent=fmt3(err);
+  const par=v=>{const s=(v<0?'−':'')+Math.abs(v).toFixed(2);return v<0?'('+s+')':s;};
+  document.getElementById('diffeq').innerHTML=
+    'dz = <span class="cx">'+fxv.toFixed(2)+'</span>·<span class="cx">'+par(ddx)+'</span> + '+
+    '<span class="cy">'+fyv.toFixed(2)+'</span>·<span class="cy">'+par(ddy)+'</span> = <b>'+dz.toFixed(3)+'</b>';
+  document.getElementById('werr').textContent=Math.abs(err)<5e-4?'essentially exact this close'
+    :(err>0?'estimate runs high':'estimate runs low')+' — the curvature you dropped';
+}
+
+/* ================= orchestration ================= */
+function renderAll(){render3D();renderZoom();drawErrPlot();readout1();readout2();renderEst();readout3();}
+
+const sx=document.getElementById('sx'),sy=document.getElementById('sy'),sw=document.getElementById('sw'),
+      dxS=document.getElementById('dx'),dyS=document.getElementById('dy');
+function configSliders(ex){
+  for(const s of[sx,sy]){s.min=-ex.r;s.max=ex.r;s.step=ex.step;}sx.value=ax;sy.value=ay;
+  sw.min=ex.r*0.02;sw.max=ex.r*0.6;sw.step=ex.r*0.01;zoomW=clamp(zoomW,+sw.min,+sw.max);sw.value=zoomW;
+}
+function configEst(ex){
+  const q=ex.r*0.5;
+  for(const s of[dxS,dyS]){s.min=-q;s.max=q;s.step=ex.r*0.01;}
+  ddx=clamp(ddx,-q,q);ddy=clamp(ddy,-q,q);dxS.value=ddx;dyS.value=ddy;
+}
+sx.addEventListener('input',()=>{ax=+sx.value;render3D();readout1();renderZoom();drawErrPlot();readout2();});
+sy.addEventListener('input',()=>{ay=+sy.value;render3D();readout1();renderZoom();drawErrPlot();readout2();});
+sw.addEventListener('input',()=>{zoomW=+sw.value;renderZoom();drawErrPlot();readout2();syncZoomSeg();});
+dxS.addEventListener('input',()=>{ddx=+dxS.value;renderEst();readout3();});
+dyS.addEventListener('input',()=>{ddy=+dyS.value;renderEst();readout3();});
+function syncZoomSeg(){document.querySelectorAll('#segzoom button').forEach(b=>{
+  const w=EX[cur].r*0.6/(+b.dataset.z);b.classList.toggle('on',Math.abs(w-zoomW)<1e-6);});}
+document.querySelectorAll('#segzoom button').forEach(b=>b.addEventListener('click',()=>{
+  zoomW=EX[cur].r*0.6/(+b.dataset.z);sw.value=zoomW;renderZoom();drawErrPlot();readout2();
+  document.querySelectorAll('#segzoom button').forEach(o=>o.classList.toggle('on',o===b));}));
+for(const[id,key]of[['tPlane','plane'],['tLines','lines'],['tSurf','surf']])
+  document.getElementById(id).addEventListener('change',e=>{show[key]=e.target.checked;render3D();});
+
+function buildChips(){
+  const c=document.getElementById('chips');c.innerHTML='';
+  EX.forEach((ex,i)=>{const b=document.createElement('button');b.className='chip'+(i===cur?' on':'');b.textContent=ex.sym;
+    b.setAttribute('aria-pressed',i===cur);b.onclick=()=>{cur=i;loadExample();};c.appendChild(b);});
+  const c3=document.getElementById('chips3');c3.innerHTML='';
+  EX.forEach((ex,i)=>{const b=document.createElement('button');b.className='chip'+(i===cur3?' on':'');b.textContent=ex.sym;
+    b.setAttribute('aria-pressed',i===cur3);b.onclick=()=>{cur3=i;configEst(EX[cur3]);renderEst();readout3();buildChips();};c3.appendChild(b);});
+}
+function loadExample(){
+  const ex=EX[cur];
+  ax=clamp(ax,-ex.r,ex.r);ay=clamp(ay,-ex.r,ex.r);
+  configSliders(ex);
+  document.getElementById('exnote').innerHTML='<b>'+ex.name+'.</b> '+ex.note;
+  buildChips();buildMesh(ex);
+  render3D();readout1();renderZoom();drawErrPlot();readout2();syncZoomSeg();
+}
+
+/* orbit binding */
+function orbit(cv,cam,redraw){
+  let raf=false;const pts=new Map();let pinchD=0;
+  const sched=()=>{if(raf)return;raf=true;requestAnimationFrame(()=>{raf=false;redraw();});};
+  const dist=()=>{const a=[...pts.values()];return Math.hypot(a[0].x-a[1].x,a[0].y-a[1].y);};
+  cv.addEventListener('pointerdown',e=>{cv.setPointerCapture(e.pointerId);pts.set(e.pointerId,{x:e.clientX,y:e.clientY});if(pts.size===2)pinchD=dist();});
+  cv.addEventListener('pointermove',e=>{
+    if(!pts.has(e.pointerId))return;
+    const prev=pts.get(e.pointerId);pts.set(e.pointerId,{x:e.clientX,y:e.clientY});
+    if(pts.size>=2){const d=dist();if(pinchD>0)cam.zoom=clamp(cam.zoom*d/pinchD,0.45,3.5);pinchD=d;sched();return;}
+    cam.yaw+=(e.clientX-prev.x)*0.01;cam.pitch=clamp(cam.pitch+(e.clientY-prev.y)*0.007,0.05,1.5);sched();
+  });
+  const end=e=>{pts.delete(e.pointerId);pinchD=0;};
+  cv.addEventListener('pointerup',end);cv.addEventListener('pointercancel',end);
+  cv.addEventListener('wheel',e=>{e.preventDefault();cam.zoom=clamp(cam.zoom*(e.deltaY<0?1.12:0.9),0.45,3.5);sched();},{passive:false});
+}
+orbit(document.getElementById('c3d'),camA,render3D);
+orbit(document.getElementById('c3dz'),camZ,renderZoom);
+orbit(document.getElementById('c3de'),camE,renderEst);
+
+let rt=false;
+window.addEventListener('resize',()=>{if(rt)return;rt=true;requestAnimationFrame(()=>{rt=false;renderAll();});});
+window.addEventListener('load',()=>{renderAll();});
+
+configEst(EX[cur3]);
+loadExample();renderEst();readout3();
+}catch(err){
+  const b=document.getElementById('errbar');if(b){b.style.display='block';b.textContent='Something failed while loading the lab: '+err.message;}
+  console.error(err);
+}
+</script>
+</body>
+</html>
