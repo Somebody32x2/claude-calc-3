@@ -137,6 +137,16 @@ input[type=range]::-moz-range-thumb{width:17px;height:17px;border-radius:50%;bac
 .wk th{color:var(--ink-faint);font-weight:400}
 .pitfall{margin-top:26px;border-left:2px solid var(--x);background:rgba(255,122,92,0.06);padding:14px 16px;border-radius:0 8px 8px 0;font-size:14.5px;color:var(--ink-dim);max-width:820px}
 .pitfall b{color:var(--x-soft);font-weight:600}
+.myths{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.myth{border:1px solid var(--line);border-radius:12px;background:var(--bg2);padding:17px 19px}
+.myth .tagline{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.12em;text-transform:uppercase;margin-bottom:9px;color:var(--x)}
+.myth .claim{color:var(--ink);font-weight:600;font-size:15.5px;line-height:1.45;margin-bottom:12px}
+.myth .yes{color:var(--y);font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.12em;text-transform:uppercase;margin-bottom:7px}
+.myth p{margin:0;font-size:14.2px;color:var(--ink-dim)}
+.myth p b{color:var(--ink);font-weight:600}
+.myth p .mono{color:var(--grad-soft)}
+.myth.wide{grid-column:1/-1}
+@media(max-width:920px){.myths{grid-template-columns:1fr}}
 footer{padding:48px 0 72px;border-top:1px solid var(--line);margin-top:36px;color:var(--ink-dim)}
 footer h3{font-size:20px;color:var(--ink);margin:0 0 14px}
 .next{display:flex;flex-wrap:wrap;gap:10px}
@@ -310,6 +320,49 @@ footer h3{font-size:20px;color:var(--ink);margin:0 0 14px}
       opposite truths. When <span class="mono">D = 0</span> you have to go back to the function itself — higher
       derivatives, or just checking values along a few directions — because second-order information has run
       out.</p>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="sec-num">05</span><h2>Common misconceptions</h2>
+      <p>Optimization is where confident-looking work goes wrong most often, usually by finding the right critical points and then answering the wrong question with them.</p></div>
+    <div class="myths">
+      <div class="myth wide">
+        <div class="tagline">✕ the myth</div>
+        <div class="claim">"To find the maximum of f on a region, solve ∇f = 0 and compare the answers."</div>
+        <div class="yes">✓ actually</div>
+        <p><b>That misses the boundary entirely.</b> The argument for <span class="mono">∇f = 0</span> only works at an <em>interior</em> point, where you're free to step in any direction. On the edge of a region you are not free — the maximum can sit on the boundary with the gradient still pointing firmly uphill, straight out of the region. Think of a tilted plane over a square: it has no critical points at all, yet it certainly has a highest point, at a corner. The complete recipe on a closed bounded region is: <b>interior critical points</b>, plus <b>the boundary analysed separately</b> (often with Lagrange), plus <b>the corners</b> — then compare every candidate's value. Skipping the second and third steps is the most common way to lose the actual answer.</p>
+      </div>
+      <div class="myth">
+        <div class="tagline">✕ the myth</div>
+        <div class="claim">"D = 0 means it's a saddle" — or "means it's nothing."</div>
+        <div class="yes">✓ actually</div>
+        <p>It means the test has <b>no opinion</b>. Both readings are wrong, and provably so: <span class="mono">x⁴ + y⁴</span> has an unmistakable minimum at the origin with <span class="mono">D = 0</span>, while the monkey saddle also has <span class="mono">D = 0</span> and is genuinely a saddle. Same number, opposite truths. When <span class="mono">D = 0</span>, second derivatives have run out of information and you must go back to the function — higher-order terms, or just evaluating along a few directions.</p>
+      </div>
+      <div class="myth">
+        <div class="tagline">✕ the myth</div>
+        <div class="claim">"A local maximum is the maximum."</div>
+        <div class="yes">✓ actually</div>
+        <p>"Local" means it beats its immediate neighbours and nothing more. The <b>double well</b> above has two separate minima; a hill-climbing method that stops at the first flat spot it finds will happily report a local answer as though it were global. Finding the global extremum means <em>enumerating all</em> the candidates and comparing their actual values — the second-derivative test classifies points but never ranks them.</p>
+      </div>
+      <div class="myth">
+        <div class="tagline">✕ the myth</div>
+        <div class="claim">"λ in Lagrange is just bookkeeping — solve for it and throw it away."</div>
+        <div class="yes">✓ actually</div>
+        <p>λ has a real and useful meaning: it is the <b>rate at which the optimal value changes as you loosen the constraint</b>. If the constraint is a budget, λ is what one more unit of budget is worth — economists call it the shadow price. In this lab's example the two multipliers come out as exactly 1 and 2, matching the constrained values <span class="mono">f = 1</span> and <span class="mono">f = 2</span>. Far from disposable, λ is often the most interesting number in the problem.</p>
+      </div>
+      <div class="myth">
+        <div class="tagline">✕ the myth</div>
+        <div class="claim">"Lagrange tells you which point is the max and which is the min."</div>
+        <div class="yes">✓ actually</div>
+        <p>It produces <b>candidates</b> — every point where the constraint curve runs tangent to a level curve — and stays silent about which is which. You still have to plug each one back into <span class="mono">f</span> and compare. The method finds where the value stops changing; deciding whether that stall is a peak or a trough is a separate, and much easier, final step.</p>
+      </div>
+      <div class="myth">
+        <div class="tagline">✕ the myth</div>
+        <div class="claim">"Every critical point is an extremum of some kind."</div>
+        <div class="yes">✓ actually</div>
+        <p>Saddles are critical points and are neither. In fact on the four-corners surface above, <b>half</b> the critical points are saddles. "Critical" is a statement about the first derivatives being zero — it identifies where the ground is flat, which includes mountain passes just as much as summits and basins.</p>
+      </div>
+    </div>
   </section>
 
   <footer>

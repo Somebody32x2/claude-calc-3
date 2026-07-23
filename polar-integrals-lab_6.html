@@ -113,6 +113,16 @@ input.tthumb::-webkit-slider-thumb{background:var(--th)}input.tthumb::-moz-range
 .wk .hint{color:var(--ink-faint);font-size:13px}
 .pitfall{margin-top:26px;border-left:2px solid var(--x);background:rgba(255,122,92,0.06);padding:14px 16px;border-radius:0 8px 8px 0;font-size:14.5px;color:var(--ink-dim);max-width:820px}
 .pitfall b{color:var(--x-soft);font-weight:600}
+.myths{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.myth{border:1px solid var(--line);border-radius:12px;background:var(--bg2);padding:17px 19px}
+.myth .tagline{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.12em;text-transform:uppercase;margin-bottom:9px;color:var(--x)}
+.myth .claim{color:var(--ink);font-weight:600;font-size:15.5px;line-height:1.45;margin-bottom:12px}
+.myth .yes{color:var(--y);font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.12em;text-transform:uppercase;margin-bottom:7px}
+.myth p{margin:0;font-size:14.2px;color:var(--ink-dim)}
+.myth p b{color:var(--ink);font-weight:600}
+.myth p .mono{color:var(--grad-soft)}
+.myth.wide{grid-column:1/-1}
+@media(max-width:920px){.myths{grid-template-columns:1fr}}
 footer{padding:48px 0 72px;border-top:1px solid var(--line);margin-top:36px;color:var(--ink-dim)}
 footer h3{font-size:20px;color:var(--ink);margin:0 0 14px}
 .next{display:flex;flex-wrap:wrap;gap:10px}
@@ -307,6 +317,37 @@ footer h3{font-size:20px;color:var(--ink);margin:0 0 14px}
       <em>under</em>-weights the outer rings, which is where most of a disk's area actually lives. When you
       change variables, the <span class="mono">r</span> — or in general the <span class="mono">|J|</span> — is
       not decoration. It <em>is</em> the new area.</p>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="sec-num">05</span><h2>Common misconceptions</h2>
+      <p>Changing coordinates has three moving parts — the integrand, the limits, and the area element — and it is remarkably easy to convert only the first one.</p></div>
+    <div class="myths">
+      <div class="myth wide">
+        <div class="tagline">✕ the myth</div>
+        <div class="claim">"Converting to polar means replacing x² + y² with r² and integrating."</div>
+        <div class="yes">✓ actually</div>
+        <p>That is only <b>one of three</b> conversions, and skipping the other two is the classic failure. A complete change of variables converts (1) the <b>integrand</b>, (2) the <b>limits</b>, describing the region in the new coordinates, and (3) the <b>area element</b>, <span class="mono">dA = r dr dθ</span>. Leaving out the <span class="mono">r</span> is the most common single error in all of multivariable calculus — and it isn't a small correction: the "without the r" row in section 04 goes wrong by 30% or more, because it treats a sliver near the centre as though it were as big as a broad tile at the rim.</p>
+      </div>
+      <div class="myth">
+        <div class="tagline">✕ the myth</div>
+        <div class="claim">"θ always runs from 0 to 2π and r from 0 to R."</div>
+        <div class="yes">✓ actually</div>
+        <p>Only for a full disk centred at the origin. The limits describe <b>your</b> region: a quarter disk wants <span class="mono">θ: 0 → π/2</span>, an annulus wants <span class="mono">r: a → b</span>, and a region bounded by a curve like <span class="mono">r = 1 + cos θ</span> has an inner limit that <em>depends on θ</em> — exactly the Type I/II situation from Lab 02, just in round coordinates. Defaulting to <span class="mono">0 → 2π</span> out of habit silently integrates over the wrong region.</p>
+      </div>
+      <div class="myth">
+        <div class="tagline">✕ the myth</div>
+        <div class="claim">"The Jacobian is just the derivative of the transformation."</div>
+        <div class="yes">✓ actually</div>
+        <p>It is the <b>determinant</b> of the matrix of partial derivatives — and you use its <b>absolute value</b>. The determinant measures how the map scales area, and its sign only records whether orientation is flipped, which is irrelevant when you are accumulating area. Reporting a negative Jacobian and using it unsigned is a fast route to a negative volume.</p>
+      </div>
+      <div class="myth">
+        <div class="tagline">✕ the myth</div>
+        <div class="claim">"r dr dθ is a formula to memorize for polar."</div>
+        <div class="yes">✓ actually</div>
+        <p>It is one instance of a general fact, and remembering it as a special case will strand you the moment a problem uses different coordinates. <b>Every</b> change of variables carries its own factor <span class="mono">|J|</span>, computed the same way: polar gives <span class="mono">r</span>, spherical gives <span class="mono">ρ² sin φ</span>, and an arbitrary substitution gives whatever its determinant says. The idea to carry forward is "a transformed cell has a different area," not a particular letter.</p>
+      </div>
+    </div>
   </section>
 
   <footer>

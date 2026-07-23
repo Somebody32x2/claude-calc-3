@@ -134,6 +134,16 @@ input#st::-webkit-slider-thumb{background:var(--u)}input#st::-moz-range-thumb{ba
 .wk .hint{color:var(--ink-faint);font-size:13px}
 .pitfall{margin-top:26px;border-left:2px solid var(--x);background:rgba(255,122,92,0.06);padding:14px 16px;border-radius:0 8px 8px 0;font-size:14.5px;color:var(--ink-dim);max-width:820px}
 .pitfall b{color:var(--x-soft);font-weight:600}
+.myths{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.myth{border:1px solid var(--line);border-radius:12px;background:var(--bg2);padding:17px 19px}
+.myth .tagline{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.12em;text-transform:uppercase;margin-bottom:9px;color:var(--x)}
+.myth .claim{color:var(--ink);font-weight:600;font-size:15.5px;line-height:1.45;margin-bottom:12px}
+.myth .yes{color:var(--y);font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.12em;text-transform:uppercase;margin-bottom:7px}
+.myth p{margin:0;font-size:14.2px;color:var(--ink-dim)}
+.myth p b{color:var(--ink);font-weight:600}
+.myth p .mono{color:var(--grad-soft)}
+.myth.wide{grid-column:1/-1}
+@media(max-width:920px){.myths{grid-template-columns:1fr}}
 footer{padding:48px 0 72px;border-top:1px solid var(--line);margin-top:36px;color:var(--ink-dim)}
 footer h3{font-size:20px;color:var(--ink);margin:0 0 14px}
 .next{display:flex;flex-wrap:wrap;gap:10px}
@@ -273,6 +283,49 @@ footer h3{font-size:20px;color:var(--ink);margin:0 0 14px}
         <div class="step">→ <span class="res">|∇f| = 10</span></div></div>
     </div>
     <p class="pitfall"><b>The mistake everyone makes once.</b> Forgetting to normalize. If you dot the gradient with a raw direction vector like <span class="mono">(3, 4)</span> instead of <span class="mono">(3/5, 4/5)</span>, you get an answer five times too large — and nothing in the arithmetic warns you. A directional derivative is a rate <em>per unit of distance travelled</em>; feeding in a vector of length 5 quietly measures five units of travel per step. Check <span class="mono">|u| = 1</span> before you dot, every time.</p>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="sec-num">05</span><h2>Common misconceptions</h2>
+      <p>The gradient is the most frequently misunderstood object in the course, and almost all of the trouble comes from one question: <em>which space does it live in?</em></p></div>
+    <div class="myths">
+      <div class="myth wide">
+        <div class="tagline">✕ the myth</div>
+        <div class="claim">"The gradient is an arrow lying on the surface, pointing up the hill in 3-D."</div>
+        <div class="yes">✓ actually</div>
+        <p><b>∇f is a two-dimensional vector living in the <span class="mono">xy</span>-plane</b> — down on the map, not up on the landscape. It has components <span class="mono">(f<sub>x</sub>, f<sub>y</sub>)</span> and no <span class="mono">z</span>-component at all. Read it as a <em>compass instruction</em>: "from where you're standing, face this way to climb fastest." The steepness of that climb is its length, <span class="mono">|∇f|</span>, which is a separate number — not the arrow's third coordinate. This is why every gradient arrow in this lab is drawn flat on the floor of the box and on the map, never tilted up the hillside.</p>
+      </div>
+      <div class="myth">
+        <div class="tagline">✕ the myth</div>
+        <div class="claim">"The gradient is perpendicular to the surface."</div>
+        <div class="yes">✓ actually</div>
+        <p>It is perpendicular to the <b>level curves</b>, in the domain. That is a statement about the flat contour map, not about the 3-D surface. (There <em>is</em> a true "normal to the surface" vector, and for the graph <span class="mono">z = f(x,y)</span> it works out to <span class="mono">(f<sub>x</sub>, f<sub>y</sub>, −1)</span> — related to the gradient, but a different object in a different space. Conflating the two is the single most common gradient error.)</p>
+      </div>
+      <div class="myth">
+        <div class="tagline">✕ the myth</div>
+        <div class="claim">"On a perfectly symmetric bowl, every direction is equally steep."</div>
+        <div class="yes">✓ actually</div>
+        <p>Rotational symmetry relates different <b>points</b>, not different <b>directions at one point</b>. Standing on the wall of a funnel, walking straight down is steep while walking <em>around</em> the funnel keeps you at exactly the same height — that level direction is the 90° one. The only place all directions truly tie is the <b>very bottom</b>, where <span class="mono">∇f = 0</span> and the cosine law gives <span class="mono">0 · cos φ = 0</span> for every heading.</p>
+      </div>
+      <div class="myth">
+        <div class="tagline">✕ the myth</div>
+        <div class="claim">"D<sub>u</sub> f is a vector, since it came from vectors."</div>
+        <div class="yes">✓ actually</div>
+        <p>It is a <b>single number</b> — a slope. A dot product of two vectors always returns a scalar. The direction information was <em>consumed</em> by the dot product: you supplied a heading and got back how fast the height changes along it. If your answer to a directional-derivative question has components, something has gone wrong.</p>
+      </div>
+      <div class="myth">
+        <div class="tagline">✕ the myth</div>
+        <div class="claim">"If D<sub>u</sub> f = 0, the point must be a critical point."</div>
+        <div class="yes">✓ actually</div>
+        <p>It only means <b>that particular heading</b> is level — you happened to be facing along a contour. On any non-flat hillside there are always two such directions, and they say nothing about the point being special. A critical point needs <span class="mono">D<sub>u</sub> f = 0</span> in <em>every</em> direction at once, which is the same as <span class="mono">∇f = 0</span>.</p>
+      </div>
+      <div class="myth">
+        <div class="tagline">✕ the myth</div>
+        <div class="claim">"Any direction vector will do — the formula is just a dot product."</div>
+        <div class="yes">✓ actually</div>
+        <p>The vector must be a <b>unit</b> vector, or the answer is scaled by its length and is no longer a rate per unit distance. Dotting with <span class="mono">(3,4)</span> instead of <span class="mono">(3/5, 4/5)</span> gives an answer five times too big, and nothing in the arithmetic warns you. Check <span class="mono">|u| = 1</span> before you dot, every single time.</p>
+      </div>
+    </div>
   </section>
 
   <footer>

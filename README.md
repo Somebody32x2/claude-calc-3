@@ -15,6 +15,12 @@ self-contained HTML file. Fewer lessons, each finished — polish over quantity.
 | 04 | Tangent planes & linearization — zoom to local flatness, quadratic error, the differential | [open](https://raw.githack.com/Somebody32x2/claude-calc-3/main/tangent-planes-lab_4.html) |
 | 05 | Hills, valleys & saddles — ∇f = 0, the discriminant test, the Hessian, Lagrange multipliers | [open](https://raw.githack.com/Somebody32x2/claude-calc-3/main/optimization-lab_5.html) |
 | 06 | Polar coordinates & the Jacobian — why dA = r dr dθ, area-stretch, the Gaussian integral | [open](https://raw.githack.com/Somebody32x2/claude-calc-3/main/polar-integrals-lab_6.html) |
+| 07 | Triple integrals — slicing solids, cylindrical cells, and where ρ² sin φ comes from | [open](https://raw.githack.com/Somebody32x2/claude-calc-3/main/triple-integrals-lab_7.html) |
+
+Every lab ends with a **Common misconceptions** section — the specific wrong ideas that feel
+reasonable and quietly break things later (the gradient does *not* live on the surface;
+existing partials do *not* imply differentiability; `D = 0` is *not* a verdict; extrema can
+sit on a boundary where `∇f ≠ 0`).
 
 See [CURRICULUM.md](CURRICULUM.md) for the full nine-lab plan and the house rules
 every lab is built to.

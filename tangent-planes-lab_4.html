@@ -126,6 +126,16 @@ input#sw::-webkit-slider-thumb{background:var(--pl)}input#sw::-moz-range-thumb{b
 .wk .hint{color:var(--ink-faint);font-size:13px}
 .pitfall{margin-top:26px;border-left:2px solid var(--x);background:rgba(255,122,92,0.06);padding:14px 16px;border-radius:0 8px 8px 0;font-size:14.5px;color:var(--ink-dim);max-width:820px}
 .pitfall b{color:var(--x-soft);font-weight:600}
+.myths{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.myth{border:1px solid var(--line);border-radius:12px;background:var(--bg2);padding:17px 19px}
+.myth .tagline{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.12em;text-transform:uppercase;margin-bottom:9px;color:var(--x)}
+.myth .claim{color:var(--ink);font-weight:600;font-size:15.5px;line-height:1.45;margin-bottom:12px}
+.myth .yes{color:var(--y);font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.12em;text-transform:uppercase;margin-bottom:7px}
+.myth p{margin:0;font-size:14.2px;color:var(--ink-dim)}
+.myth p b{color:var(--ink);font-weight:600}
+.myth p .mono{color:var(--grad-soft)}
+.myth.wide{grid-column:1/-1}
+@media(max-width:920px){.myths{grid-template-columns:1fr}}
 footer{padding:48px 0 72px;border-top:1px solid var(--line);margin-top:36px;color:var(--ink-dim)}
 footer h3{font-size:20px;color:var(--ink);margin:0 0 14px}
 .next{display:flex;flex-wrap:wrap;gap:10px}
@@ -296,6 +306,37 @@ footer h3{font-size:20px;color:var(--ink);margin:0 0 14px}
       wrong almost immediately. When an estimate has to be trusted, the honest question is never "is
       <span class="mono">L</span> close?" but "how big is the <em>second</em> derivative I'm ignoring?" That
       curvature term is exactly what the next lab turns into a tool.</p>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="sec-num">05</span><h2>Common misconceptions</h2>
+      <p>The first one below is a genuine theorem-level trap: it is false, most people believe it, and it is the reason "differentiable" gets its own careful definition in two variables.</p></div>
+    <div class="myths">
+      <div class="myth wide">
+        <div class="tagline">✕ the myth</div>
+        <div class="claim">"If both partial derivatives exist at a point, the function is differentiable there."</div>
+        <div class="yes">✓ actually</div>
+        <p><b>False — and this is the big one.</b> In one variable, having a derivative is the whole story. In two variables it is not: partials only probe along the <span class="mono">x</span>- and <span class="mono">y</span>-axes, so a function can be perfectly well behaved along those two lines and violently misbehaved everywhere else. The standard example is <span class="mono">f = xy/(x²+y²)</span> with <span class="mono">f(0,0) = 0</span>: both partials exist at the origin (they're zero, since <span class="mono">f</span> is identically zero on both axes), yet the function isn't even <em>continuous</em> there — approach along <span class="mono">y = x</span> and it tends to ½, not 0. Differentiability is the stronger statement that the tangent plane actually approximates <span class="mono">f</span> in <b>every</b> direction, with error vanishing faster than distance. Existence of partials alone does not buy you that.</p>
+      </div>
+      <div class="myth">
+        <div class="tagline">✕ the myth</div>
+        <div class="claim">"The tangent plane touches at one point and stays on one side of the surface."</div>
+        <div class="yes">✓ actually</div>
+        <p>True for a bowl, false in general. On a <b>saddle</b> the plane slices straight <em>through</em> the surface: the surface rides above it along one axis and below it along the other, which is exactly what the coral-and-blue colouring in section 02 shows. "Tangent" constrains the plane's height and slope at the point, and says nothing about which side the surface stays on.</p>
+      </div>
+      <div class="myth">
+        <div class="tagline">✕ the myth</div>
+        <div class="claim">"dz and Δz are the same thing."</div>
+        <div class="yes">✓ actually</div>
+        <p><span class="mono">Δz</span> is the <b>true</b> change in <span class="mono">f</span>; <span class="mono">dz = f<sub>x</sub>dx + f<sub>y</sub>dy</span> is the <b>plane's prediction</b> of it. They agree in the limit and differ by exactly the curvature you threw away — the gap you can watch in section 03. Treating them as identical is harmless for tiny steps and disastrous for large ones, which is why the honest question is always "how big is the second derivative I'm ignoring?"</p>
+      </div>
+      <div class="myth">
+        <div class="tagline">✕ the myth</div>
+        <div class="claim">"Linear approximation always underestimates the true value."</div>
+        <div class="yes">✓ actually</div>
+        <p>It depends entirely on which way the surface curves. Over a <b>concave-up</b> region (like the bowl) the surface sits above its tangent plane, so the estimate runs <em>low</em>; over a concave-down region (the dome near its summit) it runs <em>high</em>; on a saddle it does both at once depending on your direction. There is no universal direction to the error — only the sign of the curvature decides.</p>
+      </div>
+    </div>
   </section>
 
   <footer>

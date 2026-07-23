@@ -118,6 +118,15 @@ input#sy::-webkit-slider-thumb{background:var(--y)}input#sy::-moz-range-thumb{ba
 .tag-y{color:var(--y);background:rgba(70,201,214,0.1)}
 .wk .res{font-family:'IBM Plex Mono';color:var(--ink)}
 .wk .hint{color:var(--ink-faint);font-size:13px}
+.myths{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.myth{border:1px solid var(--line);border-radius:12px;background:var(--bg2);padding:17px 19px}
+.myth .tagline{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.12em;text-transform:uppercase;margin-bottom:9px;color:var(--x)}
+.myth .claim{color:var(--ink);font-weight:600;font-size:15.5px;line-height:1.45;margin-bottom:12px}
+.myth .yes{color:var(--y);font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.12em;text-transform:uppercase;margin-bottom:7px}
+.myth p{margin:0;font-size:14.2px;color:var(--ink-dim)}
+.myth p b{color:var(--ink);font-weight:600}
+.myth p .mono{color:var(--grad-soft)}
+@media(max-width:920px){.myths{grid-template-columns:1fr}}
 footer{padding:48px 0 72px;border-top:1px solid var(--line);margin-top:36px;color:var(--ink-dim)}
 footer h3{font-size:20px;color:var(--ink);margin:0 0 14px}
 .next{display:flex;flex-wrap:wrap;gap:10px}
@@ -225,6 +234,37 @@ footer h3{font-size:20px;color:var(--ink);margin:0 0 14px}
       <div class="wk"><div class="fn">f = x / y</div>
         <div class="step"><span class="tag tag-x">∂/∂x</span><span class="hint">1/y is just a constant multiplier</span></div><div class="step">→ <span class="res">1 / y</span></div>
         <div class="step"><span class="tag tag-y">∂/∂y</span><span class="hint">rewrite as x·y⁻¹, power rule</span></div><div class="step">→ <span class="res">−x / y²</span></div></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="sec-num">05</span><h2>Common misconceptions</h2>
+      <p>Each of these sounds perfectly reasonable, and each one quietly breaks something later. They are worth reading before you need them.</p></div>
+    <div class="myths">
+      <div class="myth">
+        <div class="tagline">✕ the myth</div>
+        <div class="claim">"∂f/∂x is <em>the</em> slope of the surface at that point."</div>
+        <div class="yes">✓ actually</div>
+        <p>A surface has <b>infinitely many slopes</b> at a single point — one for every direction you could face. <span class="mono">∂f/∂x</span> is just the east–west one, and <span class="mono">∂f/∂y</span> the north–south one. They are two samples out of a whole circle of possible answers. Getting the slope in an arbitrary direction is the job of the directional derivative.</p>
+      </div>
+      <div class="myth">
+        <div class="tagline">✕ the myth</div>
+        <div class="claim">"∂ is just a fancier-looking d."</div>
+        <div class="yes">✓ actually</div>
+        <p>The curly ∂ carries real information: it announces that <b>everything else is being held fixed</b>. Plain <span class="mono">d</span> is reserved for when there is only one variable, or when the other variables are themselves changing along with it. The moment <span class="mono">y</span> secretly depends on <span class="mono">x</span>, the rules change and you need the chain rule — which is precisely why the notation distinguishes the two cases.</p>
+      </div>
+      <div class="myth">
+        <div class="tagline">✕ the myth</div>
+        <div class="claim">"If both partials are zero, the point is a maximum or a minimum."</div>
+        <div class="yes">✓ actually</div>
+        <p>Flat is not the same as extreme. On the <b>saddle</b> above, both partials vanish at the origin, yet the ground climbs to the east and falls to the north — it is neither a peak nor a pit. Zero gradient makes a point a <em>suspect</em>, not a verdict. Deciding which kind it is takes second derivatives.</p>
+      </div>
+      <div class="myth">
+        <div class="tagline">✕ the myth</div>
+        <div class="claim">"The two partials tell you everything about the surface near that point."</div>
+        <div class="yes">✓ actually</div>
+        <p>They tell you everything about the surface's <b>flat approximation</b> near that point — the tangent plane — and nothing at all about how it curves away from it. A bowl and a saddle can have identical partials at a point and behave completely differently a step away. Curvature is invisible to first derivatives by construction.</p>
+      </div>
     </div>
   </section>
 

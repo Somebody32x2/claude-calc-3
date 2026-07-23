@@ -1,0 +1,716 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Triple Integrals · A Field Lab</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#081416;--bg2:#0c1e22;--panel:#0f2429;--panel2:#123037;
+  --line:rgba(120,170,175,0.16);--line-strong:rgba(120,170,175,0.32);
+  --ink:#e7f2f0;--ink-dim:#9db3b3;--ink-faint:#6b8484;
+  --x:#ff7a5c;--x-soft:#ffab90;--y:#46c9d6;--y-soft:#8fe3ec;
+  --grad:#ffd15c;--grad-soft:#ffe4a1;--peak:#f0d79a;
+  --rho:#ff9f68;--phi:#b39dff;--phi-soft:#d5c9ff;--th:#7bd8ff;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font-family:'Inter',system-ui,sans-serif;font-size:16px;line-height:1.6;-webkit-font-smoothing:antialiased;
+  background-image:radial-gradient(1200px 500px at 80% -10%,rgba(179,157,255,0.06),transparent),radial-gradient(900px 400px at 0% 5%,rgba(123,216,255,0.05),transparent);}
+.wrap{max-width:1180px;margin:0 auto;padding:0 24px}
+h1,h2,h3{font-family:'Space Grotesk',sans-serif;font-weight:600;line-height:1.1;letter-spacing:-0.01em}
+.mono{font-family:'IBM Plex Mono',monospace}
+#errbar{display:none;background:#3a1414;border:1px solid #ff7a5c;color:#ffd9cf;padding:12px 16px;margin:16px 0;border-radius:10px;font-family:'IBM Plex Mono';font-size:13px}
+
+header{padding:64px 0 8px}
+.eyebrow{font-family:'IBM Plex Mono',monospace;font-size:12.5px;letter-spacing:0.28em;text-transform:uppercase;color:var(--ink-faint);display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.eyebrow::before{content:"";width:34px;height:1px;background:var(--line-strong)}
+.eyebrow a{color:var(--ink-faint);text-decoration:none;border-bottom:1px solid var(--line-strong)}
+.eyebrow a:hover{color:var(--y)}
+h1{font-size:clamp(38px,6.4vw,70px);margin:18px 0 0;font-weight:700}
+h1 .accent{background:linear-gradient(100deg,var(--rho),var(--phi) 55%,var(--th));-webkit-background-clip:text;background-clip:text;color:transparent}
+.lede{max-width:700px;color:var(--ink-dim);font-size:clamp(17px,2.2vw,20px);margin:22px 0 0}
+.lede b{color:var(--ink);font-weight:600}
+
+.idea{margin:52px 0;display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.idea>div{background:var(--bg2);padding:26px 24px}
+.idea .k{font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:0.14em;text-transform:uppercase;margin-bottom:10px}
+.idea .kr{color:var(--rho)}.idea .kp{color:var(--phi)}.idea .kt{color:var(--th)}
+.idea p{margin:0;color:var(--ink-dim);font-size:15px}
+.idea .big{font-family:'Space Grotesk';font-size:19px;color:var(--ink);display:block;margin-bottom:6px;font-weight:500}
+
+section{padding:34px 0}
+.sec-head{display:flex;align-items:baseline;gap:16px;margin-bottom:22px;flex-wrap:wrap}
+.sec-num{font-family:'IBM Plex Mono',monospace;color:var(--ink-faint);font-size:14px;letter-spacing:0.1em}
+h2{font-size:clamp(26px,3.6vw,38px)}
+.sec-head p{margin:0;color:var(--ink-dim);font-size:15px;flex:1;min-width:240px}
+.prose{max-width:770px;color:var(--ink-dim);font-size:15.5px;margin:0 0 22px}
+.prose b{color:var(--ink);font-weight:600}
+.prose .mono{color:var(--grad-soft)}
+.prose.eqn{font-family:'IBM Plex Mono',monospace;font-size:15px;color:var(--ink);background:var(--bg2);border:1px solid var(--line);border-radius:10px;padding:14px 16px;text-align:center}
+
+.lab{display:grid;grid-template-columns:1fr 356px;gap:20px;border:1px solid var(--line);border-radius:16px;background:var(--bg2);padding:20px}
+.viewport{position:relative;height:500px;border-radius:12px;overflow:hidden;background:linear-gradient(180deg,#0a1a1e,#081315);border:1px solid var(--line)}
+canvas.stage{width:100%;height:100%;display:block;touch-action:none;cursor:grab}
+canvas.stage:active{cursor:grabbing}
+.vhint{position:absolute;left:14px;bottom:12px;z-index:3;font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:0.12em;color:var(--ink-faint);text-transform:uppercase;pointer-events:none;background:rgba(8,20,22,0.55);padding:4px 9px;border-radius:6px}
+.rail{display:flex;flex-direction:column;gap:16px}
+.chips{display:flex;flex-wrap:wrap;gap:7px}
+.chip{font-family:'IBM Plex Mono',monospace;font-size:12.5px;padding:7px 12px;border-radius:8px;border:1px solid var(--line-strong);background:transparent;color:var(--ink-dim);cursor:pointer;transition:all .15s}
+.chip:hover{border-color:var(--y);color:var(--ink)}
+.chip.on{background:var(--panel2);border-color:var(--y);color:var(--ink)}
+.chip.on::before{content:"▸ "}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px}
+.card .lbl{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:var(--ink-faint);margin-bottom:12px}
+.sliderrow{margin-bottom:14px}.sliderrow:last-child{margin-bottom:0}
+.sliderrow .top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px}
+.sliderrow .name{font-family:'Space Grotesk';font-size:14px;font-weight:500}
+.sliderrow .name .sub{color:var(--ink-faint);font-size:12px;font-weight:400}
+.sliderrow .val{font-family:'IBM Plex Mono';font-size:14px}
+.dotr{color:var(--rho)}.dotp{color:var(--phi)}.dott{color:var(--th)}
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:4px;border-radius:4px;background:var(--line-strong);outline:none;margin:6px 0 2px}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:17px;height:17px;border-radius:50%;background:var(--phi);border:2px solid var(--bg);cursor:pointer;box-shadow:0 0 0 1px var(--line-strong)}
+input[type=range]::-moz-range-thumb{width:17px;height:17px;border-radius:50%;background:var(--phi);border:2px solid var(--bg);cursor:pointer}
+input.rthumb::-webkit-slider-thumb{background:var(--rho)}input.rthumb::-moz-range-thumb{background:var(--rho)}
+input.tthumb::-webkit-slider-thumb{background:var(--th)}input.tthumb::-moz-range-thumb{background:var(--th)}
+.readout .line{display:flex;justify-content:space-between;align-items:baseline;padding:9px 0;border-bottom:1px solid var(--line);gap:12px}
+.readout .line:last-child{border-bottom:none;padding-bottom:0}.readout .line:first-child{padding-top:0}
+.readout .rl{font-size:13.5px;color:var(--ink-dim)}
+.readout .rl .exp{font-family:'IBM Plex Mono';font-size:12px;color:var(--ink-faint);display:block}
+.readout .rv{font-family:'IBM Plex Mono';font-size:16px;font-weight:500;text-align:right;white-space:nowrap}
+.rv.vr{color:var(--rho)}.rv.vp{color:var(--phi)}.rv.vt{color:var(--th)}.rv.vg{color:var(--grad)}
+.eqbox{font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--ink-dim);background:rgba(179,157,255,0.07);border:1px solid rgba(179,157,255,0.22);border-radius:8px;padding:10px 12px;margin-top:12px;line-height:1.8;word-break:break-word}
+.eqbox .cr{color:var(--rho)}.eqbox .cp{color:var(--phi-soft)}.eqbox .ct{color:var(--th)}.eqbox b{color:var(--ink)}
+.note{border-left:2px solid var(--phi);background:rgba(179,157,255,0.06);padding:12px 14px;border-radius:0 8px 8px 0;font-size:13.5px;color:var(--ink-dim)}
+.note b{color:var(--phi-soft);font-weight:600}
+.seg{display:flex;gap:6px;flex-wrap:wrap}
+.seg button{flex:1;min-width:70px;font-family:'IBM Plex Mono',monospace;font-size:12px;padding:7px 4px;border-radius:8px;border:1px solid var(--line-strong);background:transparent;color:var(--ink-dim);cursor:pointer;transition:.15s}
+.seg button:hover{border-color:var(--phi);color:var(--ink)}
+.seg button.on{background:var(--panel2);border-color:var(--phi);color:var(--ink)}
+.panels{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:18px}
+.panel{border:1px solid var(--line);border-radius:14px;background:var(--bg2);padding:16px 16px 12px}
+.panel h3{font-size:16px;margin:0 0 2px;display:flex;align-items:center;gap:8px}
+.panel .cap{font-size:13px;color:var(--ink-dim);margin:0 0 8px}
+.panel .swatch{width:11px;height:11px;border-radius:3px;flex:none}
+.sw-a{background:var(--th)}.sw-v{background:var(--grad)}
+.plot2d{width:100%;height:230px;display:block}
+.pbadge{font-family:'IBM Plex Mono';font-size:13px;padding:2px 8px;border-radius:6px;margin-left:auto;white-space:nowrap}
+.badge-a{color:var(--th);background:rgba(123,216,255,0.12)}
+.badge-v{color:var(--grad);background:rgba(255,209,92,0.1)}
+
+.rule{font-size:17px;color:var(--ink);max-width:780px;margin:0 0 26px}
+.rule b{color:var(--phi-soft)}
+.worked{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.wk{border:1px solid var(--line);border-radius:12px;background:var(--bg2);padding:18px}
+.wk .fn{font-family:'IBM Plex Mono';font-size:14px;color:var(--peak);margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid var(--line);line-height:1.5}
+.wk .step{display:flex;gap:10px;font-size:14px;margin-bottom:10px;align-items:baseline}
+.wk .step:last-child{margin-bottom:0}
+.wk .tag{font-family:'IBM Plex Mono';font-size:12px;padding:2px 6px;border-radius:5px;flex:none}
+.tag-r{color:var(--rho);background:rgba(255,159,104,0.12)}
+.tag-p{color:var(--phi);background:rgba(179,157,255,0.12)}
+.tag-g{color:var(--grad);background:rgba(255,209,92,0.1)}
+.wk .res{font-family:'IBM Plex Mono';color:var(--ink)}
+.wk .hint{color:var(--ink-faint);font-size:13px}
+
+/* ---- common misconceptions ---- */
+.myths{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.myth{border:1px solid var(--line);border-radius:12px;background:var(--bg2);padding:17px 19px}
+.myth .tagline{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.12em;text-transform:uppercase;margin-bottom:9px}
+.myth .no{color:var(--x)}
+.myth .claim{color:var(--ink);font-weight:600;font-size:15.5px;line-height:1.45;margin-bottom:12px}
+.myth .yes{color:var(--y);font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.12em;text-transform:uppercase;margin-bottom:7px}
+.myth p{margin:0;font-size:14.2px;color:var(--ink-dim)}
+.myth p .mono{color:var(--grad-soft)}
+.myth p b{color:var(--ink);font-weight:600}
+@media(max-width:920px){.myths{grid-template-columns:1fr}}
+
+footer{padding:48px 0 72px;border-top:1px solid var(--line);margin-top:36px;color:var(--ink-dim)}
+footer h3{font-size:20px;color:var(--ink);margin:0 0 14px}
+.next{display:flex;flex-wrap:wrap;gap:10px}
+.next span{font-family:'IBM Plex Mono';font-size:13px;padding:8px 12px;border:1px solid var(--line);border-radius:8px;color:var(--ink-dim)}
+.next span .n{color:var(--y)}
+.fine{font-size:13px;color:var(--ink-faint);margin-top:20px;max-width:820px}
+@media (max-width:920px){
+  .lab{grid-template-columns:1fr}.viewport{height:400px}
+  .idea,.worked{grid-template-columns:1fr}.panels{grid-template-columns:1fr}
+}
+@media (prefers-reduced-motion:no-preference){
+  .fade{opacity:0;transform:translateY(14px);animation:rise .7s cubic-bezier(.2,.7,.3,1) forwards}
+  @keyframes rise{to{opacity:1;transform:none}}
+}
+:focus-visible{outline:2px solid var(--y);outline-offset:2px;border-radius:4px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div id="errbar"></div>
+  <header>
+    <div class="eyebrow fade">Calc 3 · Field Lab 07 · <a href="index.html">all labs</a> · <a href="polar-integrals-lab_6.html">← polar &amp; the Jacobian</a></div>
+    <h1 class="fade" style="animation-delay:.05s">Triple integrals &amp; <span class="accent">round coordinates</span></h1>
+    <p class="lede fade" style="animation-delay:.12s">
+      Nothing new happens here — that is the good news. A triple integral is the same slicing move you
+      already know, run one dimension higher: <b>chop the solid, measure each slice, add them up.</b> The
+      only genuinely new thing is what a tiny box looks like in round coordinates, where the volume element
+      picks up factors of <b class="mono">r</b> and <b class="mono">ρ² sin φ</b> for reasons you can see.</p>
+  </header>
+
+  <div class="idea fade" style="animation-delay:.18s">
+    <div><div class="k kt">∭<sub>E</sub> f dV</div><span class="big">Slice, measure, add</span>
+      <p>Cut the solid with parallel planes. Each cut is a flat region whose area you can already find. Sweep the cut through the solid and accumulate — a double integral inside a single one.</p></div>
+    <div><div class="k kr">dV = r dz dr dθ</div><span class="big">Cylindrical: polar plus height</span>
+      <p>For anything built around an axis. It's the polar tile of Lab 06 with a height glued on, so the same lone <span class="mono">r</span> comes along unchanged.</p></div>
+    <div><div class="k kp">dV = ρ² sin φ dρ dφ dθ</div><span class="big">Spherical: two curved edges</span>
+      <p>A spherical box has one straight edge and <em>two</em> arcs, and one of those arcs shrinks near the poles. That is where <span class="mono">ρ²</span> and <span class="mono">sin φ</span> come from.</p></div>
+  </div>
+
+  <section>
+    <div class="sec-head"><span class="sec-num">01</span><h2>Slicing a solid</h2>
+      <p>Exactly the sweeping-blade move from Lab 02, one dimension up. There the blade exposed a curve and we integrated its area; here it exposes a flat region and we integrate <em>its</em> area.</p></div>
+    <p class="prose">Take a solid and cut it with a horizontal plane at height <span class="mono">z</span>. The cut
+      is a two-dimensional region, and its area <span class="mono">A(z)</span> is something a double integral
+      can find. Stack up all those slices, each of thickness <span class="mono">dz</span>, and you get the
+      volume:</p>
+    <p class="prose eqn">V = ∫ A(z) dz&nbsp;&nbsp;&nbsp;where&nbsp;&nbsp;&nbsp;A(z) = ∬<sub>slice at z</sub> 1 dA</p>
+    <p class="prose">Every solid below is a shape of revolution, so its slice is a disk of some radius
+      <span class="mono">R(z)</span> and <span class="mono">A(z) = πR(z)²</span> — no work required. Sweep the
+      blade and watch the running volume fill toward the exact answer. The general
+      <span class="mono">∭ f dV</span> is the same thing with a density <span class="mono">f</span> inside
+      instead of a bare 1.</p>
+    <div class="lab">
+      <div class="viewport"><canvas class="stage" id="c3d"></canvas><div class="vhint">drag to orbit · the blue disk is the slice</div></div>
+      <div class="rail">
+        <div class="chips" id="chips"></div>
+        <div class="card">
+          <div class="lbl">Sweep the cutting plane</div>
+          <div class="sliderrow"><div class="top"><span class="name"><span class="dott">■</span> z <span class="sub">— height of the cut</span></span><span class="val" id="valz">0.00</span></div><input type="range" id="sz" class="tthumb"></div>
+        </div>
+        <div class="card readout">
+          <div class="line"><span class="rl">Slice radius <span class="exp mono" id="eRz">R(z)</span></span><span class="rv vr" id="rRz">0.00</span></div>
+          <div class="line"><span class="rl">Slice area <span class="exp mono">A(z) = πR²</span></span><span class="rv vt" id="rA">0.00</span></div>
+          <div class="line"><span class="rl">Volume so far <span class="exp mono">∫ A dz</span></span><span class="rv vg" id="racc">0.00</span></div>
+          <div class="line"><span class="rl">Exact total <span class="exp mono" id="eV">V</span></span><span class="rv" id="rV">0.00</span></div>
+        </div>
+        <div class="note" id="exnote"></div>
+      </div>
+    </div>
+    <div class="panels">
+      <div class="panel"><h3><span class="swatch sw-a"></span> Slice area against height<span class="pbadge badge-a" id="badgeA">—</span></h3>
+        <p class="cap">Plot <span class="mono">A(z)</span> as the blade rises. The gold region is the volume swept so far — the area under this curve <em>is</em> the volume.</p>
+        <canvas class="plot2d" id="plotA"></canvas></div>
+      <div class="panel"><h3><span class="swatch sw-v"></span> Running volume<span class="pbadge badge-v" id="badgeV">—</span></h3>
+        <p class="cap">The accumulation itself, climbing from zero to the exact volume as the blade passes through the whole solid.</p>
+        <canvas class="plot2d" id="plotV"></canvas></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="sec-num">02</span><h2>Cylindrical: polar with a height</h2>
+      <p>If a solid is built around an axis — a can, a cone, a paraboloid bowl — describe its base in polar and keep z as it is. The volume element is the polar tile you already earned, extruded.</p></div>
+    <p class="prose">Cylindrical coordinates are just <span class="mono">(r, θ, z)</span>: polar in the
+      <span class="mono">xy</span>-plane, with <span class="mono">z</span> left completely alone. Because the
+      <span class="mono">z</span> direction is untouched, the area factor from Lab 06 carries over unchanged
+      and simply gains a thickness:</p>
+    <p class="prose eqn">dA = r dr dθ&nbsp;&nbsp;⟹&nbsp;&nbsp;dV = r dr dθ · dz = <span style="color:var(--phi-soft)">r dz dr dθ</span></p>
+    <p class="prose">The cell below is a curved brick: two flat radial faces, two curved ones, and flat top and
+      bottom. Its exact volume is the polar wedge area times the height,
+      <span class="mono">½[(r+dr)² − r²] dθ dz</span>, and as the steps shrink that lands on
+      <span class="mono">r dr dθ dz</span>. Shrink the sliders and watch the gap close — it is the same
+      <span class="mono">½dr/r</span> story as before, because it is literally the same geometry.</p>
+    <div class="lab">
+      <div class="viewport"><canvas class="stage" id="c3dcyl"></canvas><div class="vhint">one cylindrical cell</div></div>
+      <div class="rail">
+        <div class="card">
+          <div class="lbl">Cell dimensions</div>
+          <div class="sliderrow"><div class="top"><span class="name">base radius r</span><span class="val" id="cyr">1.20</span></div><input type="range" id="cylr" class="rthumb" min="0.3" max="2" step="0.05" value="1.2"></div>
+          <div class="sliderrow"><div class="top"><span class="name"><span class="dotr">■</span> dr</span><span class="val" id="cydr">0.50</span></div><input type="range" id="cyldr" class="rthumb" min="0.05" max="1" step="0.05" value="0.5"></div>
+          <div class="sliderrow"><div class="top"><span class="name"><span class="dott">■</span> dθ</span><span class="val" id="cydt">45°</span></div><input type="range" id="cyldt" class="tthumb" min="5" max="90" step="1" value="45"></div>
+          <div class="sliderrow"><div class="top"><span class="name">dz</span><span class="val" id="cydz">0.70</span></div><input type="range" id="cyldz" min="0.1" max="1.5" step="0.05" value="0.7"></div>
+        </div>
+        <div class="card readout">
+          <div class="line"><span class="rl">Exact cell volume <span class="exp mono">½[(r+dr)²−r²]dθ dz</span></span><span class="rv vp" id="cyex">0.00</span></div>
+          <div class="line"><span class="rl">r dz dr dθ <span class="exp mono">the limit form</span></span><span class="rv vg" id="cyform">0.00</span></div>
+          <div class="line"><span class="rl">Relative gap <span class="exp mono">= ½dr ⁄ r</span></span><span class="rv" id="cygap">0%</span></div>
+        </div>
+        <div class="note"><b>Nothing new to learn.</b> The <span class="mono">z</span> direction is Cartesian, so it contributes a plain <span class="mono">dz</span>. All of the distortion lives in the <span class="mono">xy</span>-plane, and you already accounted for it once.</div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="sec-num">03</span><h2>Spherical: where ρ² sin φ comes from</h2>
+      <p>This is the factor everyone drops. It is not arbitrary — it is the product of three edge lengths, and one of those edges shrinks to nothing at the poles. Move φ and watch it happen.</p></div>
+    <p class="prose">Spherical coordinates locate a point by distance from the origin
+      <span class="mono">ρ</span>, the angle down from the north pole <span class="mono">φ</span> (the
+      <em>polar angle</em>, from 0 to π), and the angle around the axis <span class="mono">θ</span> (the
+      <em>azimuth</em>, 0 to 2π):</p>
+    <p class="prose eqn">x = ρ sin φ cos θ&nbsp;&nbsp; y = ρ sin φ sin θ&nbsp;&nbsp; z = ρ cos φ</p>
+    <p class="prose">Now build a tiny box by stepping each coordinate a little. Its three edges are
+      <b>not</b> all the same kind of thing:</p>
+    <p class="prose">• Stepping <span class="mono">ρ</span> moves you straight outward — that edge has length
+      <b class="mono">dρ</b>.<br>
+      • Stepping <span class="mono">φ</span> swings you along a line of longitude, a circle of radius
+      <span class="mono">ρ</span> — that arc has length <b class="mono">ρ dφ</b>.<br>
+      • Stepping <span class="mono">θ</span> swings you around a line of latitude. <b>That circle does not
+      have radius ρ</b> — it has radius <span class="mono">ρ sin φ</span>, the distance from the
+      <em>axis</em>, not from the origin. So that arc has length <b class="mono">ρ sin φ dθ</b>.</p>
+    <p class="prose eqn">dV = (dρ)(ρ dφ)(ρ sin φ dθ) = <span style="color:var(--phi-soft)">ρ² sin φ dρ dφ dθ</span></p>
+    <p class="prose">The interactive makes the third bullet concrete. The violet circle is the line of latitude
+      through your point; its radius is printed live. Slide <span class="mono">φ</span> toward either pole and
+      that radius collapses toward zero — which is exactly why <span class="mono">sin φ</span>, and not
+      something constant, multiplies the volume. At the equator (<span class="mono">φ = 90°</span>) the factor
+      is at its largest, <span class="mono">sin φ = 1</span>.</p>
+    <div class="lab">
+      <div class="viewport"><canvas class="stage" id="c3dsph"></canvas><div class="vhint">drag to orbit · violet ring is the line of latitude</div></div>
+      <div class="rail">
+        <div class="card">
+          <div class="lbl">Where the cell sits</div>
+          <div class="sliderrow"><div class="top"><span class="name"><span class="dotp">■</span> φ <span class="sub">— down from the pole</span></span><span class="val" id="svphi">60°</span></div><input type="range" id="sphi" min="4" max="176" step="1" value="60"></div>
+          <div class="sliderrow"><div class="top"><span class="name"><span class="dotr">■</span> ρ <span class="sub">— distance out</span></span><span class="val" id="svrho">1.20</span></div><input type="range" id="srho" class="rthumb" min="0.4" max="1.7" step="0.05" value="1.2"></div>
+          <div class="lbl" style="margin:16px 0 8px">Cell size</div>
+          <div class="sliderrow"><div class="top"><span class="name">dρ</span><span class="val" id="svdrho">0.30</span></div><input type="range" id="sdrho" class="rthumb" min="0.05" max="0.6" step="0.05" value="0.3"></div>
+          <div class="sliderrow"><div class="top"><span class="name">dφ, dθ</span><span class="val" id="svdang">25°</span></div><input type="range" id="sdang" min="4" max="45" step="1" value="25"></div>
+        </div>
+        <div class="card readout">
+          <div class="line"><span class="rl">Latitude-circle radius <span class="exp mono">ρ sin φ</span></span><span class="rv vp" id="rlat">0.00</span></div>
+          <div class="line"><span class="rl">Three edge lengths <span class="exp mono">dρ · ρdφ · ρ sinφ dθ</span></span><span class="rv" id="redges">—</span></div>
+          <div class="line"><span class="rl">Exact cell volume <span class="exp mono">by integration</span></span><span class="rv vp" id="rexcell">0.00</span></div>
+          <div class="line"><span class="rl">ρ² sin φ dρ dφ dθ <span class="exp mono">the limit form</span></span><span class="rv vg" id="rformcell">0.00</span></div>
+          <div class="line"><span class="rl">Ratio <span class="exp mono">exact ÷ formula</span><span class="walk" id="rratiowhy">→ 1 as the cell shrinks</span></span><span class="rv" id="rratiocell">1.00</span></div>
+          <div class="eqbox" id="spheq">—</div>
+        </div>
+        <div class="note"><b>Why the two columns don't match yet.</b> The cell is drawn <em>deliberately large</em> so you can see it — and at that size <span class="mono">ρ² sin φ</span> is only the leading term. Drag <span class="mono">dρ</span> and <span class="mono">dφ, dθ</span> down and the ratio walks to 1: that is the limit doing its work, exactly as the ½dr/r gap did in Lab 06.</div>
+        <div class="note" style="margin-top:12px"><b>The pole is the whole point.</b> Push φ to either extreme and the latitude ring shrinks to a dot — cells there are slivers, and <span class="mono">sin φ → 0</span> reports that honestly. Forget the <span class="mono">sin φ</span> and you are pretending the poles are as roomy as the equator.</div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="sec-num">04</span><h2>Computing them by hand</h2></div>
+    <p class="rule">Pick the coordinates the <b>solid</b> wants, not the ones the integrand wants. Round boundaries
+      beat pretty formulas: a sphere in Cartesian coordinates buries you in nested square roots, while in
+      spherical it is <b>ρ from 0 to R</b> and nothing else.</p>
+    <div class="worked">
+      <div class="wk"><div class="fn">Volume of a sphere of radius R<br>(spherical)</div>
+        <div class="step"><span class="tag tag-p">limits</span><span class="hint">ρ: 0→R,&nbsp; φ: 0→π,&nbsp; θ: 0→2π — all constants</span></div>
+        <div class="step">→ <span class="res">∫₀^{2π}∫₀^π∫₀^R ρ² sin φ dρ dφ dθ</span></div>
+        <div class="step"><span class="tag tag-r">ρ part</span><span class="hint">∫₀^R ρ² dρ = R³/3</span></div>
+        <div class="step"><span class="tag tag-p">φ part</span><span class="hint">∫₀^π sin φ dφ = 2</span></div>
+        <div class="step"><span class="tag tag-g">θ part</span><span class="hint">∫₀^{2π} dθ = 2π</span></div>
+        <div class="step">→ <span class="res">(R³/3)(2)(2π) = 4πR³/3</span></div></div>
+      <div class="wk"><div class="fn">Volume of a cone<br>radius R, height h  (cylindrical)</div>
+        <div class="step"><span class="tag tag-r">describe it</span><span class="hint">at height z the radius is R(1 − z/h)</span></div>
+        <div class="step">→ <span class="res">∫₀^{2π}∫₀^h∫₀^{R(1−z/h)} r dr dz dθ</span></div>
+        <div class="step"><span class="tag tag-r">inner</span><span class="hint">∫ r dr = ½R²(1−z/h)²</span></div>
+        <div class="step"><span class="tag tag-p">then z</span><span class="hint">∫₀^h (1−z/h)² dz = h/3</span></div>
+        <div class="step">→ <span class="res">2π · ½R² · h/3 = πR²h/3</span></div></div>
+      <div class="wk"><div class="fn">Mass of a ball whose density<br>grows outward, δ = ρ</div>
+        <div class="step"><span class="tag tag-p">set up</span><span class="hint">density ρ times the element ρ² sin φ</span></div>
+        <div class="step">→ <span class="res">∫∫∫ ρ · ρ² sin φ dρ dφ dθ</span></div>
+        <div class="step"><span class="tag tag-r">ρ part</span><span class="hint">∫₀^R ρ³ dρ = R⁴/4</span></div>
+        <div class="step">→ <span class="res">(R⁴/4)(2)(2π) = πR⁴</span></div>
+        <div class="step"><span class="hint">note the integrand's ρ and the element's ρ² multiply — they are different ρ's doing different jobs</span></div></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="sec-num">05</span><h2>Common misconceptions</h2>
+      <p>Every one of these is a mistake that looks completely reasonable at the time. Reading them once, before you need them, is worth more than any number of solved examples.</p></div>
+    <div class="myths">
+      <div class="myth">
+        <div class="tagline no">✕ the myth</div>
+        <div class="claim">"Spherical coordinates use ρ² — so a bigger sphere just scales the answer by ρ²."</div>
+        <div class="yes">✓ actually</div>
+        <p>The <span class="mono">ρ²</span> is not a scale factor applied at the end; it lives <b>inside</b> the integral and is integrated over. That is why the ball's volume comes out as <span class="mono">R³/3</span> rather than anything proportional to <span class="mono">R²</span>. Whenever a factor depends on a variable of integration, it must go inside.</p>
+      </div>
+      <div class="myth">
+        <div class="tagline no">✕ the myth</div>
+        <div class="claim">"φ and θ are interchangeable — they're both just angles."</div>
+        <div class="yes">✓ actually</div>
+        <p>They play completely different roles, and only one of them appears in the volume element. <span class="mono">φ</span> measures down from the axis and controls how big the latitude circle is; <span class="mono">θ</span> runs around that circle. Swap them and you get <span class="mono">sin θ</span>, which is wrong and — worse — <b>negative</b> for <span class="mono">θ &gt; π</span>. Physics and maths texts also swap the two names, so always check which convention a source uses before trusting a formula.</p>
+      </div>
+      <div class="myth">
+        <div class="tagline no">✕ the myth</div>
+        <div class="claim">"A triple integral gives volume."</div>
+        <div class="yes">✓ actually</div>
+        <p>Only when the integrand is <b>1</b>. <span class="mono">∭ 1 dV</span> is volume; <span class="mono">∭ δ dV</span> with a density is mass; <span class="mono">∭ f dV</span> in general is an accumulation of whatever <span class="mono">f</span> measures. The same confusion appears one dimension down, where a double integral is a volume only when the integrand is a height.</p>
+      </div>
+      <div class="myth">
+        <div class="tagline no">✕ the myth</div>
+        <div class="claim">"The limits can go in any order as long as I get them all."</div>
+        <div class="yes">✓ actually</div>
+        <p>The <b>innermost</b> integral may have limits depending on the outer variables; the <b>outermost</b> must have constant limits. If an outer limit still contains a variable, the setup is wrong and the answer will not be a number. Reordering is legitimate — but it means re-describing the solid, not shuffling the symbols.</p>
+      </div>
+      <div class="myth">
+        <div class="tagline no">✕ the myth</div>
+        <div class="claim">"r in cylindrical and ρ in spherical are the same thing."</div>
+        <div class="yes">✓ actually</div>
+        <p>They differ by exactly the factor this lesson is about. <span class="mono">r</span> is distance from the <b>z-axis</b>; <span class="mono">ρ</span> is distance from the <b>origin</b>. They are related by <span class="mono">r = ρ sin φ</span> — the same <span class="mono">ρ sin φ</span> that shows up as the latitude-circle radius. Mixing them is the single most common algebra slip when converting between the two systems.</p>
+      </div>
+      <div class="myth">
+        <div class="tagline no">✕ the myth</div>
+        <div class="claim">"Use spherical coordinates whenever there's a sphere in the problem."</div>
+        <div class="yes">✓ actually</div>
+        <p>Choose coordinates to make the <b>boundaries</b> constant, not to match a keyword. A cylinder cut by a sphere is often easier in cylindrical, and a region bounded by planes stays easiest in Cartesian even if a sphere is mentioned. The test to apply is: <em>in which system do my limits become numbers?</em></p>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <h3>Where this goes next</h3>
+    <div class="next">
+      <span><span class="n">→</span> vector fields &amp; line integrals</span>
+      <span><span class="n">→</span> centroids &amp; moments of inertia</span>
+      <span><span class="n">→</span> surface integrals &amp; flux</span>
+      <span><span class="n">→</span> the divergence theorem</span>
+      <span><span class="n">→</span> Green's &amp; Stokes' theorems</span>
+    </div>
+    <p class="fine">The slice areas here are exact analytic formulas, the running volume is a Simpson
+      accumulation of them, and the spherical cell's "exact" volume is the genuine triple integral
+      <span class="mono">⅓[(ρ+dρ)³−ρ³]·[cos φ − cos(φ+dφ)]·dθ</span> — not the approximation it is being
+      compared against. Push dφ small and watch the two agree.</p>
+  </footer>
+</div>
+
+<script>
+try{
+/* ================= solids of revolution: slice radius R(z) and exact volume ================= */
+const SOL=[
+ {id:'sphere',name:'Sphere',sym:'sphere, R = 1',z0:-1,z1:1,R:z=>Math.sqrt(Math.max(0,1-z*z)),
+  V:4*Math.PI/3,Vs:'4π/3',Rs:'√(1 − z²)',
+  note:'Widest at the equator, pinching to points at both poles. The slice area π(1−z²) is a downward parabola in z, and its integral is the familiar 4πR³/3.'},
+ {id:'cyl',name:'Cylinder',sym:'cylinder, R = 1, h = 2',z0:0,z1:2,R:()=>1,
+  V:2*Math.PI,Vs:'2π',Rs:'1  (constant)',
+  note:'Every slice is identical, so the area function is flat and the running volume climbs in a perfectly straight line. The simplest possible case, and a good baseline.'},
+ {id:'cone',name:'Cone',sym:'cone, R = 1, h = 2',z0:0,z1:2,R:z=>1-z/2,
+  V:2*Math.PI/3,Vs:'2π/3',Rs:'1 − z/2',
+  note:'Radius falls linearly, so the area falls quadratically — which is why a cone holds exactly one third of the cylinder around it, not one half. A classic wrong guess.'},
+ {id:'para',name:'Paraboloid',sym:'z = r², capped at z = 1',z0:0,z1:1,R:z=>Math.sqrt(Math.max(0,z)),
+  V:Math.PI/2,Vs:'π/2',Rs:'√z',
+  note:'The bowl swept out by z = r². Here the slice area πz is a straight line in z, so the running volume is a clean parabola — exactly half the cylinder that contains it.'}
+];
+
+const clamp=(v,a,b)=>v<a?a:v>b?b:v;
+const lin=(a,b,n)=>{const o=[];for(let i=0;i<n;i++)o.push(a+(b-a)*i/(n-1));return o;};
+const TAU=Math.PI*2, DEG=Math.PI/180;
+function simpson(f,a,b,m){if(b<=a)return 0;if(m%2)m++;const h=(b-a)/m;let s=f(a)+f(b);
+  for(let i=1;i<m;i++)s+=f(a+i*h)*(i%2?4:2);return s*h/3;}
+
+/* ---------- shared 3D core ---------- */
+function fit(cv){const dpr=window.devicePixelRatio||1;const rect=cv.getBoundingClientRect();const W=Math.max(1,rect.width),H=Math.max(1,rect.height);const bw=Math.round(W*dpr),bh=Math.round(H*dpr);if(cv.width!==bw||cv.height!==bh){cv.width=bw;cv.height=bh;}const ctx=cv.getContext('2d');ctx.setTransform(dpr,0,0,dpr,0,0);return{ctx,W,H};}
+function makeP(W,H,cam){const S=Math.min(W/3.25,H/2.75)*cam.zoom;return{cy:Math.cos(cam.yaw),sy:Math.sin(cam.yaw),cp:Math.cos(cam.pitch),sp:Math.sin(cam.pitch),S,cx:W/2,cc:H*0.55};}
+function proj(wx,wy,wz,P){wz*=0.92;const xr=wx*P.cy-wy*P.sy,yr=wx*P.sy+wy*P.cy;const yp=yr*P.cp-wz*P.sp,zp=yr*P.sp+wz*P.cp;return{x:P.cx+xr*P.S,y:P.cc-zp*P.S,d:yp};}
+const LIGHT=(()=>{const L=[0.32,0.34,0.88],m=Math.hypot(L[0],L[1],L[2]);return[L[0]/m,L[1]/m,L[2]/m];})();
+function line3(ctx,P,a,b,color,width,dash){const p0=proj(a[0],a[1],a[2],P),p1=proj(b[0],b[1],b[2],P);ctx.strokeStyle=color;ctx.lineWidth=width;ctx.setLineDash(dash||[]);ctx.beginPath();ctx.moveTo(p0.x,p0.y);ctx.lineTo(p1.x,p1.y);ctx.stroke();ctx.setLineDash([]);}
+function poly3(ctx,P,w,fill,stroke,lw){const p=w.map(v=>proj(v[0],v[1],v[2],P));ctx.beginPath();ctx.moveTo(p[0].x,p[0].y);for(let k=1;k<p.length;k++)ctx.lineTo(p[k].x,p[k].y);ctx.closePath();if(fill){ctx.fillStyle=fill;ctx.fill();}if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=lw||1;ctx.setLineDash([]);ctx.stroke();}}
+function strokePath3(ctx,P,w,color,width,dash){if(w.length<2)return;const p=w.map(v=>proj(v[0],v[1],v[2],P));ctx.save();ctx.beginPath();ctx.moveTo(p[0].x,p[0].y);for(let k=1;k<p.length;k++)ctx.lineTo(p[k].x,p[k].y);ctx.strokeStyle=color;ctx.lineWidth=width;ctx.lineJoin='round';ctx.setLineDash(dash||[]);ctx.stroke();ctx.restore();}
+function text3(ctx,P,a,txt,color,dx,dy,font){const p=proj(a[0],a[1],a[2],P);ctx.fillStyle=color;ctx.font=font||'12px "IBM Plex Mono",monospace';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(txt,p.x+(dx||0),p.y+(dy||0));}
+function arrow3(ctx,P,a,b,color,width){const p0=proj(a[0],a[1],a[2],P),p1=proj(b[0],b[1],b[2],P);ctx.strokeStyle=color;ctx.fillStyle=color;ctx.lineWidth=width||1.7;ctx.setLineDash([]);ctx.beginPath();ctx.moveTo(p0.x,p0.y);ctx.lineTo(p1.x,p1.y);ctx.stroke();const ang=Math.atan2(p1.y-p0.y,p1.x-p0.x),h=9;ctx.beginPath();ctx.moveTo(p1.x,p1.y);ctx.lineTo(p1.x-h*Math.cos(ang-0.42),p1.y-h*Math.sin(ang-0.42));ctx.lineTo(p1.x-h*Math.cos(ang+0.42),p1.y-h*Math.sin(ang+0.42));ctx.closePath();ctx.fill();}
+function drawFrame(ctx,P){
+  const gc='rgba(120,170,175,0.11)',bc='rgba(120,170,175,0.20)';
+  for(const g of[-1,-0.5,0,0.5,1]){line3(ctx,P,[g,-1,-1],[g,1,-1],gc,1);line3(ctx,P,[-1,g,-1],[1,g,-1],gc,1);}
+  for(const c of[[-1,-1],[1,-1],[1,1],[-1,1]])line3(ctx,P,[c[0],c[1],-1],[c[0],c[1],1],bc,1);
+  const top=[[-1,-1,1],[1,-1,1],[1,1,1],[-1,1,1]],bot=[[-1,-1,-1],[1,-1,-1],[1,1,-1],[-1,1,-1]];
+  for(let k=0;k<4;k++){line3(ctx,P,top[k],top[(k+1)%4],bc,1);line3(ctx,P,bot[k],bot[(k+1)%4],bc,1);}
+}
+function axes3(ctx,P,lx,ly,lz){
+  const O=[-1,-1,-1];
+  arrow3(ctx,P,O,[1.18,-1,-1],'#ff9a80');arrow3(ctx,P,O,[-1,1.18,-1],'#7fdbe6');arrow3(ctx,P,O,[-1,-1,1.18],'#ffdd82');
+  const bf='600 14px "Space Grotesk",sans-serif';
+  text3(ctx,P,[1.34,-1,-1],lx||'x','#ff9a80',0,0,bf);
+  text3(ctx,P,[-1,1.34,-1],ly||'y','#7fdbe6',0,0,bf);
+  text3(ctx,P,[-1,-1,1.35],lz||'z','#ffdd82',0,0,bf);
+}
+
+/* ================= section 1: slice a solid ================= */
+let cur=0, zs=0;
+const camA={yaw:-0.62,pitch:0.42,zoom:1};
+function solidScale(S){const rmax=Math.max(...lin(S.z0,S.z1,40).map(S.R))||1;return{rmax,zc:(S.z0+S.z1)/2,zh:(S.z1-S.z0)/2||1};}
+function render3D(){
+  const S=SOL[cur],cv=document.getElementById('c3d');const{ctx,W,H}=fit(cv);
+  ctx.clearRect(0,0,W,H);
+  const P=makeP(W,H,camA);
+  const sc=solidScale(S);
+  const NR=v=>v/sc.rmax, NZ=z=>(z-sc.zc)/sc.zh;
+  drawFrame(ctx,P);
+  /* lateral surface as a lathe mesh over (z, θ) */
+  const NZs=34,NT=40;
+  const zsl=lin(S.z0,S.z1,NZs),ths=lin(0,TAU,NT);
+  const quads=[];
+  for(let i=0;i<NZs-1;i++)for(let j=0;j<NT-1;j++){
+    const z0=zsl[i],z1=zsl[i+1],t0=ths[j],t1=ths[j+1];
+    const r0=S.R(z0),r1=S.R(z1);
+    const w=[[r0*Math.cos(t0),r0*Math.sin(t0),z0],[r0*Math.cos(t1),r0*Math.sin(t1),z0],
+             [r1*Math.cos(t1),r1*Math.sin(t1),z1],[r1*Math.cos(t0),r1*Math.sin(t0),z1]]
+            .map(v=>[NR(v[0]),NR(v[1]),NZ(v[2])]);
+    const p=w.map(v=>proj(v[0],v[1],v[2],P));
+    const e1=[w[1][0]-w[0][0],w[1][1]-w[0][1],w[1][2]-w[0][2]],e2=[w[3][0]-w[0][0],w[3][1]-w[0][1],w[3][2]-w[0][2]];
+    let nv=[e1[1]*e2[2]-e1[2]*e2[1],e1[2]*e2[0]-e1[0]*e2[2],e1[0]*e2[1]-e1[1]*e2[0]];
+    const nl=Math.hypot(nv[0],nv[1],nv[2])||1;nv=[nv[0]/nl,nv[1]/nl,nv[2]/nl];
+    const br=0.42+0.58*Math.abs(nv[0]*LIGHT[0]+nv[1]*LIGHT[1]+nv[2]*LIGHT[2]);
+    const above=((z0+z1)/2)>zs;
+    const base=above?[120,150,160]:[200,150,110];
+    quads.push({p,depth:(p[0].d+p[1].d+p[2].d+p[3].d)/4,
+      col:'rgb('+(base[0]*br|0)+','+(base[1]*br|0)+','+(base[2]*br|0)+')',above});
+  }
+  quads.sort((a,b)=>b.depth-a.depth);
+  for(const q of quads){
+    ctx.globalAlpha=q.above?0.42:1;
+    ctx.beginPath();ctx.moveTo(q.p[0].x,q.p[0].y);for(let k=1;k<4;k++)ctx.lineTo(q.p[k].x,q.p[k].y);ctx.closePath();
+    ctx.fillStyle=q.col;ctx.strokeStyle=q.col;ctx.lineWidth=1;ctx.fill();ctx.stroke();
+  }
+  ctx.globalAlpha=1;
+  /* the slice disk at z = zs */
+  const Rz=S.R(zs);
+  if(Rz>1e-6){
+    const ring=[];for(let j=0;j<=48;j++){const t=j/48*TAU;ring.push([NR(Rz*Math.cos(t)),NR(Rz*Math.sin(t)),NZ(zs)]);}
+    poly3(ctx,P,ring,'rgba(123,216,255,0.34)','#7bd8ff',2);
+    /* a radius marker */
+    line3(ctx,P,[0,0,NZ(zs)],[NR(Rz),0,NZ(zs)],'#ff9f68',2.4);
+  }
+  axes3(ctx,P);
+}
+function drawPlots(){
+  const S=SOL[cur];
+  const A=z=>Math.PI*S.R(z)*S.R(z);
+  /* --- A(z) --- */
+  (function(){
+    const cv=document.getElementById('plotA');const{ctx,W,H}=fit(cv);ctx.clearRect(0,0,W,H);
+    const N=140,zz=lin(S.z0,S.z1,N),vals=zz.map(A);
+    const pL=48,pB=26,pT=12,pR=12;
+    const hi=Math.max(...vals)*1.14||1;
+    const MX=z=>pL+(z-S.z0)/((S.z1-S.z0)||1)*(W-pL-pR),MY=v=>H-pB-(v/hi)*(H-pT-pB);
+    ctx.strokeStyle='rgba(120,170,175,0.30)';ctx.lineWidth=1;
+    ctx.beginPath();ctx.moveTo(pL,MY(0));ctx.lineTo(W-pR,MY(0));ctx.stroke();
+    /* swept region */
+    ctx.beginPath();ctx.moveTo(MX(S.z0),MY(0));
+    for(let i=0;i<N;i++){if(zz[i]>zs)break;ctx.lineTo(MX(zz[i]),MY(vals[i]));}
+    ctx.lineTo(MX(Math.min(zs,S.z1)),MY(0));ctx.closePath();
+    ctx.fillStyle='rgba(255,209,92,0.30)';ctx.fill();
+    ctx.strokeStyle='#7bd8ff';ctx.lineWidth=2.6;ctx.lineJoin='round';ctx.beginPath();
+    for(let i=0;i<N;i++){const px=MX(zz[i]),py=MY(vals[i]);i?ctx.lineTo(px,py):ctx.moveTo(px,py);}ctx.stroke();
+    ctx.strokeStyle='rgba(231,242,240,0.6)';ctx.lineWidth=1.5;ctx.setLineDash([5,4]);
+    ctx.beginPath();ctx.moveTo(MX(zs),pT);ctx.lineTo(MX(zs),H-pB);ctx.stroke();ctx.setLineDash([]);
+    ctx.beginPath();ctx.arc(MX(zs),MY(A(zs)),5,0,TAU);ctx.fillStyle='#fff';ctx.fill();ctx.lineWidth=2;ctx.strokeStyle='#7bd8ff';ctx.stroke();
+    ctx.fillStyle='#6b8484';ctx.font='11px "IBM Plex Mono",monospace';ctx.textAlign='center';
+    ctx.fillText('z  →  A(z)',W/2,H-8);
+    document.getElementById('badgeA').textContent='A = '+A(zs).toFixed(3);
+  })();
+  /* --- running volume --- */
+  (function(){
+    const cv=document.getElementById('plotV');const{ctx,W,H}=fit(cv);ctx.clearRect(0,0,W,H);
+    const N=120,zz=lin(S.z0,S.z1,N);
+    const vals=zz.map(z=>simpson(A,S.z0,z,80));
+    const pL=48,pB=26,pT=12,pR=12;
+    const hi=S.V*1.14||1;
+    const MX=z=>pL+(z-S.z0)/((S.z1-S.z0)||1)*(W-pL-pR),MY=v=>H-pB-(v/hi)*(H-pT-pB);
+    ctx.strokeStyle='rgba(120,170,175,0.30)';ctx.lineWidth=1;
+    ctx.beginPath();ctx.moveTo(pL,MY(0));ctx.lineTo(W-pR,MY(0));ctx.stroke();
+    /* exact-total guide */
+    ctx.strokeStyle='rgba(255,209,92,0.35)';ctx.setLineDash([4,4]);
+    ctx.beginPath();ctx.moveTo(pL,MY(S.V));ctx.lineTo(W-pR,MY(S.V));ctx.stroke();ctx.setLineDash([]);
+    ctx.fillStyle='rgba(255,209,92,0.7)';ctx.font='10px "IBM Plex Mono",monospace';ctx.textAlign='left';
+    ctx.fillText('exact V',pL+4,MY(S.V)-5);
+    ctx.strokeStyle='#ffd15c';ctx.lineWidth=2.6;ctx.lineJoin='round';ctx.beginPath();
+    for(let i=0;i<N;i++){const px=MX(zz[i]),py=MY(vals[i]);i?ctx.lineTo(px,py):ctx.moveTo(px,py);}ctx.stroke();
+    const acc=simpson(A,S.z0,zs,120);
+    ctx.beginPath();ctx.arc(MX(zs),MY(acc),5,0,TAU);ctx.fillStyle='#fff';ctx.fill();ctx.lineWidth=2;ctx.strokeStyle='#ffd15c';ctx.stroke();
+    ctx.fillStyle='#6b8484';ctx.font='11px "IBM Plex Mono",monospace';ctx.textAlign='center';
+    ctx.fillText('z  →  volume swept',W/2,H-8);
+    document.getElementById('badgeV').textContent=acc.toFixed(3)+' / '+S.V.toFixed(3);
+  })();
+}
+function readout1(){
+  const S=SOL[cur],Rz=S.R(zs),A=Math.PI*Rz*Rz;
+  const acc=simpson(z=>Math.PI*S.R(z)*S.R(z),S.z0,zs,160);
+  document.getElementById('valz').textContent=zs.toFixed(2);
+  document.getElementById('rRz').textContent=Rz.toFixed(3);
+  document.getElementById('rA').textContent=A.toFixed(3);
+  document.getElementById('racc').textContent=acc.toFixed(3);
+  document.getElementById('rV').textContent=S.V.toFixed(3);
+  document.getElementById('eRz').textContent='R(z) = '+S.Rs;
+  document.getElementById('eV').textContent='V = '+S.Vs;
+}
+
+/* ================= section 2: a cylindrical cell ================= */
+let cyR=1.2,cyDr=0.5,cyDt=45,cyDz=0.7;
+const camC={yaw:-0.7,pitch:0.44,zoom:1};
+function renderCyl(){
+  const cv=document.getElementById('c3dcyl');const{ctx,W,H}=fit(cv);ctx.clearRect(0,0,W,H);
+  const P=makeP(W,H,camC);
+  const r0=cyR,r1=cyR+cyDr,t0=-cyDt*DEG/2,t1=cyDt*DEG/2,z0=0,z1=cyDz;
+  const sc=Math.max(r1,1.4), NZ=z=>(z-z1/2)/(Math.max(z1,1)*0.9)*0.7, NR=v=>v/sc*0.85;
+  drawFrame(ctx,P);
+  const arc=(r,z,n)=>{const o=[];for(let i=0;i<=n;i++){const t=t0+(t1-t0)*i/n;o.push([NR(r*Math.cos(t)),NR(r*Math.sin(t)),NZ(z)]);}return o;};
+  /* faces, drawn back-to-front by rough depth */
+  const faces=[];
+  const push=(pts,fill,stroke)=>{const d=pts.reduce((s,v)=>s+proj(v[0],v[1],v[2],P).d,0)/pts.length;faces.push({pts,fill,stroke,d});};
+  push(arc(r0,z0,18).concat(arc(r1,z0,18).reverse()),'rgba(179,157,255,0.22)','rgba(179,157,255,0.7)');   /* bottom */
+  push(arc(r0,z1,18).concat(arc(r1,z1,18).reverse()),'rgba(179,157,255,0.34)','rgba(179,157,255,0.9)');   /* top */
+  push(arc(r1,z0,18).concat(arc(r1,z1,18).reverse()),'rgba(123,216,255,0.26)','rgba(123,216,255,0.8)');   /* outer */
+  push(arc(r0,z0,18).concat(arc(r0,z1,18).reverse()),'rgba(123,216,255,0.18)','rgba(123,216,255,0.55)');  /* inner */
+  for(const t of[t0,t1]){
+    push([[NR(r0*Math.cos(t)),NR(r0*Math.sin(t)),NZ(z0)],[NR(r1*Math.cos(t)),NR(r1*Math.sin(t)),NZ(z0)],
+          [NR(r1*Math.cos(t)),NR(r1*Math.sin(t)),NZ(z1)],[NR(r0*Math.cos(t)),NR(r0*Math.sin(t)),NZ(z1)]],
+         'rgba(255,159,104,0.24)','rgba(255,159,104,0.75)');
+  }
+  faces.sort((a,b)=>b.d-a.d);
+  for(const f of faces)poly3(ctx,P,f.pts,f.fill,f.stroke,1.6);
+  /* guide lines to the axis */
+  for(const t of[t0,t1])line3(ctx,P,[0,0,NZ(z0)],[NR(r1*Math.cos(t)),NR(r1*Math.sin(t)),NZ(z0)],'rgba(120,170,175,0.3)',1,[4,4]);
+  /* labels */
+  const midT=(t0+t1)/2;
+  text3(ctx,P,[NR((r0+r1)/2*Math.cos(t1)),NR((r0+r1)/2*Math.sin(t1)),NZ(z0)],'dr','#ff9f68',0,14,'600 12px "Space Grotesk",sans-serif');
+  text3(ctx,P,[NR(r1*Math.cos(midT)),NR(r1*Math.sin(midT)),NZ(z0)],'r dθ','#7bd8ff',0,16,'600 12px "Space Grotesk",sans-serif');
+  text3(ctx,P,[NR(r1*Math.cos(t0)),NR(r1*Math.sin(t0)),NZ(z1/2)],'dz','#d5c9ff',-16,0,'600 12px "Space Grotesk",sans-serif');
+  axes3(ctx,P);
+  /* readouts */
+  const dt=cyDt*DEG;
+  const exact=0.5*(r1*r1-r0*r0)*dt*cyDz, form=cyR*cyDr*dt*cyDz;
+  document.getElementById('cyr').textContent=cyR.toFixed(2);
+  document.getElementById('cydr').textContent=cyDr.toFixed(2);
+  document.getElementById('cydt').textContent=cyDt.toFixed(0)+'°';
+  document.getElementById('cydz').textContent=cyDz.toFixed(2);
+  document.getElementById('cyex').textContent=exact.toFixed(4);
+  document.getElementById('cyform').textContent=form.toFixed(4);
+  document.getElementById('cygap').textContent=((0.5*cyDr/cyR)*100).toFixed(1)+'%';
+}
+
+/* ================= section 3: the spherical cell ================= */
+let sPhi=60,sRho=1.2,sDrho=0.3,sDang=25;
+const camS={yaw:-0.66,pitch:0.36,zoom:1};
+function renderSph(){
+  const cv=document.getElementById('c3dsph');const{ctx,W,H}=fit(cv);ctx.clearRect(0,0,W,H);
+  const P=makeP(W,H,camS);
+  const RMAXV=2.0, N=v=>v/RMAXV;
+  const ph=sPhi*DEG, rho=sRho, dph=sDang*DEG, dth=sDang*DEG, drho=sDrho;
+  const sp=(r,p,t)=>[N(r*Math.sin(p)*Math.cos(t)),N(r*Math.sin(p)*Math.sin(t)),N(r*Math.cos(p))];
+  drawFrame(ctx,P);
+  /* faint sphere wireframe at radius rho */
+  ctx.save();ctx.globalAlpha=0.5;
+  for(let k=1;k<=5;k++){const p=k/6*Math.PI;const ring=[];
+    for(let i=0;i<=60;i++)ring.push(sp(rho,p,i/60*TAU));
+    strokePath3(ctx,P,ring,'rgba(120,170,175,0.30)',1);}
+  for(let k=0;k<8;k++){const t=k/8*TAU;const mer=[];
+    for(let i=0;i<=40;i++)mer.push(sp(rho,i/40*Math.PI,t));
+    strokePath3(ctx,P,mer,'rgba(120,170,175,0.22)',1);}
+  ctx.restore();
+  /* the line of latitude through the point — the star of the section */
+  const lat=[];for(let i=0;i<=80;i++)lat.push(sp(rho,ph,i/80*TAU));
+  strokePath3(ctx,P,lat,'#b39dff',3);
+  /* its radius, drawn from the axis */
+  const zAt=N(rho*Math.cos(ph));
+  line3(ctx,P,[0,0,zAt],sp(rho,ph,0),'#b39dff',2.2,[5,4]);
+  line3(ctx,P,[0,0,N(-RMAXV)],[0,0,N(RMAXV)],'rgba(255,221,130,0.5)',1.5,[4,4]);
+  /* the spherical cell */
+  const t0=-dth/2,t1=dth/2,p0=ph,p1=Math.min(Math.PI,ph+dph),r0=rho,r1=rho+drho;
+  const facePts=(fixed,val,n)=>{
+    const o=[];
+    if(fixed==='r'){for(let i=0;i<=n;i++)o.push(sp(val,p0,t0+(t1-t0)*i/n));
+      for(let i=0;i<=n;i++)o.push(sp(val,p0+(p1-p0)*i/n,t1));
+      for(let i=n;i>=0;i--)o.push(sp(val,p1,t0+(t1-t0)*i/n));
+      for(let i=n;i>=0;i--)o.push(sp(val,p0+(p1-p0)*i/n,t0));}
+    return o;
+  };
+  const cellFaces=[];
+  const pushF=(pts,fill,stroke)=>{if(pts.length<3)return;const d=pts.reduce((s,v)=>s+proj(v[0],v[1],v[2],P).d,0)/pts.length;cellFaces.push({pts,fill,stroke,d});};
+  pushF(facePts('r',r1,10),'rgba(179,157,255,0.40)','#d5c9ff');
+  pushF(facePts('r',r0,10),'rgba(179,157,255,0.22)','rgba(213,201,255,0.6)');
+  /* θ-faces (flat wedges) */
+  for(const t of[t0,t1]){
+    const o=[];for(let i=0;i<=10;i++)o.push(sp(r0,p0+(p1-p0)*i/10,t));
+    for(let i=10;i>=0;i--)o.push(sp(r1,p0+(p1-p0)*i/10,t));
+    pushF(o,'rgba(255,159,104,0.26)','rgba(255,159,104,0.7)');
+  }
+  /* φ-faces (cones) */
+  for(const p of[p0,p1]){
+    const o=[];for(let i=0;i<=10;i++)o.push(sp(r0,p,t0+(t1-t0)*i/10));
+    for(let i=10;i>=0;i--)o.push(sp(r1,p,t0+(t1-t0)*i/10));
+    pushF(o,'rgba(123,216,255,0.24)','rgba(123,216,255,0.7)');
+  }
+  cellFaces.sort((a,b)=>b.d-a.d);
+  for(const f of cellFaces)poly3(ctx,P,f.pts,f.fill,f.stroke,1.5);
+  /* label the latitude radius */
+  text3(ctx,P,[N(rho*Math.sin(ph)/2),0,zAt],'ρ sin φ','#d5c9ff',0,-12,'600 12px "Space Grotesk",sans-serif');
+  axes3(ctx,P);
+  /* ---- readouts ---- */
+  const latR=rho*Math.sin(ph);
+  const eRho=drho, ePhi=rho*dph, eTh=latR*dth;
+  /* exact cell volume: ∫∫∫ ρ² sinφ dρ dφ dθ  over the box */
+  const exact=((r1*r1*r1-r0*r0*r0)/3)*(Math.cos(p0)-Math.cos(p1))*dth;
+  const form=rho*rho*Math.sin(ph)*drho*dph*dth;
+  document.getElementById('svphi').textContent=sPhi.toFixed(0)+'°';
+  document.getElementById('svrho').textContent=sRho.toFixed(2);
+  document.getElementById('svdrho').textContent=sDrho.toFixed(2);
+  document.getElementById('svdang').textContent=sDang.toFixed(0)+'°';
+  document.getElementById('rlat').textContent=latR.toFixed(3);
+  document.getElementById('redges').textContent=eRho.toFixed(2)+' · '+ePhi.toFixed(2)+' · '+eTh.toFixed(2);
+  document.getElementById('rexcell').textContent=exact.toFixed(4);
+  document.getElementById('rformcell').textContent=form.toFixed(4);
+  const ratio=form>1e-12?exact/form:1;
+  document.getElementById('rratiocell').textContent=ratio.toFixed(3);
+  document.getElementById('rratiowhy').textContent=
+    Math.abs(ratio-1)<0.02?'agreed — the cell is small enough':'→ 1 as dρ, dφ, dθ shrink';
+  document.getElementById('spheq').innerHTML=
+    'sin φ = <span class="cp">'+Math.sin(ph).toFixed(3)+'</span>&nbsp; at φ = '+sPhi.toFixed(0)+'°<br>'+
+    'ρ² sin φ = <span class="cr">'+(rho*rho).toFixed(2)+'</span> · <span class="cp">'+Math.sin(ph).toFixed(3)+'</span> = <b>'+(rho*rho*Math.sin(ph)).toFixed(3)+'</b>';
+}
+
+/* ================= wiring ================= */
+const sz=document.getElementById('sz');
+function configZ(S){sz.min=S.z0;sz.max=S.z1;sz.step=(S.z1-S.z0)/200;zs=clamp(zs,S.z0,S.z1);sz.value=zs;}
+sz.addEventListener('input',()=>{zs=+sz.value;render3D();drawPlots();readout1();});
+function buildChips(){const c=document.getElementById('chips');c.innerHTML='';
+  SOL.forEach((S,i)=>{const b=document.createElement('button');b.className='chip'+(i===cur?' on':'');b.textContent=S.sym;
+    b.setAttribute('aria-pressed',i===cur);b.onclick=()=>{cur=i;loadSolid();};c.appendChild(b);});}
+function loadSolid(){
+  const S=SOL[cur];
+  zs=S.z0+(S.z1-S.z0)*0.5;
+  configZ(S);
+  document.getElementById('exnote').innerHTML='<b>'+S.name+'.</b> '+S.note;
+  buildChips();render3D();drawPlots();readout1();
+}
+const bind=(id,fn)=>{const el=document.getElementById(id);el.addEventListener('input',()=>fn(+el.value));};
+bind('cylr',v=>{cyR=v;renderCyl();});
+bind('cyldr',v=>{cyDr=v;renderCyl();});
+bind('cyldt',v=>{cyDt=v;renderCyl();});
+bind('cyldz',v=>{cyDz=v;renderCyl();});
+bind('sphi',v=>{sPhi=v;renderSph();});
+bind('srho',v=>{sRho=v;renderSph();});
+bind('sdrho',v=>{sDrho=v;renderSph();});
+bind('sdang',v=>{sDang=v;renderSph();});
+
+function orbit(cv,cam,redraw){
+  let raf=false;const pts=new Map();let pinchD=0;
+  const sched=()=>{if(raf)return;raf=true;requestAnimationFrame(()=>{raf=false;redraw();});};
+  const dist=()=>{const a=[...pts.values()];return Math.hypot(a[0].x-a[1].x,a[0].y-a[1].y);};
+  cv.addEventListener('pointerdown',e=>{cv.setPointerCapture(e.pointerId);pts.set(e.pointerId,{x:e.clientX,y:e.clientY});if(pts.size===2)pinchD=dist();});
+  cv.addEventListener('pointermove',e=>{
+    if(!pts.has(e.pointerId))return;const prev=pts.get(e.pointerId);pts.set(e.pointerId,{x:e.clientX,y:e.clientY});
+    if(pts.size>=2){const d=dist();if(pinchD>0)cam.zoom=clamp(cam.zoom*d/pinchD,0.45,3.5);pinchD=d;sched();return;}
+    cam.yaw+=(e.clientX-prev.x)*0.01;cam.pitch=clamp(cam.pitch+(e.clientY-prev.y)*0.007,0.05,1.5);sched();
+  });
+  const end=e=>{pts.delete(e.pointerId);pinchD=0;};
+  cv.addEventListener('pointerup',end);cv.addEventListener('pointercancel',end);
+  cv.addEventListener('wheel',e=>{e.preventDefault();cam.zoom=clamp(cam.zoom*(e.deltaY<0?1.12:0.9),0.45,3.5);sched();},{passive:false});
+}
+orbit(document.getElementById('c3d'),camA,()=>{render3D();});
+orbit(document.getElementById('c3dcyl'),camC,renderCyl);
+orbit(document.getElementById('c3dsph'),camS,renderSph);
+
+let rt=false;
+function drawAll(){render3D();drawPlots();readout1();renderCyl();renderSph();}
+window.addEventListener('resize',()=>{if(rt)return;rt=true;requestAnimationFrame(()=>{rt=false;drawAll();});});
+window.addEventListener('load',drawAll);
+
+loadSolid();renderCyl();renderSph();
+}catch(err){
+  const b=document.getElementById('errbar');if(b){b.style.display='block';b.textContent='Something failed while loading the lab: '+err.message;}
+  console.error(err);
+}
+</script>
+</body>
+</html>

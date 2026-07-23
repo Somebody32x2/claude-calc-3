@@ -16,6 +16,8 @@ manipulable object that makes the idea *feel* obvious before any notation appear
 | Structure | Hero → three-card "the whole idea" → interactive lab → collapse-to-Calc-1 section → a second view of the same object → compute-by-hand worked examples → "where this goes next". |
 | Interaction | Drag to orbit, scroll/pinch to zoom, sliders for position, toggles for layers. All state changes re-render synchronously; heavy work is `requestAnimationFrame`-throttled. |
 | Failure | Whole script wrapped in try/catch feeding a visible `#errbar`. A broken lab must say so rather than render blank. |
+| Misconceptions | Every lab closes with a **Common misconceptions** section before the footer: a myth/reality grid naming the specific wrong ideas that feel reasonable. These are chosen for being *load-bearing* — each one, believed, produces confidently wrong work later. Written as "✕ the myth / ✓ actually", never as a list of rules. |
+| Honest instruments | When a demo shows an exact quantity next to an approximation, the gap must be *explained on screen*, not left as an unremarked mismatch (see Lab 07's exact ÷ formula ratio). A visible unexplained discrepancy reads as a bug in the lab. |
 | A11y | Real `<button>`/`<input>` elements, `aria-pressed`, visible focus rings, reduced-motion respected, 920px single-column breakpoint. |
 
 ## Sequence
@@ -76,9 +78,19 @@ integrals converge to their closed forms. *(Design note: the disk radius and
 integrand set were chosen to avoid the R = 2 coincidence where a constant
 integrand's wrong-sum accidentally equals the right answer.)*
 
-**07 · Triple integrals, cylindrical & spherical**
-Same slicing logic one dimension up. Solid region + sweeping cross-sectional
-plane; coordinate system chosen by the symmetry of the solid.
+**07 · Triple integrals, cylindrical & spherical** ✅ *shipped*
+Same slicing logic one dimension up, and deliberately framed that way — the
+sweeping blade is the Lab 02 move re-run on a solid, so the section opens by
+pointing back at it. Solids of revolution let the slice be a disk with an exact
+`A(z)`, so the running volume is honest. The centrepiece is the `ρ² sin φ`
+derivation: a spherical box has edges `dρ`, `ρ dφ`, and `ρ sin φ dθ`, and the
+lab draws the line of latitude whose radius *is* that third factor — slide φ
+toward a pole and watch it collapse. Verified: all four solids' slice integrals
+match their closed forms, the cylindrical gap is exactly `dr/2r`, the latitude
+radius equals `ρ sin φ` at every φ, and the spherical element integrates to
+`4π/3`. The cell is drawn deliberately large for visibility, so a live
+exact ÷ formula ratio (1.39 → 1.06 as it shrinks) makes the limit explicit
+rather than leaving an unexplained mismatch on screen.
 
 **08 · Vector fields & line integrals**
 Field visualization, a particle dragged along a path, `∫ F · dr` accumulating in
