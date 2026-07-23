@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vector Fields & Line Integrals · A Field Lab</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#081416;--bg2:#0c1e22;--panel:#0f2429;--panel2:#123037;
+  --line:rgba(120,170,175,0.16);--line-strong:rgba(120,170,175,0.32);
+  --ink:#e7f2f0;--ink-dim:#9db3b3;--ink-faint:#6b8484;
+  --x:#ff7a5c;--x-soft:#ffab90;--y:#46c9d6;--y-soft:#8fe3ec;
+  --grad:#ffd15c;--grad-soft:#ffe4a1;--peak:#f0d79a;
+  --F:#ff7a5c;--T:#b39dff;--T-soft:#d5c9ff;--path:#ffd15c;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font-family:'Inter',system-ui,sans-serif;font-size:16px;line-height:1.6;-webkit-font-smoothing:antialiased;
+  background-image:radial-gradient(1200px 500px at 80% -10%,rgba(255,209,92,0.06),transparent),radial-gradient(900px 400px at 0% 5%,rgba(179,157,255,0.05),transparent);}
+.wrap{max-width:1180px;margin:0 auto;padding:0 24px}
+h1,h2,h3{font-family:'Space Grotesk',sans-serif;font-weight:600;line-height:1.1;letter-spacing:-0.01em}
+.mono{font-family:'IBM Plex Mono',monospace}
+#errbar{display:none;background:#3a1414;border:1px solid #ff7a5c;color:#ffd9cf;padding:12px 16px;margin:16px 0;border-radius:10px;font-family:'IBM Plex Mono';font-size:13px}
+header{padding:64px 0 8px}
+.eyebrow{font-family:'IBM Plex Mono',monospace;font-size:12.5px;letter-spacing:0.28em;text-transform:uppercase;color:var(--ink-faint);display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.eyebrow::before{content:"";width:34px;height:1px;background:var(--line-strong)}
+.eyebrow a{color:var(--ink-faint);text-decoration:none;border-bottom:1px solid var(--line-strong)}
+.eyebrow a:hover{color:var(--y)}
+h1{font-size:clamp(38px,6.4vw,70px);margin:18px 0 0;font-weight:700}
+h1 .accent{background:linear-gradient(100deg,var(--F),var(--path) 50%,var(--T));-webkit-background-clip:text;background-clip:text;color:transparent}
+.lede{max-width:700px;color:var(--ink-dim);font-size:clamp(17px,2.2vw,20px);margin:22px 0 0}
+.lede b{color:var(--ink);font-weight:600}
+.idea{margin:52px 0;display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.idea>div{background:var(--bg2);padding:26px 24px}
+.idea .k{font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:0.14em;text-transform:uppercase;margin-bottom:10px}
+.idea .kf{color:var(--F)}.idea .kp{color:var(--path)}.idea .kt{color:var(--T)}
+.idea p{margin:0;color:var(--ink-dim);font-size:15px}
+.idea .big{font-family:'Space Grotesk';font-size:19px;color:var(--ink);display:block;margin-bottom:6px;font-weight:500}
+section{padding:34px 0}
+.sec-head{display:flex;align-items:baseline;gap:16px;margin-bottom:22px;flex-wrap:wrap}
+.sec-num{font-family:'IBM Plex Mono',monospace;color:var(--ink-faint);font-size:14px;letter-spacing:0.1em}
+h2{font-size:clamp(26px,3.6vw,38px)}
+.sec-head p{margin:0;color:var(--ink-dim);font-size:15px;flex:1;min-width:240px}
+.prose{max-width:770px;color:var(--ink-dim);font-size:15.5px;margin:0 0 22px}
+.prose b{color:var(--ink);font-weight:600}
+.prose .mono{color:var(--grad-soft)}
+.prose.eqn{font-family:'IBM Plex Mono',monospace;font-size:15px;color:var(--ink);background:var(--bg2);border:1px solid var(--line);border-radius:10px;padding:14px 16px;text-align:center}
+.lab{display:grid;grid-template-columns:1fr 356px;gap:20px;border:1px solid var(--line);border-radius:16px;background:var(--bg2);padding:20px}
+.viewport{position:relative;border-radius:12px;overflow:hidden;background:linear-gradient(180deg,#0a1a1e,#081315);border:1px solid var(--line);aspect-ratio:1/1}
+canvas.flat{width:100%;height:100%;display:block}
+.vhint{position:absolute;left:14px;bottom:12px;z-index:3;font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:0.12em;color:var(--ink-faint);text-transform:uppercase;pointer-events:none;background:rgba(8,20,22,0.55);padding:4px 9px;border-radius:6px}
+.rail{display:flex;flex-direction:column;gap:16px}
+.chips{display:flex;flex-wrap:wrap;gap:7px}
+.chip{font-family:'IBM Plex Mono',monospace;font-size:12px;padding:7px 11px;border-radius:8px;border:1px solid var(--line-strong);background:transparent;color:var(--ink-dim);cursor:pointer;transition:all .15s}
+.chip:hover{border-color:var(--y);color:var(--ink)}
+.chip.on{background:var(--panel2);border-color:var(--y);color:var(--ink)}
+.chip.on::before{content:"▸ "}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px}
+.card .lbl{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:var(--ink-faint);margin-bottom:12px}
+.sliderrow{margin-bottom:14px}.sliderrow:last-child{margin-bottom:0}
+.sliderrow .top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px}
+.sliderrow .name{font-family:'Space Grotesk';font-size:14px;font-weight:500}
+.sliderrow .val{font-family:'IBM Plex Mono';font-size:14px}
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:4px;border-radius:4px;background:var(--line-strong);outline:none;margin:6px 0 2px}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:17px;height:17px;border-radius:50%;background:var(--path);border:2px solid var(--bg);cursor:pointer;box-shadow:0 0 0 1px var(--line-strong)}
+input[type=range]::-moz-range-thumb{width:17px;height:17px;border-radius:50%;background:var(--path);border:2px solid var(--bg);cursor:pointer}
+.readout .line{display:flex;justify-content:space-between;align-items:baseline;padding:9px 0;border-bottom:1px solid var(--line);gap:12px}
+.readout .line:last-child{border-bottom:none;padding-bottom:0}.readout .line:first-child{padding-top:0}
+.readout .rl{font-size:13.5px;color:var(--ink-dim)}
+.readout .rl .exp{font-family:'IBM Plex Mono';font-size:12px;color:var(--ink-faint);display:block}
+.readout .rv{font-family:'IBM Plex Mono';font-size:16px;font-weight:500;text-align:right;white-space:nowrap}
+.rv.vf{color:var(--F)}.rv.vt{color:var(--T)}.rv.vg{color:var(--grad)}
+.eqbox{font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--ink-dim);background:rgba(255,209,92,0.07);border:1px solid rgba(255,209,92,0.22);border-radius:8px;padding:10px 12px;margin-top:12px;line-height:1.85;word-break:break-word}
+.eqbox .cf{color:var(--x-soft)}.eqbox .ct{color:var(--T-soft)}.eqbox b{color:var(--ink)}
+.note{border-left:2px solid var(--path);background:rgba(255,209,92,0.06);padding:12px 14px;border-radius:0 8px 8px 0;font-size:13.5px;color:var(--ink-dim)}
+.note b{color:var(--grad-soft);font-weight:600}
+.verdict{margin-top:14px;border-radius:10px;padding:13px 15px;text-align:center;font-family:'Space Grotesk';font-weight:600;font-size:17px;border:1px solid}
+.v-yes{color:var(--y);background:rgba(70,201,214,0.10);border-color:rgba(70,201,214,0.4)}
+.v-no{color:var(--x);background:rgba(255,122,92,0.10);border-color:rgba(255,122,92,0.4)}
+.verdict .why{display:block;font-family:'Inter';font-weight:400;font-size:13px;color:var(--ink-dim);margin-top:6px}
+.plot2d{width:100%;height:210px;display:block}
+.panel{border:1px solid var(--line);border-radius:14px;background:var(--bg2);padding:16px 16px 12px;margin-top:18px}
+.panel h3{font-size:16px;margin:0 0 2px;display:flex;align-items:center;gap:8px}
+.panel .cap{font-size:13px;color:var(--ink-dim);margin:0 0 8px}
+.pbadge{font-family:'IBM Plex Mono';font-size:13px;padding:2px 8px;border-radius:6px;margin-left:auto;white-space:nowrap;color:var(--grad);background:rgba(255,209,92,0.1)}
+table.paths{border-collapse:collapse;width:100%;font-family:'IBM Plex Mono';font-size:13px;margin-top:10px}
+table.paths td,table.paths th{border:1px solid var(--line);padding:7px 10px;text-align:center}
+table.paths th{color:var(--ink-faint);font-weight:400;font-size:12px}
+table.paths td.p{color:var(--ink-dim);text-align:left}
+table.paths .same{color:var(--y)}table.paths .diff{color:var(--x)}
+.rule{font-size:17px;color:var(--ink);max-width:780px;margin:0 0 26px}
+.rule b{color:var(--grad-soft)}
+/* worked-by-hand block */
+.byhand{border:1px solid var(--line);border-radius:14px;background:var(--bg2);padding:22px 24px;margin-bottom:18px}
+.byhand h3{font-size:17px;margin:0 0 4px;color:var(--ink)}
+.byhand .sub{font-size:13.5px;color:var(--ink-faint);margin:0 0 16px}
+.byhand ol{margin:0;padding-left:22px;counter-reset:s}
+.byhand li{margin-bottom:15px;font-size:14.5px;color:var(--ink-dim)}
+.byhand li:last-child{margin-bottom:0}
+.byhand li b{color:var(--ink);font-weight:600}
+.byhand .work{font-family:'IBM Plex Mono',monospace;font-size:13.5px;color:var(--ink);background:rgba(120,170,175,0.07);border-left:2px solid var(--line-strong);padding:9px 13px;border-radius:0 7px 7px 0;margin-top:8px;line-height:1.9;overflow-x:auto}
+.byhand .work .hl{color:var(--grad-soft)}
+.byhand .work .cf{color:var(--x-soft)}.byhand .work .ct{color:var(--T-soft)}
+.byhand .ans{display:inline-block;font-family:'IBM Plex Mono';background:rgba(255,209,92,0.14);border:1px solid rgba(255,209,92,0.35);color:var(--grad-soft);padding:3px 10px;border-radius:6px;margin-top:8px}
+.myths{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.myth{border:1px solid var(--line);border-radius:12px;background:var(--bg2);padding:17px 19px}
+.myth .tagline{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.12em;text-transform:uppercase;margin-bottom:9px;color:var(--x)}
+.myth .claim{color:var(--ink);font-weight:600;font-size:15.5px;line-height:1.45;margin-bottom:12px}
+.myth .yes{color:var(--y);font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.12em;text-transform:uppercase;margin-bottom:7px}
+.myth p{margin:0;font-size:14.2px;color:var(--ink-dim)}
+.myth p b{color:var(--ink);font-weight:600}
+.myth p .mono{color:var(--grad-soft)}
+.myth.wide{grid-column:1/-1}
+footer{padding:48px 0 72px;border-top:1px solid var(--line);margin-top:36px;color:var(--ink-dim)}
+footer h3{font-size:20px;color:var(--ink);margin:0 0 14px}
+.next{display:flex;flex-wrap:wrap;gap:10px}
+.next span{font-family:'IBM Plex Mono';font-size:13px;padding:8px 12px;border:1px solid var(--line);border-radius:8px;color:var(--ink-dim)}
+.next span .n{color:var(--y)}
+.fine{font-size:13px;color:var(--ink-faint);margin-top:20px;max-width:820px}
+@media (max-width:920px){.lab{grid-template-columns:1fr}.idea{grid-template-columns:1fr}.myths{grid-template-columns:1fr}}
+@media (prefers-reduced-motion:no-preference){
+  .fade{opacity:0;transform:translateY(14px);animation:rise .7s cubic-bezier(.2,.7,.3,1) forwards}
+  @keyframes rise{to{opacity:1;transform:none}}}
+:focus-visible{outline:2px solid var(--y);outline-offset:2px;border-radius:4px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div id="errbar"></div>
+  <header>
+    <div class="eyebrow fade">Calc 3 · Field Lab 08 · <a href="index.html">all labs</a> · <a href="triple-integrals-lab_7.html">← triple integrals</a> · MIT 18.02 L19–21</div>
+    <h1 class="fade" style="animation-delay:.05s">Vector fields &amp; <span class="accent">line integrals</span></h1>
+    <p class="lede fade" style="animation-delay:.12s">
+      Until now <span class="mono">f</span> gave a <b>number</b> at every point. A vector field gives an
+      <b>arrow</b> — a wind, a current, a force. The question changes to match: not "how high is it here?"
+      but <b>"how much does this field help me as I travel along a path?"</b> Add that up along the route
+      and you get work — and the startling fact that for some fields the route doesn't matter at all.</p>
+  </header>
+
+  <div class="idea fade" style="animation-delay:.18s">
+    <div><div class="k kf">F(x, y) = ⟨P, Q⟩</div><span class="big">An arrow at every point</span>
+      <p>Two ordinary functions bundled together: <span class="mono">P</span> is the arrow's x-component, <span class="mono">Q</span> its y-component. Wind maps, electric fields and fluid flows are all exactly this.</p></div>
+    <div><div class="k kp">∫<sub>C</sub> F · dr</div><span class="big">Add up the helpful part</span>
+      <p>At each step, only the component of <span class="mono">F</span> <em>along</em> your direction counts — a dot product again. Sum those contributions over the whole path and you have the work.</p></div>
+    <div><div class="k kt">F = ∇f  ⟹  path-independent</div><span class="big">Some fields forget the route</span>
+      <p>If the field is the gradient of some <span class="mono">f</span>, the integral collapses to <span class="mono">f(end) − f(start)</span>. The whole journey in between cancels out.</p></div>
+  </div>
+
+  <section>
+    <div class="sec-head"><span class="sec-num">01</span><h2>Walking through a field</h2>
+      <p>Pick a field and a route from (0,0) to (1,1). Slide along it and watch the coral field arrow, the violet direction arrow, and the running total of their dot product.</p></div>
+    <p class="prose">To turn "add up the helpful part" into arithmetic, <b>parametrize</b> the path: write it as
+      <span class="mono">r(t) = ⟨x(t), y(t)⟩</span> for <span class="mono">t</span> from
+      <span class="mono">a</span> to <span class="mono">b</span>. Then
+      <span class="mono">dr = r′(t) dt</span>, and everything becomes a single ordinary integral in
+      <span class="mono">t</span>:</p>
+    <p class="prose eqn">∫<sub>C</sub> F · dr = ∫<sub>a</sub><sup>b</sup> F(r(t)) · r′(t) dt</p>
+    <p class="prose">That is the whole computational recipe, and it is worth saying plainly what each piece does.
+      <span class="mono">F(r(t))</span> means <b>substitute the path into the field</b> — wherever the field
+      formula says <span class="mono">x</span>, write <span class="mono">x(t)</span>.
+      <span class="mono">r′(t)</span> is the <b>velocity</b> along the path. Their dot product is a single
+      number for each <span class="mono">t</span>, and integrating it is Calc 1. The panel below plots that
+      dot product as <span class="mono">t</span> runs, so the work really is the signed area under a curve.</p>
+    <div class="lab">
+      <div class="viewport"><canvas class="flat" id="field"></canvas><div class="vhint">coral = F · violet = direction of travel</div></div>
+      <div class="rail">
+        <div class="chips" id="fchips"></div>
+        <div class="chips" id="pchips" style="margin-top:-6px"></div>
+        <div class="card">
+          <div class="lbl">Position along the path</div>
+          <div class="sliderrow"><div class="top"><span class="name">t</span><span class="val" id="valt">0.50</span></div><input type="range" id="st" min="0" max="1" step="0.005" value="0.5"></div>
+        </div>
+        <div class="card readout">
+          <div class="line"><span class="rl">Where you are <span class="exp mono">r(t)</span></span><span class="rv" id="rpos">—</span></div>
+          <div class="line"><span class="rl">Field there <span class="exp mono">F(r(t))</span></span><span class="rv vf" id="rF">—</span></div>
+          <div class="line"><span class="rl">Velocity <span class="exp mono">r′(t)</span></span><span class="rv vt" id="rV">—</span></div>
+          <div class="line"><span class="rl">Their dot product <span class="exp mono">F · r′</span></span><span class="rv" id="rdot">0.00</span></div>
+          <div class="line"><span class="rl">Work so far <span class="exp mono">∫₀ᵗ F · r′ dt</span></span><span class="rv vg" id="racc">0.00</span></div>
+          <div class="line"><span class="rl">Total on this path <span class="exp mono">exact</span></span><span class="rv" id="rtot">0.00</span></div>
+          <div class="eqbox" id="dotwork">—</div>
+        </div>
+        <div class="note" id="fnote"></div>
+      </div>
+    </div>
+    <div class="panel"><h3>The integrand <span class="mono">F(r(t)) · r′(t)</span><span class="pbadge" id="badgeI">—</span></h3>
+      <p class="cap">Everything collapses to this one curve. Gold area is the work accumulated so far; area below the axis counts against you.</p>
+      <canvas class="plot2d" id="plotI"></canvas></div>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="sec-num">02</span><h2>Does the route matter?</h2>
+      <p>Same field, same endpoints, four different routes. For some fields every route gives the same number; for others they disagree wildly. That split is the most important idea in this lab.</p></div>
+    <p class="prose">Run the table below. When all four routes agree, the field is <b>conservative</b>: it has a
+      potential function <span class="mono">f</span> with <span class="mono">F = ∇f</span>, and the integral
+      is just <span class="mono">f(end) − f(start)</span> — the fundamental theorem of calculus, promoted to
+      curves. When the routes disagree, no such <span class="mono">f</span> can exist, because a potential
+      would have forced them to agree.</p>
+    <p class="prose">There is a cheap test that avoids trying all routes. If
+      <span class="mono">F = ∇f = ⟨f<sub>x</sub>, f<sub>y</sub>⟩</span>, then
+      <span class="mono">P = f<sub>x</sub></span> and <span class="mono">Q = f<sub>y</sub></span>, so
+      <span class="mono">∂P/∂y = f<sub>xy</sub></span> and <span class="mono">∂Q/∂x = f<sub>yx</sub></span>.
+      Mixed partials of a nice function are equal, so:</p>
+    <p class="prose eqn">conservative ⟹ ∂Q/∂x − ∂P/∂y = 0</p>
+    <p class="prose">That quantity is the <b>two-dimensional curl</b>, and it measures how much the field spins.
+      On a region with no holes the implication runs both ways, so a zero curl is a reliable green light.</p>
+    <div class="lab">
+      <div class="viewport" style="aspect-ratio:auto;height:420px"><canvas class="flat" id="compare"></canvas><div class="vhint">all four routes, same endpoints</div></div>
+      <div class="rail">
+        <div class="card">
+          <div class="lbl">Verdict for this field</div>
+          <div class="readout">
+            <div class="line"><span class="rl">∂P/∂y</span><span class="rv" id="rPy">—</span></div>
+            <div class="line"><span class="rl">∂Q/∂x</span><span class="rv" id="rQx">—</span></div>
+            <div class="line"><span class="rl">curl <span class="exp mono">∂Q/∂x − ∂P/∂y</span></span><span class="rv vf" id="rcurl">—</span></div>
+          </div>
+          <div class="verdict v-yes" id="cverdict">conservative<span class="why" id="cwhy"></span></div>
+        </div>
+        <div class="card">
+          <div class="lbl">Work along each route</div>
+          <table class="paths" id="ptable"></table>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="sec-num">03</span><h2>Worked by hand, with the numbers</h2>
+      <p>The mechanics, done slowly and completely. No steps skipped, every substitution written out — this is exactly what you would put on paper.</p></div>
+
+    <div class="byhand">
+      <h3>Compute <span class="mono">∫<sub>C</sub> F · dr</span> for <span class="mono">F = ⟨−y, x⟩</span> along the parabola <span class="mono">y = x²</span> from (0,0) to (1,1)</h3>
+      <p class="sub">The path-dependent case. Watch how the answer depends on the route we chose.</p>
+      <ol>
+        <li><b>Parametrize the path.</b> The curve is <span class="mono">y = x²</span>, so let <span class="mono">x = t</span> and <span class="mono">y = t²</span>. At <span class="mono">t = 0</span> we're at (0,0); at <span class="mono">t = 1</span> we're at (1,1). So <span class="mono">t</span> runs 0 → 1.
+          <div class="work">r(t) = ⟨t, t²⟩,&nbsp;&nbsp; 0 ≤ t ≤ 1</div></li>
+        <li><b>Differentiate to get the velocity.</b> Differentiate each component separately.
+          <div class="work">r′(t) = ⟨<span class="ct">1</span>, <span class="ct">2t</span>⟩</div></li>
+        <li><b>Substitute the path into the field.</b> <span class="mono">F = ⟨−y, x⟩</span>, and on our path <span class="mono">y = t²</span>, <span class="mono">x = t</span>.
+          <div class="work">F(r(t)) = ⟨−<span class="hl">t²</span>, <span class="hl">t</span>⟩</div></li>
+        <li><b>Take the dot product.</b> Multiply matching components and add.
+          <div class="work">F · r′ = (<span class="cf">−t²</span>)(<span class="ct">1</span>) + (<span class="cf">t</span>)(<span class="ct">2t</span>)<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; = −t² + 2t²<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; = <span class="hl">t²</span></div></li>
+        <li><b>Integrate over t.</b> A plain Calc 1 integral now.
+          <div class="work">∫₀¹ t² dt = [ t³/3 ]₀¹ = 1/3 − 0</div>
+          <span class="ans">= 1/3 ≈ 0.333</span></li>
+        <li><b>Sanity-check against a different route.</b> Along the straight line <span class="mono">r(t) = ⟨t, t⟩</span>: <span class="mono">r′ = ⟨1,1⟩</span>, <span class="mono">F = ⟨−t, t⟩</span>, dot <span class="mono">= −t + t = 0</span>, so the work is <b>0</b>. Different route, different answer — this field is <b>not</b> conservative, and the table in section 02 shows the same thing.</li>
+      </ol>
+    </div>
+
+    <div class="byhand">
+      <h3>Compute <span class="mono">∫<sub>C</sub> F · dr</span> for <span class="mono">F = ⟨2xy, x²⟩</span> — the easy way and the hard way</h3>
+      <p class="sub">The conservative case, done twice: once by brute force, once by finding a potential. Same answer, wildly different effort.</p>
+      <ol>
+        <li><b>Test whether it's conservative first.</b> Here <span class="mono">P = 2xy</span> and <span class="mono">Q = x²</span>.
+          <div class="work">∂P/∂y = ∂(2xy)/∂y = <span class="hl">2x</span>&nbsp;&nbsp;&nbsp;(treat x as a constant)<br>
+            ∂Q/∂x = ∂(x²)/∂x = <span class="hl">2x</span><br>
+            curl = 2x − 2x = <span class="hl">0</span>&nbsp; ✓ conservative</div></li>
+        <li><b>Find the potential f.</b> We need <span class="mono">f<sub>x</sub> = 2xy</span>. Integrate with respect to <span class="mono">x</span>, treating <span class="mono">y</span> as constant:
+          <div class="work">f = ∫ 2xy dx = x²y + g(y)</div>
+          The constant of integration can be any function of <span class="mono">y</span> alone — call it <span class="mono">g(y)</span>.</li>
+        <li><b>Pin down g(y) using the other component.</b> Differentiate our <span class="mono">f</span> with respect to <span class="mono">y</span> and match it to <span class="mono">Q</span>:
+          <div class="work">f<sub>y</sub> = ∂(x²y + g(y))/∂y = x² + g′(y)<br>
+            must equal Q = x²<br>
+            ⟹ g′(y) = 0 ⟹ g = constant</div>
+          <div class="work">so&nbsp; <span class="hl">f(x,y) = x²y</span></div></li>
+        <li><b>Apply the fundamental theorem.</b> No parametrizing, no dot products — just evaluate at the two endpoints.
+          <div class="work">∫<sub>C</sub> F · dr = f(1,1) − f(0,0)<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; = (1)²(1) − (0)²(0)<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; = 1 − 0</div>
+          <span class="ans">= 1</span></li>
+        <li><b>The hard way, for comparison.</b> Along <span class="mono">r(t) = ⟨t, t²⟩</span>: <span class="mono">r′ = ⟨1, 2t⟩</span>, and <span class="mono">F(r(t)) = ⟨2·t·t², t²⟩ = ⟨2t³, t²⟩</span>.
+          <div class="work">F · r′ = (2t³)(1) + (t²)(2t) = 2t³ + 2t³ = 4t³<br>
+            ∫₀¹ 4t³ dt = [ t⁴ ]₀¹ = 1&nbsp; ✓ same answer</div>
+          Both routes work; the potential method took a fraction of the effort and would have given the same 1 for <em>any</em> path between those points.</li>
+      </ol>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="sec-num">04</span><h2>Common misconceptions</h2></div>
+    <div class="myths">
+      <div class="myth wide">
+        <div class="tagline">✕ the myth</div>
+        <div class="claim">"Zero curl means the field is conservative. Always."</div>
+        <div class="yes">✓ actually</div>
+        <p>Only on a region with <b>no holes</b> (simply connected). The standard counterexample is the vortex <span class="mono">F = ⟨−y/(x²+y²), x/(x²+y²)⟩</span>: its curl is zero everywhere it is defined, yet its circulation around the unit circle is <span class="mono">2π</span>, not 0 — so it cannot be a gradient. The catch is the puncture at the origin. Zero curl gives you conservative <em>locally</em>; you need the domain to have no holes to upgrade that to <em>globally</em>. This is the one hypothesis worth actually remembering.</p>
+      </div>
+      <div class="myth">
+        <div class="tagline">✕ the myth</div>
+        <div class="claim">"A line integral depends on how fast you traverse the path."</div>
+        <div class="yes">✓ actually</div>
+        <p>It does not. Reparametrize <span class="mono">r(t) = ⟨t,t⟩</span> as <span class="mono">⟨t², t²⟩</span> and both <span class="mono">F</span> and <span class="mono">r′</span> change — but the extra speed in <span class="mono">r′</span> is exactly cancelled by the shorter time spent there. What <b>does</b> matter is the <b>direction</b>: reversing the path negates the integral, because every <span class="mono">r′</span> flips sign.</p>
+      </div>
+      <div class="myth">
+        <div class="tagline">✕ the myth</div>
+        <div class="claim">"∫ F · dr is the length of the path, weighted by F."</div>
+        <div class="yes">✓ actually</div>
+        <p>Only the component of <span class="mono">F</span> <b>along</b> the path counts, and it can be negative. Move perpendicular to the field and you accumulate exactly zero, no matter how far you travel — same geometry as the directional derivative in Lab 03. A field pushing against you subtracts. That is why work can come out negative, or zero on a long journey.</p>
+      </div>
+      <div class="myth">
+        <div class="tagline">✕ the myth</div>
+        <div class="claim">"The potential f is unique."</div>
+        <div class="yes">✓ actually</div>
+        <p>It is unique only <b>up to an additive constant</b> — <span class="mono">x²y</span> and <span class="mono">x²y + 7</span> are both potentials for <span class="mono">⟨2xy, x²⟩</span>. This never matters for line integrals, because the constant cancels in <span class="mono">f(end) − f(start)</span>. It is the same freedom as the "+C" in a one-variable antiderivative.</p>
+      </div>
+      <div class="myth">
+        <div class="tagline">✕ the myth</div>
+        <div class="claim">"When integrating F(r(t)), plug the path into only one of the two slots."</div>
+        <div class="yes">✓ actually</div>
+        <p>Every <span class="mono">x</span> and <span class="mono">y</span> in <b>both</b> components of <span class="mono">F</span> must be replaced by <span class="mono">x(t)</span> and <span class="mono">y(t)</span>. A half-substituted integrand still contains <span class="mono">x</span> or <span class="mono">y</span> after you have committed to <span class="mono">t</span>, and the integral becomes meaningless. Check before integrating: the expression should contain <b>nothing but t</b>.</p>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <h3>Where this goes next</h3>
+    <div class="next">
+      <span><span class="n">→</span> Green's theorem: circulation &amp; flux</span>
+      <span><span class="n">→</span> curl and divergence as fields</span>
+      <span><span class="n">→</span> surface integrals &amp; flux in 3-D</span>
+      <span><span class="n">→</span> the divergence theorem</span>
+      <span><span class="n">→</span> Stokes' theorem</span>
+    </div>
+    <p class="fine">Every "exact" total on this page is a closed-form value worked out by hand in advance, and the
+      running total is a Simpson accumulation of the true integrand — so when they agree at
+      <span class="mono">t = 1</span>, that agreement means something. Follows MIT 18.02 lectures 19–21.</p>
+  </footer>
+</div>
+
+<script>
+try{
+/* ---------- fields: P, Q, their relevant partials, potential (if any) ---------- */
+const FLD=[
+ {id:'cons',sym:'⟨2xy, x²⟩',name:'A gradient field',
+  P:(x,y)=>2*x*y, Q:(x,y)=>x*x, Ps:'2xy', Qs:'x²',
+  Py:'2x', Qx:'2x', curl:()=>0, curlS:'0',
+  pot:(x,y)=>x*x*y, potS:'f = x²y',
+  note:'This one is a gradient: F = ∇(x²y). Every route from (0,0) to (1,1) gives exactly 1, and the fundamental theorem gets there in a single subtraction.'},
+ {id:'rot',sym:'⟨−y, x⟩',name:'Rotation',
+  P:(x,y)=>-y, Q:(x,y)=>x, Ps:'−y', Qs:'x',
+  Py:'−1', Qx:'1', curl:()=>2, curlS:'2',
+  pot:null, potS:null,
+  note:'A pure swirl. The curl is a constant 2 — the field spins everywhere — so no potential can exist, and the four routes give four different answers.'},
+ {id:'rad',sym:'⟨x, y⟩',name:'Radial',
+  P:(x,y)=>x, Q:(x,y)=>y, Ps:'x', Qs:'y',
+  Py:'0', Qx:'0', curl:()=>0, curlS:'0',
+  pot:(x,y)=>(x*x+y*y)/2, potS:'f = (x² + y²)/2',
+  note:'Everything points straight out from the origin. Conservative, with potential (x²+y²)/2 — half the squared distance, which is exactly the kind of thing an energy looks like.'},
+ {id:'shear',sym:'⟨y, 0⟩',name:'Shear',
+  P:(x,y)=>y, Q:()=>0, Ps:'y', Qs:'0',
+  Py:'1', Qx:'0', curl:()=>-1, curlS:'−1',
+  pot:null, potS:null,
+  note:'A horizontal current that runs faster the higher you go. It looks like it has no rotation, but the curl is −1: a paddlewheel dropped in would spin. Shear is rotation in disguise.'}
+];
+
+/* ---------- paths from (0,0) to (1,1), each with r(t) and r'(t) ---------- */
+const PTH=[
+ {id:'line',name:'straight',  r:t=>[t,t],      d:t=>[1,1],      s:'⟨t, t⟩'},
+ {id:'para1',name:'y = x²',   r:t=>[t,t*t],    d:t=>[1,2*t],    s:'⟨t, t²⟩'},
+ {id:'para2',name:'x = y²',   r:t=>[t*t,t],    d:t=>[2*t,1],    s:'⟨t², t⟩'},
+ {id:'axes',name:'along axes',r:t=>t<0.5?[2*t,0]:[1,2*t-1], d:t=>t<0.5?[2,0]:[0,2], s:'x then y'}
+];
+/* exact totals, worked out by hand — see the lab notes */
+const EXACT={
+  cons:{line:1,para1:1,para2:1,axes:1},
+  rot:{line:0,para1:1/3,para2:-1/3,axes:1},
+  rad:{line:1,para1:1,para2:1,axes:1},
+  shear:{line:0.5,para1:1/3,para2:2/3,axes:0}
+};
+
+const clamp=(v,a,b)=>v<a?a:v>b?b:v;
+const lin=(a,b,n)=>{const o=[];for(let i=0;i<n;i++)o.push(a+(b-a)*i/(n-1));return o;};
+const fmt=v=>{const a=Math.abs(v);return(v<0&&a>=5e-4?'−':'')+a.toFixed(3);};
+const vec=v=>'⟨'+(v[0]>=0?'':'−')+Math.abs(v[0]).toFixed(2)+', '+(v[1]>=0?'':'−')+Math.abs(v[1]).toFixed(2)+'⟩';
+function fit(cv){const dpr=window.devicePixelRatio||1;const rect=cv.getBoundingClientRect();const W=Math.max(1,rect.width),H=Math.max(1,rect.height);const bw=Math.round(W*dpr),bh=Math.round(H*dpr);if(cv.width!==bw||cv.height!==bh){cv.width=bw;cv.height=bh;}const ctx=cv.getContext('2d');ctx.setTransform(dpr,0,0,dpr,0,0);return{ctx,W,H};}
+/* integrand of the line integral at parameter t */
+function integrand(F,Pth,t){const p=Pth.r(t),d=Pth.d(t);return F.P(p[0],p[1])*d[0]+F.Q(p[0],p[1])*d[1];}
+function simpson(f,a,b,m){if(b<=a)return 0;if(m%2)m++;const h=(b-a)/m;let s=f(a)+f(b);
+  for(let i=1;i<m;i++)s+=f(a+i*h)*(i%2?4:2);return s*h/3;}
+/* the axes path has a corner at t=0.5, so integrate the two legs separately */
+function workTo(F,Pth,t){
+  if(Pth.id!=='axes')return simpson(u=>integrand(F,Pth,u),0,t,400);
+  if(t<=0.5)return simpson(u=>integrand(F,Pth,u),0,t,400);
+  return simpson(u=>integrand(F,Pth,u),0,0.4999,400)+simpson(u=>integrand(F,Pth,u),0.5001,t,400);
+}
+
+let fcur=0,pcur=1,tcur=0.5;
+
+/* ================= section 1: the field + path ================= */
+function drawField(){
+  const F=FLD[fcur],Pth=PTH[pcur];
+  const cv=document.getElementById('field');const{ctx,W,H}=fit(cv);ctx.clearRect(0,0,W,H);
+  const lo=-0.35,hi=1.35;
+  const MX=x=>(x-lo)/(hi-lo)*W, MY=y=>H-(y-lo)/(hi-lo)*H;
+  /* grid + axes */
+  ctx.strokeStyle='rgba(120,170,175,0.10)';ctx.lineWidth=1;
+  for(let g=0;g<=1;g+=0.25){ctx.beginPath();ctx.moveTo(MX(g),MY(lo));ctx.lineTo(MX(g),MY(hi));ctx.stroke();
+    ctx.beginPath();ctx.moveTo(MX(lo),MY(g));ctx.lineTo(MX(hi),MY(g));ctx.stroke();}
+  ctx.strokeStyle='rgba(120,170,175,0.4)';ctx.lineWidth=1.3;
+  ctx.beginPath();ctx.moveTo(MX(lo),MY(0));ctx.lineTo(MX(hi),MY(0));ctx.stroke();
+  ctx.beginPath();ctx.moveTo(MX(0),MY(lo));ctx.lineTo(MX(0),MY(hi));ctx.stroke();
+  /* the field arrows */
+  const N=13;let mmax=1e-6;const gs=[];
+  for(let i=0;i<=N;i++)for(let j=0;j<=N;j++){
+    const x=lo+(hi-lo)*i/N,y=lo+(hi-lo)*j/N;
+    const u=F.P(x,y),v=F.Q(x,y),m=Math.hypot(u,v);gs.push({x,y,u,v,m});mmax=Math.max(mmax,m);
+  }
+  const cell=Math.min(W,H)/(N+1)*0.55;
+  for(const g of gs){
+    if(g.m<1e-9)continue;
+    const s=cell*(g.m/(g.m+mmax*0.4));
+    const ux=g.u/g.m,uy=g.v/g.m;
+    const x0=MX(g.x),y0=MY(g.y),x1=x0+ux*s,y1=y0-uy*s;
+    const al=clamp(0.20+0.55*g.m/mmax,0.16,0.8);
+    ctx.strokeStyle='rgba(143,227,236,'+al+')';ctx.lineWidth=1.3;
+    ctx.beginPath();ctx.moveTo(x0,y0);ctx.lineTo(x1,y1);ctx.stroke();
+    const ang=Math.atan2(y1-y0,x1-x0),h=4.2;
+    ctx.fillStyle='rgba(143,227,236,'+al+')';ctx.beginPath();ctx.moveTo(x1,y1);
+    ctx.lineTo(x1-h*Math.cos(ang-0.5),y1-h*Math.sin(ang-0.5));ctx.lineTo(x1-h*Math.cos(ang+0.5),y1-h*Math.sin(ang+0.5));
+    ctx.closePath();ctx.fill();
+  }
+  /* the path: travelled part bright, remainder dim */
+  const NP=160;
+  ctx.lineWidth=3.4;ctx.lineJoin='round';ctx.lineCap='round';
+  for(const seg of [[0,tcur,'#ffd15c'],[tcur,1,'rgba(255,209,92,0.28)']]){
+    ctx.strokeStyle=seg[2];ctx.beginPath();
+    for(let i=0;i<=NP;i++){const t=seg[0]+(seg[1]-seg[0])*i/NP;const p=Pth.r(t);
+      const px=MX(p[0]),py=MY(p[1]);i?ctx.lineTo(px,py):ctx.moveTo(px,py);}
+    ctx.stroke();
+  }
+  /* endpoints */
+  const A=Pth.r(0),B=Pth.r(1);
+  for(const [pt,lab] of [[A,'start'],[B,'end']]){
+    ctx.beginPath();ctx.arc(MX(pt[0]),MY(pt[1]),5,0,7);ctx.fillStyle='#e7f2f0';ctx.fill();
+    ctx.lineWidth=2;ctx.strokeStyle='#081416';ctx.stroke();
+    ctx.fillStyle='rgba(155,179,179,0.9)';ctx.font='11px "IBM Plex Mono",monospace';ctx.textAlign='center';
+    ctx.fillText(lab,MX(pt[0]),MY(pt[1])+(lab==='start'?20:-12));
+  }
+  /* the moving point with F and r' arrows */
+  const p=Pth.r(tcur),d=Pth.d(tcur);
+  const Fv=[F.P(p[0],p[1]),F.Q(p[0],p[1])];
+  const arrow=(vx,vy,col,scale)=>{
+    const m=Math.hypot(vx,vy);if(m<1e-9)return;
+    const L=Math.min(0.30,0.10+0.18*m/(m+1))*scale;
+    const x0=MX(p[0]),y0=MY(p[1]),x1=MX(p[0]+vx/m*L),y1=MY(p[1]+vy/m*L);
+    ctx.strokeStyle=col;ctx.fillStyle=col;ctx.lineWidth=3.2;ctx.lineCap='round';
+    ctx.beginPath();ctx.moveTo(x0,y0);ctx.lineTo(x1,y1);ctx.stroke();
+    const ang=Math.atan2(y1-y0,x1-x0),h=9;ctx.beginPath();ctx.moveTo(x1,y1);
+    ctx.lineTo(x1-h*Math.cos(ang-0.42),y1-h*Math.sin(ang-0.42));ctx.lineTo(x1-h*Math.cos(ang+0.42),y1-h*Math.sin(ang+0.42));
+    ctx.closePath();ctx.fill();
+  };
+  arrow(d[0],d[1],'#b39dff',1);
+  arrow(Fv[0],Fv[1],'#ff7a5c',1.15);
+  ctx.beginPath();ctx.arc(MX(p[0]),MY(p[1]),6,0,7);ctx.fillStyle='#fff';ctx.fill();
+  ctx.lineWidth=2;ctx.strokeStyle='#081416';ctx.stroke();
+  ctx.fillStyle='rgba(155,179,179,0.9)';ctx.font='12px "IBM Plex Mono",monospace';ctx.textAlign='left';
+  ctx.fillText('x →',W-32,MY(0)-8);ctx.fillText('y ↑',MX(0)+8,18);
+}
+function drawIntegrand(){
+  const F=FLD[fcur],Pth=PTH[pcur];
+  const cv=document.getElementById('plotI');const{ctx,W,H}=fit(cv);ctx.clearRect(0,0,W,H);
+  const N=200,ts=lin(0,1,N),vals=ts.map(t=>integrand(F,Pth,t));
+  const pL=48,pB=26,pT=14,pR=14;
+  let lo=Math.min(0,...vals),hi=Math.max(0,...vals);const pad=((hi-lo)||1)*0.16;lo-=pad;hi+=pad;
+  const MX=t=>pL+t*(W-pL-pR),MY=v=>pT+(hi-v)/((hi-lo)||1)*(H-pT-pB);
+  ctx.strokeStyle='rgba(120,170,175,0.34)';ctx.lineWidth=1;
+  ctx.beginPath();ctx.moveTo(pL,MY(0));ctx.lineTo(W-pR,MY(0));ctx.stroke();
+  /* accumulated area up to t */
+  ctx.beginPath();ctx.moveTo(MX(0),MY(0));
+  for(let i=0;i<N;i++){if(ts[i]>tcur)break;ctx.lineTo(MX(ts[i]),MY(vals[i]));}
+  ctx.lineTo(MX(Math.min(tcur,1)),MY(0));ctx.closePath();
+  ctx.fillStyle='rgba(255,209,92,0.30)';ctx.fill();
+  ctx.strokeStyle='#ffd15c';ctx.lineWidth=2.6;ctx.lineJoin='round';ctx.beginPath();
+  for(let i=0;i<N;i++){const px=MX(ts[i]),py=MY(vals[i]);
+    if(Pth.id==='axes'&&Math.abs(ts[i]-0.5)<0.006){ctx.stroke();ctx.beginPath();continue;}
+    i?ctx.lineTo(px,py):ctx.moveTo(px,py);}
+  ctx.stroke();
+  ctx.strokeStyle='rgba(231,242,240,0.55)';ctx.lineWidth=1.5;ctx.setLineDash([5,4]);
+  ctx.beginPath();ctx.moveTo(MX(tcur),pT);ctx.lineTo(MX(tcur),H-pB);ctx.stroke();ctx.setLineDash([]);
+  ctx.beginPath();ctx.arc(MX(tcur),MY(integrand(F,Pth,tcur)),5,0,7);ctx.fillStyle='#fff';ctx.fill();
+  ctx.lineWidth=2;ctx.strokeStyle='#ffd15c';ctx.stroke();
+  ctx.fillStyle='#6b8484';ctx.font='11px "IBM Plex Mono",monospace';ctx.textAlign='center';
+  ctx.fillText('t   →   F(r(t)) · r′(t)',W/2,H-8);
+  document.getElementById('badgeI').textContent='area so far = '+fmt(workTo(F,Pth,tcur));
+}
+function readout1(){
+  const F=FLD[fcur],Pth=PTH[pcur],t=tcur;
+  const p=Pth.r(t),d=Pth.d(t),Fv=[F.P(p[0],p[1]),F.Q(p[0],p[1])];
+  const dot=Fv[0]*d[0]+Fv[1]*d[1];
+  document.getElementById('valt').textContent=t.toFixed(2);
+  document.getElementById('rpos').textContent=vec(p);
+  document.getElementById('rF').textContent=vec(Fv);
+  document.getElementById('rV').textContent=vec(d);
+  document.getElementById('rdot').textContent=fmt(dot);
+  document.getElementById('racc').textContent=fmt(workTo(F,Pth,t));
+  document.getElementById('rtot').textContent=fmt(EXACT[F.id][Pth.id]);
+  const n=v=>(v<0?'(−'+Math.abs(v).toFixed(2)+')':v.toFixed(2));
+  document.getElementById('dotwork').innerHTML=
+    'F · r′ = (<span class="cf">'+n(Fv[0])+'</span>)(<span class="ct">'+n(d[0])+'</span>) + '+
+    '(<span class="cf">'+n(Fv[1])+'</span>)(<span class="ct">'+n(d[1])+'</span>) = <b>'+dot.toFixed(3)+'</b>';
+}
+
+/* ================= section 2: compare the routes ================= */
+function drawCompare(){
+  const F=FLD[fcur];
+  const cv=document.getElementById('compare');const{ctx,W,H}=fit(cv);ctx.clearRect(0,0,W,H);
+  const lo=-0.25,hi=1.25;
+  const S=Math.min(W,H);
+  const ox=(W-S)/2;
+  const MX=x=>ox+(x-lo)/(hi-lo)*S, MY=y=>H-(y-lo)/(hi-lo)*S-(H-S)/2;
+  ctx.strokeStyle='rgba(120,170,175,0.35)';ctx.lineWidth=1.2;
+  ctx.beginPath();ctx.moveTo(MX(lo),MY(0));ctx.lineTo(MX(hi),MY(0));ctx.stroke();
+  ctx.beginPath();ctx.moveTo(MX(0),MY(lo));ctx.lineTo(MX(0),MY(hi));ctx.stroke();
+  /* faint field */
+  const N=11;let mmax=1e-6;const gs=[];
+  for(let i=0;i<=N;i++)for(let j=0;j<=N;j++){const x=lo+(hi-lo)*i/N,y=lo+(hi-lo)*j/N;
+    const u=F.P(x,y),v=F.Q(x,y),m=Math.hypot(u,v);gs.push({x,y,u,v,m});mmax=Math.max(mmax,m);}
+  const cell=S/(N+1)*0.5;
+  for(const g of gs){if(g.m<1e-9)continue;
+    const s=cell*(g.m/(g.m+mmax*0.4)),ux=g.u/g.m,uy=g.v/g.m;
+    const x0=MX(g.x),y0=MY(g.y);
+    ctx.strokeStyle='rgba(143,227,236,0.22)';ctx.lineWidth=1;
+    ctx.beginPath();ctx.moveTo(x0,y0);ctx.lineTo(x0+ux*s,y0-uy*s);ctx.stroke();}
+  /* the four routes */
+  const cols=['#ffd15c','#ff7a5c','#b39dff','#46c9d6'];
+  PTH.forEach((Pth,i)=>{
+    ctx.strokeStyle=cols[i];ctx.lineWidth=i===pcur?4:2.2;ctx.globalAlpha=i===pcur?1:0.65;
+    ctx.lineJoin='round';ctx.lineCap='round';ctx.beginPath();
+    for(let k=0;k<=120;k++){const t=k/120;const p=Pth.r(t);const px=MX(p[0]),py=MY(p[1]);
+      k?ctx.lineTo(px,py):ctx.moveTo(px,py);}
+    ctx.stroke();ctx.globalAlpha=1;
+    /* label with its value */
+    const mid=Pth.r(0.6);
+    ctx.fillStyle=cols[i];ctx.font='600 12px "IBM Plex Mono",monospace';ctx.textAlign='left';
+    ctx.fillText(fmt(EXACT[F.id][Pth.id]),MX(mid[0])+8,MY(mid[1])-6);
+  });
+  for(const [pt,lab] of [[[0,0],'start'],[[1,1],'end']]){
+    ctx.beginPath();ctx.arc(MX(pt[0]),MY(pt[1]),6,0,7);ctx.fillStyle='#fff';ctx.fill();
+    ctx.lineWidth=2;ctx.strokeStyle='#081416';ctx.stroke();
+    ctx.fillStyle='rgba(200,220,220,0.95)';ctx.font='11px "IBM Plex Mono",monospace';ctx.textAlign='center';
+    ctx.fillText(lab,MX(pt[0]),MY(pt[1])+(lab==='start'?20:-13));
+  }
+}
+function readout2(){
+  const F=FLD[fcur];
+  document.getElementById('rPy').textContent=F.Py;
+  document.getElementById('rQx').textContent=F.Qx;
+  document.getElementById('rcurl').textContent=F.curlS;
+  const vals=PTH.map(p=>EXACT[F.id][p.id]);
+  const same=vals.every(v=>Math.abs(v-vals[0])<1e-9);
+  const v=document.getElementById('cverdict');
+  v.className='verdict '+(same?'v-yes':'v-no');
+  v.childNodes[0].nodeValue=same?'conservative':'not conservative';
+  document.getElementById('cwhy').textContent=same
+    ? 'curl = 0, and every route agrees. Potential: '+F.potS+' — so the work is just f(1,1) − f(0,0).'
+    : 'curl ≠ 0, so no potential exists — and sure enough the routes disagree.';
+  const tb=document.getElementById('ptable');
+  let html='<tr><th>route</th><th>r(t)</th><th>work</th></tr>';
+  PTH.forEach((p,i)=>{
+    html+='<tr><td class="p">'+p.name+'</td><td>'+p.s+'</td><td class="'+(same?'same':'diff')+'">'+fmt(EXACT[F.id][p.id])+'</td></tr>';
+  });
+  if(same&&F.pot)html+='<tr><td class="p">f(end) − f(start)</td><td>'+F.potS.replace('f = ','')+'</td><td class="same">'+fmt(F.pot(1,1)-F.pot(0,0))+'</td></tr>';
+  tb.innerHTML=html;
+}
+
+/* ================= wiring ================= */
+function buildChips(){
+  const fc=document.getElementById('fchips');fc.innerHTML='';
+  FLD.forEach((F,i)=>{const b=document.createElement('button');b.className='chip'+(i===fcur?' on':'');b.textContent=F.sym;
+    b.setAttribute('aria-pressed',i===fcur);b.onclick=()=>{fcur=i;refresh();};fc.appendChild(b);});
+  const pc=document.getElementById('pchips');pc.innerHTML='';
+  PTH.forEach((P,i)=>{const b=document.createElement('button');b.className='chip'+(i===pcur?' on':'');b.textContent=P.name;
+    b.setAttribute('aria-pressed',i===pcur);b.onclick=()=>{pcur=i;refresh();};pc.appendChild(b);});
+}
+function refresh(){
+  document.getElementById('fnote').innerHTML='<b>'+FLD[fcur].name+'.</b> '+FLD[fcur].note;
+  buildChips();drawField();drawIntegrand();readout1();drawCompare();readout2();
+}
+document.getElementById('st').addEventListener('input',e=>{tcur=+e.target.value;drawField();drawIntegrand();readout1();});
+let rt=false;
+window.addEventListener('resize',()=>{if(rt)return;rt=true;requestAnimationFrame(()=>{rt=false;drawField();drawIntegrand();drawCompare();});});
+window.addEventListener('load',refresh);
+refresh();
+}catch(err){
+  const b=document.getElementById('errbar');if(b){b.style.display='block';b.textContent='Something failed while loading the lab: '+err.message;}
+  console.error(err);
+}
+</script>
+</body>
+</html>

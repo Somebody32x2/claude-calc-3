@@ -17,7 +17,8 @@ manipulable object that makes the idea *feel* obvious before any notation appear
 | Interaction | Drag to orbit, scroll/pinch to zoom, sliders for position, toggles for layers. All state changes re-render synchronously; heavy work is `requestAnimationFrame`-throttled. |
 | Failure | Whole script wrapped in try/catch feeding a visible `#errbar`. A broken lab must say so rather than render blank. |
 | Misconceptions | Every lab closes with a **Common misconceptions** section before the footer: a myth/reality grid naming the specific wrong ideas that feel reasonable. These are chosen for being *load-bearing* — each one, believed, produces confidently wrong work later. Written as "✕ the myth / ✓ actually", never as a list of rules. |
-| Honest instruments | When a demo shows an exact quantity next to an approximation, the gap must be *explained on screen*, not left as an unremarked mismatch (see Lab 07's exact ÷ formula ratio). A visible unexplained discrepancy reads as a bug in the lab. |
+| Honest instruments | When a demo shows an exact quantity next to an approximation, the gap must be *explained on screen*, not left as an unremarked mismatch (see Lab 07's exact ÷ formula ratio). A visible unexplained discrepancy reads as a bug in the lab. Where two sides of a theorem are compared numerically, the tolerance is **relative**, and the residual is labelled as discretisation rather than disagreement. |
+| Worked by hand | Every lab carries at least one `.byhand` block: a numbered, fully-substituted computation with the actual numbers — gradients evaluated at a point, dot products multiplied out, integrals with limits plugged in. No step elided with "similarly". Where a classic trap exists (forgetting to normalise, forgetting the `r`), the block *computes the wrong answer too* and shows how far off it lands. |
 | A11y | Real `<button>`/`<input>` elements, `aria-pressed`, visible focus rings, reduced-motion respected, 920px single-column breakpoint. |
 
 ## Sequence
@@ -92,16 +93,39 @@ radius equals `ρ sin φ` at every φ, and the spherical element integrates to
 exact ÷ formula ratio (1.39 → 1.06 as it shrinks) makes the limit explicit
 rather than leaving an unexplained mismatch on screen.
 
-**08 · Vector fields & line integrals**
-Field visualization, a particle dragged along a path, `∫ F · dr` accumulating in
-real time on a running-total gauge. Conservative vs. non-conservative shown by
-walking two paths between the same endpoints.
+**08 · Vector fields & line integrals** ✅ *shipped* — MIT 18.02 L19–21
+Field quiver, a walker on a parametrized path, and the integrand `F(r(t))·r′(t)`
+plotted so the work is visibly the area under a curve. Four routes between the
+same endpoints, with all sixteen field/path totals hand-derived in closed form
+and verified against quadrature. Conservative fields get the curl test, a
+potential, and the FTC-for-line-integrals shortcut shown against the brute-force
+route. Misconceptions cover the simply-connected hypothesis (the vortex field
+with zero curl and circulation 2π).
 
-**09 · Green's, Stokes' & the Divergence theorem**
-The capstone. Circulation around a boundary = curl summed over the interior;
-flux through a surface = divergence summed over the volume. Built as one
-"shrink the loop / subdivide the region" visual reused at all three scales, so
-the three theorems read as one theorem.
+**09 · Green's theorem** ✅ *shipped* — MIT 18.02 L24–26
+Both forms in one interactive with a circulation/flux toggle; boundary and
+interior integrals computed by wholly independent methods (Simpson along the
+parametrized curve vs. a masked grid over the region) so their agreement is the
+theorem being *checked*, not restated — 24/24 pairs agree. Plus the cancellation
+picture: subdivide, and every interior edge is walked twice in opposite
+directions. That single argument is flagged as the seed of Labs 09 and 10 alike.
+
+**10 · Divergence theorem & Stokes** ✅ *shipped* — MIT 18.02 L28–32
+The capstone. Flux out of a sphere or cylinder vs. the divergence integrated over
+the solid (8/8 agree, matching 4π, 2π·3, etc.). Then the Stokes showpiece: the
+rim is a fixed circle, a slider morphs the cap from flat disk to tall dome, and
+the curl flux **does not move** — pinned at 2π, because the boundary integral it
+must equal never changed. Closes with the three theorems (plus the FTC) laid side
+by side as one sentence: *∫ over a region of a derivative = ∫ over its boundary
+of the original.*
+
+### Alignment
+
+The sequence deliberately follows the arc of **MIT 18.02** (OCW, Denis Auroux) —
+partial derivatives → multiple integrals → vector fields → the integral theorems —
+so a reader can pair a lab with a lecture. Lecture ranges are printed in each
+lab's eyebrow. The one deliberate reordering is double integrals at Lab 02
+instead of later; see the note under Lab 02 for why.
 
 ## Supporting work (not lessons)
 

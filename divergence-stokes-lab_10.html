@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Divergence & Stokes · A Field Lab</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#081416;--bg2:#0c1e22;--panel:#0f2429;--panel2:#123037;
+  --line:rgba(120,170,175,0.16);--line-strong:rgba(120,170,175,0.32);
+  --ink:#e7f2f0;--ink-dim:#9db3b3;--ink-faint:#6b8484;
+  --x:#ff7a5c;--x-soft:#ffab90;--y:#46c9d6;--y-soft:#8fe3ec;
+  --grad:#ffd15c;--grad-soft:#ffe4a1;--peak:#f0d79a;
+  --surf:#7bd8ff;--vol:#b39dff;--vol-soft:#d5c9ff;--bdry:#ffd15c;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font-family:'Inter',system-ui,sans-serif;font-size:16px;line-height:1.6;-webkit-font-smoothing:antialiased;
+  background-image:radial-gradient(1200px 500px at 80% -10%,rgba(123,216,255,0.06),transparent),radial-gradient(900px 400px at 0% 5%,rgba(179,157,255,0.05),transparent);}
+.wrap{max-width:1180px;margin:0 auto;padding:0 24px}
+h1,h2,h3{font-family:'Space Grotesk',sans-serif;font-weight:600;line-height:1.1;letter-spacing:-0.01em}
+.mono{font-family:'IBM Plex Mono',monospace}
+#errbar{display:none;background:#3a1414;border:1px solid #ff7a5c;color:#ffd9cf;padding:12px 16px;margin:16px 0;border-radius:10px;font-family:'IBM Plex Mono';font-size:13px}
+header{padding:64px 0 8px}
+.eyebrow{font-family:'IBM Plex Mono',monospace;font-size:12.5px;letter-spacing:0.28em;text-transform:uppercase;color:var(--ink-faint);display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.eyebrow::before{content:"";width:34px;height:1px;background:var(--line-strong)}
+.eyebrow a{color:var(--ink-faint);text-decoration:none;border-bottom:1px solid var(--line-strong)}
+.eyebrow a:hover{color:var(--y)}
+h1{font-size:clamp(38px,6.4vw,70px);margin:18px 0 0;font-weight:700}
+h1 .accent{background:linear-gradient(100deg,var(--surf),var(--vol) 55%,var(--bdry));-webkit-background-clip:text;background-clip:text;color:transparent}
+.lede{max-width:710px;color:var(--ink-dim);font-size:clamp(17px,2.2vw,20px);margin:22px 0 0}
+.lede b{color:var(--ink);font-weight:600}
+.idea{margin:52px 0;display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.idea>div{background:var(--bg2);padding:26px 24px}
+.idea .k{font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:0.14em;text-transform:uppercase;margin-bottom:10px}
+.idea .ks{color:var(--surf)}.idea .kv{color:var(--vol)}.idea .kb{color:var(--bdry)}
+.idea p{margin:0;color:var(--ink-dim);font-size:15px}
+.idea .big{font-family:'Space Grotesk';font-size:19px;color:var(--ink);display:block;margin-bottom:6px;font-weight:500}
+section{padding:34px 0}
+.sec-head{display:flex;align-items:baseline;gap:16px;margin-bottom:22px;flex-wrap:wrap}
+.sec-num{font-family:'IBM Plex Mono',monospace;color:var(--ink-faint);font-size:14px;letter-spacing:0.1em}
+h2{font-size:clamp(26px,3.6vw,38px)}
+.sec-head p{margin:0;color:var(--ink-dim);font-size:15px;flex:1;min-width:240px}
+.prose{max-width:780px;color:var(--ink-dim);font-size:15.5px;margin:0 0 22px}
+.prose b{color:var(--ink);font-weight:600}
+.prose .mono{color:var(--grad-soft)}
+.prose.eqn{font-family:'IBM Plex Mono',monospace;font-size:15px;color:var(--ink);background:var(--bg2);border:1px solid var(--line);border-radius:10px;padding:14px 16px;text-align:center;line-height:1.9}
+.lab{display:grid;grid-template-columns:1fr 356px;gap:20px;border:1px solid var(--line);border-radius:16px;background:var(--bg2);padding:20px}
+.viewport{position:relative;height:500px;border-radius:12px;overflow:hidden;background:linear-gradient(180deg,#0a1a1e,#081315);border:1px solid var(--line)}
+canvas.stage{width:100%;height:100%;display:block;touch-action:none;cursor:grab}
+canvas.stage:active{cursor:grabbing}
+.vhint{position:absolute;left:14px;bottom:12px;z-index:3;font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:0.12em;color:var(--ink-faint);text-transform:uppercase;pointer-events:none;background:rgba(8,20,22,0.55);padding:4px 9px;border-radius:6px}
+.rail{display:flex;flex-direction:column;gap:16px}
+.chips{display:flex;flex-wrap:wrap;gap:7px}
+.chip{font-family:'IBM Plex Mono',monospace;font-size:12px;padding:7px 11px;border-radius:8px;border:1px solid var(--line-strong);background:transparent;color:var(--ink-dim);cursor:pointer;transition:all .15s}
+.chip:hover{border-color:var(--y);color:var(--ink)}
+.chip.on{background:var(--panel2);border-color:var(--y);color:var(--ink)}
+.chip.on::before{content:"▸ "}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px}
+.card .lbl{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:var(--ink-faint);margin-bottom:12px}
+.seg{display:flex;gap:6px;flex-wrap:wrap}
+.seg button{flex:1;min-width:84px;font-family:'IBM Plex Mono',monospace;font-size:12px;padding:8px 4px;border-radius:8px;border:1px solid var(--line-strong);background:transparent;color:var(--ink-dim);cursor:pointer;transition:.15s}
+.seg button:hover{border-color:var(--vol);color:var(--ink)}
+.seg button.on{background:var(--panel2);border-color:var(--vol);color:var(--ink)}
+.sliderrow{margin-bottom:14px}.sliderrow:last-child{margin-bottom:0}
+.sliderrow .top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px}
+.sliderrow .name{font-family:'Space Grotesk';font-size:14px;font-weight:500}
+.sliderrow .val{font-family:'IBM Plex Mono';font-size:14px}
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:4px;border-radius:4px;background:var(--line-strong);outline:none;margin:6px 0 2px}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:17px;height:17px;border-radius:50%;background:var(--vol);border:2px solid var(--bg);cursor:pointer;box-shadow:0 0 0 1px var(--line-strong)}
+input[type=range]::-moz-range-thumb{width:17px;height:17px;border-radius:50%;background:var(--vol);border:2px solid var(--bg);cursor:pointer}
+.readout .line{display:flex;justify-content:space-between;align-items:baseline;padding:9px 0;border-bottom:1px solid var(--line);gap:12px}
+.readout .line:last-child{border-bottom:none;padding-bottom:0}.readout .line:first-child{padding-top:0}
+.readout .rl{font-size:13.5px;color:var(--ink-dim)}
+.readout .rl .exp{font-family:'IBM Plex Mono';font-size:12px;color:var(--ink-faint);display:block}
+.readout .rv{font-family:'IBM Plex Mono';font-size:16px;font-weight:500;text-align:right;white-space:nowrap}
+.rv.vs{color:var(--surf)}.rv.vv{color:var(--vol)}.rv.vb{color:var(--bdry)}
+.matchbox{margin-top:14px;border-radius:10px;padding:13px 15px;text-align:center;font-family:'Space Grotesk';font-weight:600;font-size:16px;border:1px solid;color:var(--y);background:rgba(70,201,214,0.10);border-color:rgba(70,201,214,0.4)}
+.matchbox .why{display:block;font-family:'IBM Plex Mono';font-weight:400;font-size:12.5px;color:var(--ink-dim);margin-top:7px}
+.note{border-left:2px solid var(--vol);background:rgba(179,157,255,0.06);padding:12px 14px;border-radius:0 8px 8px 0;font-size:13.5px;color:var(--ink-dim)}
+.note b{color:var(--vol-soft);font-weight:600}
+.rule{font-size:17px;color:var(--ink);max-width:780px;margin:0 0 26px}
+.rule b{color:var(--vol-soft)}
+.trio{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:8px}
+.tcard{border:1px solid var(--line);border-radius:12px;background:var(--bg2);padding:18px 20px}
+.tcard h4{font-family:'Space Grotesk';font-size:16px;margin:0 0 10px;color:var(--ink);font-weight:600}
+.tcard .f{font-family:'IBM Plex Mono';font-size:12.5px;color:var(--grad-soft);background:rgba(255,209,92,0.08);border-radius:7px;padding:9px 11px;line-height:1.7;margin-bottom:10px;overflow-x:auto}
+.tcard p{margin:0;font-size:13.5px;color:var(--ink-dim)}
+.tcard .dim{color:var(--ink-faint);font-family:'IBM Plex Mono';font-size:11px;letter-spacing:.1em;text-transform:uppercase;margin-bottom:8px}
+.byhand{border:1px solid var(--line);border-radius:14px;background:var(--bg2);padding:22px 24px;margin-bottom:18px}
+.byhand h3{font-size:17px;margin:0 0 4px;color:var(--ink)}
+.byhand .sub{font-size:13.5px;color:var(--ink-faint);margin:0 0 16px}
+.byhand ol{margin:0;padding-left:22px}
+.byhand li{margin-bottom:15px;font-size:14.5px;color:var(--ink-dim)}
+.byhand li:last-child{margin-bottom:0}
+.byhand li b{color:var(--ink);font-weight:600}
+.byhand .work{font-family:'IBM Plex Mono',monospace;font-size:13.5px;color:var(--ink);background:rgba(120,170,175,0.07);border-left:2px solid var(--line-strong);padding:9px 13px;border-radius:0 7px 7px 0;margin-top:8px;line-height:1.9;overflow-x:auto}
+.byhand .work .hl{color:var(--grad-soft)}
+.byhand .ans{display:inline-block;font-family:'IBM Plex Mono';background:rgba(255,209,92,0.14);border:1px solid rgba(255,209,92,0.35);color:var(--grad-soft);padding:3px 10px;border-radius:6px;margin-top:8px}
+.myths{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.myth{border:1px solid var(--line);border-radius:12px;background:var(--bg2);padding:17px 19px}
+.myth .tagline{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.12em;text-transform:uppercase;margin-bottom:9px;color:var(--x)}
+.myth .claim{color:var(--ink);font-weight:600;font-size:15.5px;line-height:1.45;margin-bottom:12px}
+.myth .yes{color:var(--y);font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.12em;text-transform:uppercase;margin-bottom:7px}
+.myth p{margin:0;font-size:14.2px;color:var(--ink-dim)}
+.myth p b{color:var(--ink);font-weight:600}
+.myth p .mono{color:var(--grad-soft)}
+.myth.wide{grid-column:1/-1}
+footer{padding:48px 0 72px;border-top:1px solid var(--line);margin-top:36px;color:var(--ink-dim)}
+footer h3{font-size:20px;color:var(--ink);margin:0 0 14px}
+.next{display:flex;flex-wrap:wrap;gap:10px}
+.next span{font-family:'IBM Plex Mono';font-size:13px;padding:8px 12px;border:1px solid var(--line);border-radius:8px;color:var(--ink-dim)}
+.next span .n{color:var(--y)}
+.fine{font-size:13px;color:var(--ink-faint);margin-top:20px;max-width:840px}
+@media (max-width:920px){.lab{grid-template-columns:1fr}.idea,.trio{grid-template-columns:1fr}.myths{grid-template-columns:1fr}.viewport{height:400px}}
+@media (prefers-reduced-motion:no-preference){
+  .fade{opacity:0;transform:translateY(14px);animation:rise .7s cubic-bezier(.2,.7,.3,1) forwards}
+  @keyframes rise{to{opacity:1;transform:none}}}
+:focus-visible{outline:2px solid var(--y);outline-offset:2px;border-radius:4px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div id="errbar"></div>
+  <header>
+    <div class="eyebrow fade">Calc 3 · Field Lab 10 · <a href="index.html">all labs</a> · <a href="greens-theorem-lab_9.html">← Green's theorem</a> · MIT 18.02 L28–32</div>
+    <h1 class="fade" style="animation-delay:.05s">Divergence &amp; <span class="accent">Stokes</span></h1>
+    <p class="lede fade" style="animation-delay:.12s">
+      The finale, and the punchline is that there is only <b>one theorem</b> here. Green's theorem, the
+      divergence theorem and Stokes' theorem all say the same sentence:
+      <b>what leaks out through the boundary equals what is generated inside.</b> They differ only in the
+      dimension of the thing you are integrating over — and once you see the shared skeleton, the formula
+      sheet collapses from three entries to one.</p>
+  </header>
+
+  <div class="idea fade" style="animation-delay:.18s">
+    <div><div class="k ks">∯<sub>S</sub> F · n dS</div><span class="big">Flux through a surface</span>
+      <p>How much field flows out through a closed surface per unit time. Same idea as Lab 09's flux, with a 2-D skin instead of a 1-D curve.</p></div>
+    <div><div class="k kv">∭<sub>E</sub> div F dV</div><span class="big">Sources inside</span>
+      <p>Divergence measures creation at a point. Add it up over the solid and — the divergence theorem — it equals the flux out of the shell around it.</p></div>
+    <div><div class="k kb">∮<sub>C</sub> F · dr = ∬<sub>S</sub> curl F · n dS</div><span class="big">Stokes: Green, tilted</span>
+      <p>Circulation round a loop in space equals the curl passing through <em>any</em> surface that the loop bounds. Green's theorem, freed from the plane.</p></div>
+  </div>
+
+  <section>
+    <div class="sec-head"><span class="sec-num">01</span><h2>The divergence theorem, live</h2>
+      <p>A solid, and the field streaming through its skin. The flux out of the surface and the divergence summed over the interior are computed separately — and land on the same number.</p></div>
+    <p class="prose">The statement, sometimes called Gauss's theorem:</p>
+    <p class="prose eqn">∯<sub>S</sub> F · n dS = ∭<sub>E</sub> (∇ · F) dV&nbsp;&nbsp;&nbsp;where&nbsp;&nbsp;∇ · F = P<sub>x</sub> + Q<sub>y</sub> + R<sub>z</sub></p>
+    <p class="prose">Think of <span class="mono">F</span> as the flow of a fluid. The left side counts what
+      crosses the boundary going outward — <b>net escape</b>. The right side adds up, over every interior
+      point, how much fluid is being <b>created</b> there. If nothing is created inside, nothing can escape;
+      if the interior is manufacturing fluid, it has to come out somewhere. The theorem is conservation of
+      stuff, written in calculus.</p>
+    <p class="prose">For a sphere of radius <span class="mono">a</span>, the outward normal is beautifully
+      simple: it points radially, so <span class="mono">n = ⟨x, y, z⟩ / a</span>. That one fact turns most
+      sphere flux integrals into something you can do in your head — which is exactly what the worked example
+      below exploits.</p>
+    <div class="lab">
+      <div class="viewport"><canvas class="stage" id="c3d"></canvas><div class="vhint">drag to orbit · arrows on the skin are F · n</div></div>
+      <div class="rail">
+        <div class="chips" id="fchips"></div>
+        <div class="card">
+          <div class="lbl">The solid</div>
+          <div class="seg" id="solidseg">
+            <button data-s="sphere" class="on">sphere</button>
+            <button data-s="cyl">cylinder</button>
+          </div>
+          <div class="sliderrow" style="margin-top:14px"><div class="top"><span class="name">radius a</span><span class="val" id="vala">1.00</span></div><input type="range" id="sa" min="0.4" max="1.5" step="0.05" value="1"></div>
+        </div>
+        <div class="card readout">
+          <div class="line"><span class="rl">Flux out of the surface <span class="exp mono">∯ F · n dS</span></span><span class="rv vs" id="rflux">0.00</span></div>
+          <div class="line"><span class="rl">Divergence over the solid <span class="exp mono">∭ ∇·F dV</span></span><span class="rv vv" id="rdiv">0.00</span></div>
+          <div class="line"><span class="rl">∇ · F <span class="exp mono">at a point</span></span><span class="rv" id="rdivf">—</span></div>
+          <div class="matchbox" id="matchbox">they agree<span class="why" id="matchwhy"></span></div>
+        </div>
+        <div class="note" id="fnote"></div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="sec-num">02</span><h2>Stokes: the surface doesn't matter</h2>
+      <p>The strangest and most useful part. Fix a loop in space; every surface that shares that loop as its rim gives the same curl integral. Morph the surface and watch the number refuse to move.</p></div>
+    <p class="prose">Stokes' theorem says circulation around a closed curve <span class="mono">C</span> equals
+      the flux of the <b>curl</b> through any surface <span class="mono">S</span> whose boundary is
+      <span class="mono">C</span>:</p>
+    <p class="prose eqn">∮<sub>C</sub> F · dr = ∬<sub>S</sub> (∇ × F) · n dS</p>
+    <p class="prose">The left-hand side never mentions <span class="mono">S</span> — it only knows about the
+      rim. So the right-hand side <b>cannot</b> depend on which surface you pick. Below, the rim is the unit
+      circle in the <span class="mono">xy</span>-plane, and the slider morphs the surface from a flat disk up
+      into a tall dome. The curl flux through it is recomputed from scratch at every step, and it does not
+      budge — because the boundary integral it must equal never changed.</p>
+    <div class="lab">
+      <div class="viewport"><canvas class="stage" id="c3ds"></canvas><div class="vhint">gold rim is fixed · the cap morphs</div></div>
+      <div class="rail">
+        <div class="chips" id="schips"></div>
+        <div class="card">
+          <div class="lbl">Morph the surface</div>
+          <div class="sliderrow"><div class="top"><span class="name">dome height</span><span class="val" id="valh">0.60</span></div><input type="range" id="sh" min="0" max="1.6" step="0.05" value="0.6"></div>
+        </div>
+        <div class="card readout">
+          <div class="line"><span class="rl">Circulation round the rim <span class="exp mono">∮ F · dr</span></span><span class="rv vb" id="rcirc">0.00</span></div>
+          <div class="line"><span class="rl">Curl flux through the cap <span class="exp mono">∬ (∇×F) · n dS</span></span><span class="rv vs" id="rcurlflux">0.00</span></div>
+          <div class="line"><span class="rl">∇ × F <span class="exp mono">the curl vector</span></span><span class="rv" id="rcurlv">—</span></div>
+          <div class="matchbox" id="matchbox2">they agree<span class="why" id="matchwhy2"></span></div>
+        </div>
+        <div class="note"><b>Why this is useful.</b> Given an awkward surface, swap it for the easiest one with the same rim — usually the flat disk. The answer is guaranteed identical, and the integral is often trivial instead of horrible.</div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="sec-num">03</span><h2>One theorem, three costumes</h2>
+      <p>Line them up and the pattern is unmistakable. In every case: integrate a derivative over a region, or integrate the original thing over that region's boundary. Same answer.</p></div>
+    <p class="prose">Every one of these — including the fundamental theorem of calculus you met in first-year —
+      is an instance of a single statement: <b>∫<sub>region</sub> (derivative) = ∫<sub>boundary</sub>
+      (original)</b>. The derivative changes name as the dimension goes up (ordinary derivative, then curl,
+      then divergence), and the boundary drops a dimension each time, but the shape of the sentence never
+      changes.</p>
+    <div class="trio">
+      <div class="tcard">
+        <div class="dim">1-D region, 0-D boundary</div>
+        <h4>Fundamental theorem</h4>
+        <div class="f">∫<sub>a</sub><sup>b</sup> f′(x) dx = f(b) − f(a)</div>
+        <p>Integrate the derivative along an interval; get the original function at the two endpoints. The "boundary" of a segment is just its two ends.</p>
+      </div>
+      <div class="tcard">
+        <div class="dim">2-D region, 1-D boundary</div>
+        <h4>Green's / Stokes'</h4>
+        <div class="f">∬<sub>S</sub> (∇×F)·n dS = ∮<sub>C</sub> F · dr</div>
+        <p>Integrate the curl over a surface; get the circulation round its rim. Green's theorem is this with the surface lying flat in the plane.</p>
+      </div>
+      <div class="tcard">
+        <div class="dim">3-D region, 2-D boundary</div>
+        <h4>Divergence theorem</h4>
+        <div class="f">∭<sub>E</sub> (∇·F) dV = ∯<sub>S</sub> F · n dS</div>
+        <p>Integrate the divergence over a solid; get the flux out through its skin. The same cancellation argument as Lab 09, one dimension up.</p>
+      </div>
+    </div>
+    <p class="prose" style="margin-top:24px">The proof is the same in all three cases too, and you already saw
+      it: <b>chop the region into cells and note that everything interior cancels.</b> Each internal face is
+      shared by two cells, counted once with each orientation, so it contributes nothing. Only the outer skin
+      survives. That single argument, run in one, two and three dimensions, produces this whole family — and
+      in the language of differential forms it really is written as one line,
+      <span class="mono">∫<sub>Ω</sub> dω = ∫<sub>∂Ω</sub> ω</span>.</p>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="sec-num">04</span><h2>Worked by hand, with the numbers</h2></div>
+
+    <div class="byhand">
+      <h3>Flux of <span class="mono">F = ⟨x, y, z⟩</span> out of the sphere of radius <span class="mono">a</span></h3>
+      <p class="sub">Done twice — directly off the surface, then by the divergence theorem. The second way takes one line.</p>
+      <ol>
+        <li><b>The direct way.</b> On the sphere the outward unit normal is radial:
+          <div class="work">n = ⟨x, y, z⟩ / a</div>
+          So the integrand is
+          <div class="work">F · n = ⟨x,y,z⟩ · ⟨x,y,z⟩ / a = (x² + y² + z²)/a</div>
+          But on the sphere <span class="mono">x² + y² + z² = a²</span> exactly, so
+          <div class="work">F · n = a²/a = <span class="hl">a</span>&nbsp;&nbsp; (a constant!)</div></li>
+        <li><b>Integrate over the surface.</b> A constant integrand just multiplies by the surface area, and a sphere's area is <span class="mono">4πa²</span>.
+          <div class="work">∯ F · n dS = a · 4πa² = 4πa³</div>
+          <span class="ans">= 4πa³</span></li>
+        <li><b>Now the divergence theorem.</b> Compute the divergence:
+          <div class="work">∇ · F = ∂(x)/∂x + ∂(y)/∂y + ∂(z)/∂z<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; = 1 + 1 + 1 = <span class="hl">3</span></div></li>
+        <li><b>Integrate that over the ball.</b> Again constant, so it is 3 × volume, and the ball's volume is <span class="mono">4πa³/3</span>:
+          <div class="work">∭ 3 dV = 3 · (4/3)πa³ = 4πa³</div>
+          <span class="ans">= 4πa³ ✓ same answer</span></li>
+        <li><b>Check it live.</b> Set the field to <span class="mono">⟨x,y,z⟩</span> and the solid to a sphere above. At <span class="mono">a = 1</span> both readouts show <span class="mono">12.566 = 4π</span>.</li>
+      </ol>
+    </div>
+
+    <div class="byhand">
+      <h3>Use Stokes to find <span class="mono">∮<sub>C</sub> F · dr</span> for <span class="mono">F = ⟨−y, x, 0⟩</span> around the unit circle</h3>
+      <p class="sub">The rim sits in the xy-plane. We'll pick the easiest surface it bounds — the flat disk.</p>
+      <ol>
+        <li><b>Compute the curl.</b> Use the determinant form with <span class="mono">P = −y</span>, <span class="mono">Q = x</span>, <span class="mono">R = 0</span>:
+          <div class="work">∇ × F = ⟨ R<sub>y</sub> − Q<sub>z</sub>,&nbsp; P<sub>z</sub> − R<sub>x</sub>,&nbsp; Q<sub>x</sub> − P<sub>y</sub> ⟩</div>
+          Working through each slot:
+          <div class="work">R<sub>y</sub> − Q<sub>z</sub> = 0 − 0 = 0<br>
+            P<sub>z</sub> − R<sub>x</sub> = 0 − 0 = 0<br>
+            Q<sub>x</sub> − P<sub>y</sub> = ∂(x)/∂x − ∂(−y)/∂y = 1 − (−1) = <span class="hl">2</span></div>
+          <div class="work">∇ × F = ⟨0, 0, 2⟩</div></li>
+        <li><b>Choose the surface and its normal.</b> Take the flat unit disk in the plane <span class="mono">z = 0</span>. For a counterclockwise rim, the right-hand rule gives an upward normal:
+          <div class="work">n = ⟨0, 0, 1⟩</div></li>
+        <li><b>Dot them.</b>
+          <div class="work">(∇ × F) · n = ⟨0,0,2⟩ · ⟨0,0,1⟩ = <span class="hl">2</span></div></li>
+        <li><b>Integrate over the disk.</b> Constant again — 2 × area, and the unit disk has area π:
+          <div class="work">∬ 2 dS = 2 · π(1)² = 2π</div>
+          <span class="ans">= 2π ≈ 6.283</span></li>
+        <li><b>The point of Stokes.</b> Any other surface with the same rim — a hemisphere, a cone, a wobbling dome — gives the identical <span class="mono">2π</span>. Drag the dome slider in section 02 and watch it hold at 6.283 while the surface changes shape completely.</li>
+      </ol>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="sec-num">05</span><h2>Common misconceptions</h2></div>
+    <div class="myths">
+      <div class="myth wide">
+        <div class="tagline">✕ the myth</div>
+        <div class="claim">"The divergence theorem works for any surface."</div>
+        <div class="yes">✓ actually</div>
+        <p>The surface must be <b>closed</b> — it has to fully enclose a solid, with no openings — and oriented <b>outward</b>, and the field must be smooth <b>everywhere inside</b>. A hemisphere alone is not closed; you must add the flat disk that caps it. And the smoothness clause bites exactly as it did in Lab 09: the inverse-square field <span class="mono">F = ⟨x,y,z⟩/ρ³</span> has divergence zero everywhere it is defined, yet its flux out of any sphere around the origin is <span class="mono">4π</span>, not 0 — because of the singularity at the centre. That single example is the whole of Gauss's law in electrostatics.</p>
+      </div>
+      <div class="myth">
+        <div class="tagline">✕ the myth</div>
+        <div class="claim">"Curl and divergence are both just 'the derivative' of a vector field."</div>
+        <div class="yes">✓ actually</div>
+        <p>They extract completely different information and even return different <b>types</b>. Divergence <span class="mono">∇·F</span> is a <b>scalar</b> — how much is created here. Curl <span class="mono">∇×F</span> is a <b>vector</b> — how fast and about which axis things spin here. A field can have plenty of one and none of the other: <span class="mono">⟨x,y,z⟩</span> is pure divergence with zero curl, while <span class="mono">⟨−y,x,0⟩</span> is pure curl with zero divergence.</p>
+      </div>
+      <div class="myth">
+        <div class="tagline">✕ the myth</div>
+        <div class="claim">"In Stokes' theorem you have to use the surface you were given."</div>
+        <div class="yes">✓ actually</div>
+        <p>You may replace it with <b>any</b> surface sharing the same boundary curve, and that freedom is the entire practical value of the theorem. Faced with curl flux through an ugly paraboloid, swap in the flat disk with the same rim. The one thing you must keep consistent is the <b>orientation</b>: the normal has to follow the right-hand rule relative to the direction you traverse the rim.</p>
+      </div>
+      <div class="myth">
+        <div class="tagline">✕ the myth</div>
+        <div class="claim">"Zero flux out of a surface means the field is zero inside."</div>
+        <div class="yes">✓ actually</div>
+        <p>It means the <b>net</b> creation inside is zero — sources and sinks could be cancelling, or the field could simply be flowing straight through, in one side and out the other. The rotation field <span class="mono">⟨−y,x,0⟩</span> is vigorous everywhere and yet has exactly zero flux out of any closed surface, because it never leaves: it just circulates. Zero flux constrains the total, not the field.</p>
+      </div>
+      <div class="myth">
+        <div class="tagline">✕ the myth</div>
+        <div class="claim">"Green's, Stokes' and the divergence theorem are three separate formulas to memorize."</div>
+        <div class="yes">✓ actually</div>
+        <p>They are one statement in three dimensions of dress: <b>the integral of a derivative over a region equals the integral of the original over that region's boundary</b>. Even the fundamental theorem of calculus is the 1-D member of the family. Memorizing three formulas invites mixing them up; remembering one sentence and asking "what is my region, what is its boundary, which derivative belongs here?" does not.</p>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <h3>Where this goes next</h3>
+    <div class="next">
+      <span><span class="n">→</span> Maxwell's equations</span>
+      <span><span class="n">→</span> conservation laws &amp; continuity</span>
+      <span><span class="n">→</span> differential forms: ∫dω = ∫ω</span>
+      <span><span class="n">→</span> potential theory</span>
+      <span><span class="n">→</span> fluid dynamics</span>
+    </div>
+    <p class="fine">Both sides of both theorems are computed independently and numerically on this page — the flux
+      by summing <span class="mono">F · n</span> over a fine mesh of surface patches with their true areas, the
+      interior by a volume or surface Riemann sum. Neither is derived from the other, so the agreement you see
+      is the theorem being checked, not restated. Follows MIT 18.02 lectures 28–32; this closes the Field Labs
+      sequence.</p>
+  </footer>
+</div>
+
+<script>
+try{
+/* ================= fields in 3-D with exact div and curl ================= */
+const FLD=[
+ {id:'rad',sym:'⟨x, y, z⟩',name:'Radial source',
+  F:(x,y,z)=>[x,y,z], div:()=>3, divS:'3', curl:()=>[0,0,0], curlS:'⟨0, 0, 0⟩',
+  note:'Streams straight out in all directions. Divergence is a constant 3, so the flux out of any solid is exactly 3 × its volume — for the unit sphere, 4π.'},
+ {id:'rot',sym:'⟨−y, x, 0⟩',name:'Rotation',
+  F:(x,y,z)=>[-y,x,0], div:()=>0, divS:'0', curl:()=>[0,0,2], curlS:'⟨0, 0, 2⟩',
+  note:'A swirl about the z-axis. Divergence is zero — nothing escapes, it just goes round — while the curl is a constant ⟨0,0,2⟩ pointing up the axis of spin.'},
+ {id:'up',sym:'⟨0, 0, z⟩',name:'Vertical stretch',
+  F:(x,y,z)=>[0,0,z], div:()=>1, divS:'1', curl:()=>[0,0,0], curlS:'⟨0, 0, 0⟩',
+  note:'Flow that speeds up as it rises. Divergence 1, so flux equals the volume itself. Nothing spins, so the curl vanishes.'},
+ {id:'mix',sym:'⟨x², y, z⟩',name:'Variable',
+  F:(x,y,z)=>[x*x,y,z], div:(x)=>2*x+2, divS:'2x + 2', curl:()=>[0,0,0], curlS:'⟨0, 0, 0⟩',
+  note:'Divergence now varies with position, so the volume integral is a genuine one. Over a solid symmetric about x = 0 the 2x part cancels and only the 2 survives.'}
+];
+
+const clamp=(v,a,b)=>v<a?a:v>b?b:v;
+const TAU=Math.PI*2;
+const fmt=v=>{const a=Math.abs(v);return(v<0&&a>=5e-4?'−':'')+a.toFixed(3);};
+function fit(cv){const dpr=window.devicePixelRatio||1;const rect=cv.getBoundingClientRect();const W=Math.max(1,rect.width),H=Math.max(1,rect.height);const bw=Math.round(W*dpr),bh=Math.round(H*dpr);if(cv.width!==bw||cv.height!==bh){cv.width=bw;cv.height=bh;}const ctx=cv.getContext('2d');ctx.setTransform(dpr,0,0,dpr,0,0);return{ctx,W,H};}
+function makeP(W,H,cam){const S=Math.min(W/3.25,H/2.75)*cam.zoom;return{cy:Math.cos(cam.yaw),sy:Math.sin(cam.yaw),cp:Math.cos(cam.pitch),sp:Math.sin(cam.pitch),S,cx:W/2,cc:H*0.55};}
+function proj(wx,wy,wz,P){wz*=0.92;const xr=wx*P.cy-wy*P.sy,yr=wx*P.sy+wy*P.cy;const yp=yr*P.cp-wz*P.sp,zp=yr*P.sp+wz*P.cp;return{x:P.cx+xr*P.S,y:P.cc-zp*P.S,d:yp};}
+function line3(ctx,P,a,b,color,width,dash){const p0=proj(a[0],a[1],a[2],P),p1=proj(b[0],b[1],b[2],P);ctx.strokeStyle=color;ctx.lineWidth=width;ctx.setLineDash(dash||[]);ctx.beginPath();ctx.moveTo(p0.x,p0.y);ctx.lineTo(p1.x,p1.y);ctx.stroke();ctx.setLineDash([]);}
+function text3(ctx,P,a,txt,color,dx,dy,font){const p=proj(a[0],a[1],a[2],P);ctx.fillStyle=color;ctx.font=font||'12px "IBM Plex Mono",monospace';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(txt,p.x+(dx||0),p.y+(dy||0));}
+function arrow3(ctx,P,a,b,color,width){const p0=proj(a[0],a[1],a[2],P),p1=proj(b[0],b[1],b[2],P);ctx.strokeStyle=color;ctx.fillStyle=color;ctx.lineWidth=width||1.7;ctx.setLineDash([]);ctx.beginPath();ctx.moveTo(p0.x,p0.y);ctx.lineTo(p1.x,p1.y);ctx.stroke();const ang=Math.atan2(p1.y-p0.y,p1.x-p0.x),h=8;ctx.beginPath();ctx.moveTo(p1.x,p1.y);ctx.lineTo(p1.x-h*Math.cos(ang-0.42),p1.y-h*Math.sin(ang-0.42));ctx.lineTo(p1.x-h*Math.cos(ang+0.42),p1.y-h*Math.sin(ang+0.42));ctx.closePath();ctx.fill();}
+function drawFrame(ctx,P){
+  const gc='rgba(120,170,175,0.10)',bc='rgba(120,170,175,0.20)';
+  for(const g of[-1,-0.5,0,0.5,1]){line3(ctx,P,[g,-1,-1],[g,1,-1],gc,1);line3(ctx,P,[-1,g,-1],[1,g,-1],gc,1);}
+  const top=[[-1,-1,1],[1,-1,1],[1,1,1],[-1,1,1]],bot=[[-1,-1,-1],[1,-1,-1],[1,1,-1],[-1,1,-1]];
+  for(let k=0;k<4;k++){line3(ctx,P,top[k],top[(k+1)%4],bc,1);line3(ctx,P,bot[k],bot[(k+1)%4],bc,1);}
+  for(const c of[[-1,-1],[1,-1],[1,1],[-1,1]])line3(ctx,P,[c[0],c[1],-1],[c[0],c[1],1],bc,1);
+}
+function axes3(ctx,P){
+  const O=[-1,-1,-1];
+  arrow3(ctx,P,O,[1.18,-1,-1],'#ff9a80');arrow3(ctx,P,O,[-1,1.18,-1],'#7fdbe6');arrow3(ctx,P,O,[-1,-1,1.18],'#ffdd82');
+  const bf='600 14px "Space Grotesk",sans-serif';
+  text3(ctx,P,[1.34,-1,-1],'x','#ff9a80',0,0,bf);text3(ctx,P,[-1,1.34,-1],'y','#7fdbe6',0,0,bf);text3(ctx,P,[-1,-1,1.35],'z','#ffdd82',0,0,bf);
+}
+
+/* ================= section 1: divergence theorem ================= */
+let fcur=0, solid='sphere', aRad=1;
+const camA={yaw:-0.62,pitch:0.42,zoom:1};
+const VS=2.0, N3=v=>v/VS;   /* world -> normalized box */
+
+/* flux through the closed surface, by summing F·n dS over a mesh */
+function fluxSphere(F,a){
+  const NP=90,NT=180;let s=0;
+  for(let i=0;i<NP;i++)for(let j=0;j<NT;j++){
+    const ph=(i+0.5)/NP*Math.PI, th=(j+0.5)/NT*TAU;
+    const sp=Math.sin(ph),cp=Math.cos(ph);
+    const x=a*sp*Math.cos(th),y=a*sp*Math.sin(th),z=a*cp;
+    const n=[x/a,y/a,z/a];
+    const f=F(x,y,z);
+    const dS=a*a*sp*(Math.PI/NP)*(TAU/NT);
+    s+=(f[0]*n[0]+f[1]*n[1]+f[2]*n[2])*dS;
+  }
+  return s;
+}
+function fluxCyl(F,a){
+  /* cylinder radius a, from z=-a to z=a: side + two caps */
+  const NT=200,NZ=100,NR=80;let s=0;
+  for(let j=0;j<NT;j++)for(let k=0;k<NZ;k++){
+    const th=(j+0.5)/NT*TAU, z=-a+(k+0.5)/NZ*2*a;
+    const x=a*Math.cos(th),y=a*Math.sin(th);
+    const n=[Math.cos(th),Math.sin(th),0];
+    const f=F(x,y,z);
+    const dS=a*(TAU/NT)*(2*a/NZ);
+    s+=(f[0]*n[0]+f[1]*n[1]+f[2]*n[2])*dS;
+  }
+  for(const zc of[-a,a]){
+    const n=[0,0,zc>0?1:-1];
+    for(let j=0;j<NT;j++)for(let k=0;k<NR;k++){
+      const th=(j+0.5)/NT*TAU, r=(k+0.5)/NR*a;
+      const x=r*Math.cos(th),y=r*Math.sin(th);
+      const f=F(x,y,zc);
+      const dS=r*(TAU/NT)*(a/NR);
+      s+=(f[0]*n[0]+f[1]*n[1]+f[2]*n[2])*dS;
+    }
+  }
+  return s;
+}
+function divIntegral(fd,a){
+  /* ∭ div dV over the chosen solid, in the solid's natural coordinates */
+  if(solid==='sphere'){
+    const NR=70,NP=70,NT=70;let s=0;
+    for(let i=0;i<NR;i++)for(let j=0;j<NP;j++)for(let k=0;k<NT;k++){
+      const rho=(i+0.5)/NR*a, ph=(j+0.5)/NP*Math.PI, th=(k+0.5)/NT*TAU;
+      const sp=Math.sin(ph);
+      const x=rho*sp*Math.cos(th),y=rho*sp*Math.sin(th),z=rho*Math.cos(ph);
+      s+=fd(x,y,z)*rho*rho*sp*(a/NR)*(Math.PI/NP)*(TAU/NT);
+    }
+    return s;
+  }
+  const NR=90,NT=90,NZ=90;let s=0;
+  for(let i=0;i<NR;i++)for(let k=0;k<NT;k++)for(let m=0;m<NZ;m++){
+    const r=(i+0.5)/NR*a, th=(k+0.5)/NT*TAU, z=-a+(m+0.5)/NZ*2*a;
+    const x=r*Math.cos(th),y=r*Math.sin(th);
+    s+=fd(x,y,z)*r*(a/NR)*(TAU/NT)*(2*a/NZ);
+  }
+  return s;
+}
+function render3D(){
+  const Fo=FLD[fcur],cv=document.getElementById('c3d');const{ctx,W,H}=fit(cv);
+  ctx.clearRect(0,0,W,H);
+  const P=makeP(W,H,camA);
+  drawFrame(ctx,P);
+  const a=aRad;
+  /* surface patches, shaded by F·n, painter-sorted */
+  const patches=[];
+  if(solid==='sphere'){
+    const NP=22,NT=40;
+    for(let i=0;i<NP;i++)for(let j=0;j<NT;j++){
+      const p0=i/NP*Math.PI,p1=(i+1)/NP*Math.PI,t0=j/NT*TAU,t1=(j+1)/NT*TAU;
+      const pt=(p,t)=>[a*Math.sin(p)*Math.cos(t),a*Math.sin(p)*Math.sin(t),a*Math.cos(p)];
+      const w=[pt(p0,t0),pt(p0,t1),pt(p1,t1),pt(p1,t0)].map(v=>[N3(v[0]),N3(v[1]),N3(v[2])]);
+      const pm=pt((p0+p1)/2,(t0+t1)/2);
+      const n=[pm[0]/a,pm[1]/a,pm[2]/a];
+      const f=Fo.F(pm[0],pm[1],pm[2]);
+      patches.push({w,fn:f[0]*n[0]+f[1]*n[1]+f[2]*n[2],mid:pm,n});
+    }
+  }else{
+    const NT=40,NZ=12;
+    for(let j=0;j<NT;j++)for(let k=0;k<NZ;k++){
+      const t0=j/NT*TAU,t1=(j+1)/NT*TAU,z0=-a+k/NZ*2*a,z1=-a+(k+1)/NZ*2*a;
+      const pt=(t,z)=>[a*Math.cos(t),a*Math.sin(t),z];
+      const w=[pt(t0,z0),pt(t1,z0),pt(t1,z1),pt(t0,z1)].map(v=>[N3(v[0]),N3(v[1]),N3(v[2])]);
+      const tm=(t0+t1)/2,zm=(z0+z1)/2;
+      const pm=[a*Math.cos(tm),a*Math.sin(tm),zm],n=[Math.cos(tm),Math.sin(tm),0];
+      const f=Fo.F(pm[0],pm[1],pm[2]);
+      patches.push({w,fn:f[0]*n[0]+f[1]*n[1]+f[2]*n[2],mid:pm,n});
+    }
+    /* caps */
+    for(const zc of[-a,a]){
+      const NR=6,NTc=40;
+      for(let i=0;i<NR;i++)for(let j=0;j<NTc;j++){
+        const r0=i/NR*a,r1=(i+1)/NR*a,t0=j/NTc*TAU,t1=(j+1)/NTc*TAU;
+        const pt=(r,t)=>[r*Math.cos(t),r*Math.sin(t),zc];
+        const w=[pt(r0,t0),pt(r0,t1),pt(r1,t1),pt(r1,t0)].map(v=>[N3(v[0]),N3(v[1]),N3(v[2])]);
+        const rm=(r0+r1)/2,tm=(t0+t1)/2;
+        const pm=[rm*Math.cos(tm),rm*Math.sin(tm),zc],n=[0,0,zc>0?1:-1];
+        const f=Fo.F(pm[0],pm[1],pm[2]);
+        patches.push({w,fn:f[0]*n[0]+f[1]*n[1]+f[2]*n[2],mid:pm,n});
+      }
+    }
+  }
+  let mx=1e-6;for(const p of patches)mx=Math.max(mx,Math.abs(p.fn));
+  for(const p of patches){p.pp=p.w.map(v=>proj(v[0],v[1],v[2],P));p.depth=p.pp.reduce((s,q)=>s+q.d,0)/p.pp.length;}
+  patches.sort((a,b)=>b.depth-a.depth);
+  for(const p of patches){
+    const t=clamp(p.fn/mx,-1,1);
+    const out=[123,216,255], inn=[255,122,92], mid=[70,90,96];
+    const base=t>=0?out:inn, al=Math.abs(t);
+    const col=[mid[0]+(base[0]-mid[0])*al,mid[1]+(base[1]-mid[1])*al,mid[2]+(base[2]-mid[2])*al];
+    ctx.beginPath();ctx.moveTo(p.pp[0].x,p.pp[0].y);for(let k=1;k<p.pp.length;k++)ctx.lineTo(p.pp[k].x,p.pp[k].y);ctx.closePath();
+    ctx.fillStyle='rgba('+(col[0]|0)+','+(col[1]|0)+','+(col[2]|0)+',0.92)';ctx.fill();
+    ctx.strokeStyle='rgba(8,20,22,0.35)';ctx.lineWidth=0.5;ctx.stroke();
+  }
+  /* a few outward F·n arrows on the near side */
+  const shown=patches.slice(-46);
+  for(const p of shown){
+    if(Math.abs(p.fn)<mx*0.10)continue;
+    const s=0.30*(p.fn/mx);
+    const A=[N3(p.mid[0]),N3(p.mid[1]),N3(p.mid[2])];
+    const B=[N3(p.mid[0]+p.n[0]*s*VS*0.5),N3(p.mid[1]+p.n[1]*s*VS*0.5),N3(p.mid[2]+p.n[2]*s*VS*0.5)];
+    arrow3(ctx,P,A,B,p.fn>=0?'#7bd8ff':'#ff7a5c',2);
+  }
+  axes3(ctx,P);
+}
+function readout1(){
+  const Fo=FLD[fcur],a=aRad;
+  const flux=solid==='sphere'?fluxSphere(Fo.F,a):fluxCyl(Fo.F,a);
+  const dv=divIntegral((x,y,z)=>Fo.div(x,y,z),a);
+  document.getElementById('vala').textContent=a.toFixed(2);
+  document.getElementById('rflux').textContent=fmt(flux);
+  document.getElementById('rdiv').textContent=fmt(dv);
+  document.getElementById('rdivf').textContent=Fo.divS;
+  const diff=Math.abs(flux-dv);
+  const tol=Math.max(4e-3,0.006*Math.max(Math.abs(flux),Math.abs(dv)));
+  const mb=document.getElementById('matchbox');
+  mb.childNodes[0].nodeValue=diff<=tol?'they agree':'mismatch';
+  const vol=solid==='sphere'?(4/3)*Math.PI*a*a*a:Math.PI*a*a*2*a;
+  document.getElementById('matchwhy').textContent=
+    '∇·F = '+Fo.divS+'   ·   volume = '+vol.toFixed(3)+
+    '   ·   residual '+diff.toExponential(1)+' (mesh discretisation)';
+}
+
+/* ================= section 2: Stokes ================= */
+let scur=1, domeH=0.6;
+const camS={yaw:-0.6,pitch:0.34,zoom:1};
+/* cap surface: z = h(1 - r²) over the unit disk; h=0 gives the flat disk */
+const capZ=(r,h)=>h*(1-r*r);
+/* upward normal (unscaled) of z = g(r):  n dS = (-g_x, -g_y, 1) dx dy ; with g = h(1-x²-y²): g_x=-2hx */
+function curlFluxCap(Fo,h){
+  const NR=260,NT=260;let s=0;
+  const c=Fo.curl(0,0,0);
+  for(let i=0;i<NR;i++)for(let j=0;j<NT;j++){
+    const r=(i+0.5)/NR, th=(j+0.5)/NT*TAU;
+    const x=r*Math.cos(th),y=r*Math.sin(th);
+    const cx=c[0],cy=c[1],cz=c[2];
+    /* n dS = ⟨2hx, 2hy, 1⟩ dx dy   (upward);  dx dy = r dr dθ */
+    const nx=2*h*x, ny=2*h*y, nz=1;
+    s+=(cx*nx+cy*ny+cz*nz)*r*(1/NR)*(TAU/NT);
+  }
+  return s;
+}
+function circulationRim(Fo){
+  const N=4000;let s=0;
+  for(let i=0;i<N;i++){
+    const t=(i+0.5)/N*TAU;
+    const x=Math.cos(t),y=Math.sin(t),z=0;
+    const f=Fo.F(x,y,z);
+    const d=[-Math.sin(t),Math.cos(t),0];
+    s+=(f[0]*d[0]+f[1]*d[1]+f[2]*d[2])*(TAU/N);
+  }
+  return s;
+}
+function renderStokes(){
+  const Fo=FLD[scur],cv=document.getElementById('c3ds');const{ctx,W,H}=fit(cv);
+  ctx.clearRect(0,0,W,H);
+  const P=makeP(W,H,camS);
+  drawFrame(ctx,P);
+  const h=domeH, NN=v=>v/1.8;
+  /* the cap, shaded by curl·n */
+  const c=Fo.curl(0,0,0);
+  const NR=16,NT=44,patches=[];
+  for(let i=0;i<NR;i++)for(let j=0;j<NT;j++){
+    const r0=i/NR,r1=(i+1)/NR,t0=j/NT*TAU,t1=(j+1)/NT*TAU;
+    const pt=(r,t)=>[r*Math.cos(t),r*Math.sin(t),capZ(r,h)];
+    const w=[pt(r0,t0),pt(r0,t1),pt(r1,t1),pt(r1,t0)].map(v=>[NN(v[0]),NN(v[1]),NN(v[2])]);
+    const rm=(r0+r1)/2,tm=(t0+t1)/2;
+    const x=rm*Math.cos(tm),y=rm*Math.sin(tm);
+    const nx=2*h*x,ny=2*h*y,nz=1,nl=Math.hypot(nx,ny,nz);
+    const dens=(c[0]*nx+c[1]*ny+c[2]*nz)/nl;
+    patches.push({w,dens});
+  }
+  let mx=1e-6;for(const p of patches)mx=Math.max(mx,Math.abs(p.dens));
+  for(const p of patches){p.pp=p.w.map(v=>proj(v[0],v[1],v[2],P));p.depth=p.pp.reduce((s,q)=>s+q.d,0)/p.pp.length;}
+  patches.sort((a,b)=>b.depth-a.depth);
+  for(const p of patches){
+    const t=clamp(p.dens/mx,-1,1),al=Math.abs(t);
+    const base=t>=0?[123,216,255]:[255,122,92],mid=[40,60,70];
+    const col=[mid[0]+(base[0]-mid[0])*al,mid[1]+(base[1]-mid[1])*al,mid[2]+(base[2]-mid[2])*al];
+    ctx.beginPath();ctx.moveTo(p.pp[0].x,p.pp[0].y);for(let k=1;k<p.pp.length;k++)ctx.lineTo(p.pp[k].x,p.pp[k].y);ctx.closePath();
+    ctx.fillStyle='rgba('+(col[0]|0)+','+(col[1]|0)+','+(col[2]|0)+',0.85)';ctx.fill();
+    ctx.strokeStyle='rgba(8,20,22,0.30)';ctx.lineWidth=0.5;ctx.stroke();
+  }
+  /* the fixed rim */
+  ctx.strokeStyle='#ffd15c';ctx.lineWidth=4;ctx.lineJoin='round';ctx.beginPath();
+  for(let i=0;i<=120;i++){const t=i/120*TAU;const p=proj(NN(Math.cos(t)),NN(Math.sin(t)),NN(0),P);
+    i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y);}
+  ctx.closePath();ctx.stroke();
+  /* direction arrows on the rim */
+  for(let k=0;k<6;k++){
+    const t=(k+0.5)/6*TAU;
+    const A=[NN(Math.cos(t)),NN(Math.sin(t)),0];
+    const B=[NN(Math.cos(t+0.16)),NN(Math.sin(t+0.16)),0];
+    arrow3(ctx,P,A,B,'#ffd15c',2.4);
+  }
+  axes3(ctx,P);
+}
+function readout2(){
+  const Fo=FLD[scur];
+  const circ=circulationRim(Fo), cf=curlFluxCap(Fo,domeH);
+  document.getElementById('valh').textContent=domeH.toFixed(2);
+  document.getElementById('rcirc').textContent=fmt(circ);
+  document.getElementById('rcurlflux').textContent=fmt(cf);
+  document.getElementById('rcurlv').textContent=Fo.curlS;
+  const diff=Math.abs(circ-cf);
+  const tol=Math.max(4e-3,0.006*Math.max(Math.abs(circ),Math.abs(cf)));
+  const mb=document.getElementById('matchbox2');
+  mb.childNodes[0].nodeValue=diff<=tol?'they agree':'mismatch';
+  document.getElementById('matchwhy2').textContent=
+    '∇×F = '+Fo.curlS+'   ·   dome height '+domeH.toFixed(2)+'   ·   residual '+diff.toExponential(1);
+}
+
+/* ================= wiring ================= */
+function buildChips(){
+  const fc=document.getElementById('fchips');fc.innerHTML='';
+  FLD.forEach((F,i)=>{const b=document.createElement('button');b.className='chip'+(i===fcur?' on':'');b.textContent=F.sym;
+    b.setAttribute('aria-pressed',i===fcur);b.onclick=()=>{fcur=i;refresh1();};fc.appendChild(b);});
+  const sc=document.getElementById('schips');sc.innerHTML='';
+  FLD.forEach((F,i)=>{const b=document.createElement('button');b.className='chip'+(i===scur?' on':'');b.textContent=F.sym;
+    b.setAttribute('aria-pressed',i===scur);b.onclick=()=>{scur=i;buildChips();renderStokes();readout2();};sc.appendChild(b);});
+}
+function refresh1(){
+  document.getElementById('fnote').innerHTML='<b>'+FLD[fcur].name+'.</b> '+FLD[fcur].note;
+  buildChips();render3D();readout1();
+}
+document.getElementById('sa').addEventListener('input',e=>{aRad=+e.target.value;render3D();readout1();});
+document.getElementById('sh').addEventListener('input',e=>{domeH=+e.target.value;renderStokes();readout2();});
+document.querySelectorAll('#solidseg button').forEach(b=>b.addEventListener('click',()=>{
+  solid=b.dataset.s;document.querySelectorAll('#solidseg button').forEach(o=>o.classList.toggle('on',o===b));
+  render3D();readout1();}));
+function orbit(cv,cam,redraw){
+  let raf=false;const pts=new Map();let pinchD=0;
+  const sched=()=>{if(raf)return;raf=true;requestAnimationFrame(()=>{raf=false;redraw();});};
+  const dist=()=>{const a=[...pts.values()];return Math.hypot(a[0].x-a[1].x,a[0].y-a[1].y);};
+  cv.addEventListener('pointerdown',e=>{cv.setPointerCapture(e.pointerId);pts.set(e.pointerId,{x:e.clientX,y:e.clientY});if(pts.size===2)pinchD=dist();});
+  cv.addEventListener('pointermove',e=>{
+    if(!pts.has(e.pointerId))return;const prev=pts.get(e.pointerId);pts.set(e.pointerId,{x:e.clientX,y:e.clientY});
+    if(pts.size>=2){const d=dist();if(pinchD>0)cam.zoom=clamp(cam.zoom*d/pinchD,0.45,3.5);pinchD=d;sched();return;}
+    cam.yaw+=(e.clientX-prev.x)*0.01;cam.pitch=clamp(cam.pitch+(e.clientY-prev.y)*0.007,0.05,1.5);sched();});
+  const end=e=>{pts.delete(e.pointerId);pinchD=0;};
+  cv.addEventListener('pointerup',end);cv.addEventListener('pointercancel',end);
+  cv.addEventListener('wheel',e=>{e.preventDefault();cam.zoom=clamp(cam.zoom*(e.deltaY<0?1.12:0.9),0.45,3.5);sched();},{passive:false});
+}
+orbit(document.getElementById('c3d'),camA,render3D);
+orbit(document.getElementById('c3ds'),camS,renderStokes);
+let rt=false;
+window.addEventListener('resize',()=>{if(rt)return;rt=true;requestAnimationFrame(()=>{rt=false;render3D();renderStokes();});});
+window.addEventListener('load',()=>{render3D();renderStokes();});
+refresh1();renderStokes();readout2();
+}catch(err){
+  const b=document.getElementById('errbar');if(b){b.style.display='block';b.textContent='Something failed while loading the lab: '+err.message;}
+  console.error(err);
+}
+</script>
+</body>
+</html>

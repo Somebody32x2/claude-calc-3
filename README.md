@@ -16,6 +16,12 @@ self-contained HTML file. Fewer lessons, each finished — polish over quantity.
 | 05 | Hills, valleys & saddles — ∇f = 0, the discriminant test, the Hessian, Lagrange multipliers | [open](https://raw.githack.com/Somebody32x2/claude-calc-3/main/optimization-lab_5.html) |
 | 06 | Polar coordinates & the Jacobian — why dA = r dr dθ, area-stretch, the Gaussian integral | [open](https://raw.githack.com/Somebody32x2/claude-calc-3/main/polar-integrals-lab_6.html) |
 | 07 | Triple integrals — slicing solids, cylindrical cells, and where ρ² sin φ comes from | [open](https://raw.githack.com/Somebody32x2/claude-calc-3/main/triple-integrals-lab_7.html) |
+| 08 | Vector fields & line integrals — work, path dependence, conservative fields, potentials | [open](https://raw.githack.com/Somebody32x2/claude-calc-3/main/line-integrals-lab_8.html) |
+| 09 | Green's theorem — circulation & flux forms, curl and divergence, why the interior cancels | [open](https://raw.githack.com/Somebody32x2/claude-calc-3/main/greens-theorem-lab_9.html) |
+| 10 | Divergence & Stokes — flux through surfaces, and why the surface doesn't matter | [open](https://raw.githack.com/Somebody32x2/claude-calc-3/main/divergence-stokes-lab_10.html) |
+
+The sequence follows the arc of [MIT 18.02 (OCW)](https://ocw.mit.edu/courses/18-02sc-multivariable-calculus-fall-2010/) —
+partial derivatives → multiple integrals → vector fields → the integral theorems.
 
 Every lab ends with a **Common misconceptions** section — the specific wrong ideas that feel
 reasonable and quietly break things later (the gradient does *not* live on the surface;

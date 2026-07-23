@@ -134,6 +134,17 @@ input#st::-webkit-slider-thumb{background:var(--u)}input#st::-moz-range-thumb{ba
 .wk .hint{color:var(--ink-faint);font-size:13px}
 .pitfall{margin-top:26px;border-left:2px solid var(--x);background:rgba(255,122,92,0.06);padding:14px 16px;border-radius:0 8px 8px 0;font-size:14.5px;color:var(--ink-dim);max-width:820px}
 .pitfall b{color:var(--x-soft);font-weight:600}
+.byhand{border:1px solid var(--line);border-radius:14px;background:var(--bg2);padding:22px 24px;margin-top:20px}
+.byhand h3{font-size:17px;margin:0 0 4px;color:var(--ink)}
+.byhand .sub{font-size:13.5px;color:var(--ink-faint);margin:0 0 16px}
+.byhand ol{margin:0;padding-left:22px}
+.byhand li{margin-bottom:15px;font-size:14.5px;color:var(--ink-dim)}
+.byhand li:last-child{margin-bottom:0}
+.byhand li b{color:var(--ink);font-weight:600}
+.byhand .work{font-family:'IBM Plex Mono',monospace;font-size:13.5px;color:var(--ink);background:rgba(120,170,175,0.07);border-left:2px solid var(--line-strong);padding:9px 13px;border-radius:0 7px 7px 0;margin-top:8px;line-height:1.9;overflow-x:auto}
+.byhand .work .hl{color:var(--grad-soft)}
+.byhand .work .cx{color:var(--x-soft)}.byhand .work .cy{color:var(--y-soft)}.byhand .work .cu{color:var(--u-soft)}
+.byhand .ans{display:inline-block;font-family:'IBM Plex Mono';background:rgba(255,209,92,0.14);border:1px solid rgba(255,209,92,0.35);color:var(--grad-soft);padding:3px 10px;border-radius:6px;margin-top:8px}
 .myths{display:grid;grid-template-columns:1fr 1fr;gap:14px}
 .myth{border:1px solid var(--line);border-radius:12px;background:var(--bg2);padding:17px 19px}
 .myth .tagline{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.12em;text-transform:uppercase;margin-bottom:9px;color:var(--x)}
@@ -282,6 +293,37 @@ footer h3{font-size:20px;color:var(--ink);margin:0 0 14px}
         <div class="step"><span class="tag tag-x">rate</span><span class="hint">no dot product needed — it's the length</span></div>
         <div class="step">→ <span class="res">|∇f| = 10</span></div></div>
     </div>
+    <div class="byhand">
+      <h3>The whole procedure, slowly: find <span class="mono">D<sub>u</sub>f</span> for <span class="mono">f = x²y + 3y</span> at <span class="mono">(2, −1)</span> in the direction of <span class="mono">v = ⟨3, −4⟩</span></h3>
+      <p class="sub">Three steps, every number written out — including the normalization step that everyone skips exactly once.</p>
+      <ol>
+        <li><b>Step 1 — find the gradient and evaluate it.</b> Differentiate holding the other variable fixed, then substitute the point.
+          <div class="work">f<sub>x</sub> = 2xy&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;f<sub>y</sub> = x² + 3<br>
+            f<sub>x</sub>(2,−1) = 2(<span class="cx">2</span>)(<span class="cy">−1</span>) = −4<br>
+            f<sub>y</sub>(2,−1) = (<span class="cx">2</span>)² + 3 = 7<br>
+            <span class="hl">∇f(2,−1) = ⟨−4, 7⟩</span></div></li>
+        <li><b>Step 2 — turn the direction into a unit vector.</b> This is the step that gets skipped. Measure the length of <span class="mono">v</span> first, then divide <em>both</em> components by it.
+          <div class="work">|v| = √(3² + (−4)²) = √(9 + 16) = √25 = <span class="hl">5</span><br>
+            u = v / |v| = ⟨ <span class="cu">3/5</span>, <span class="cu">−4/5</span> ⟩ = ⟨0.6, −0.8⟩</div>
+          Confirm it worked: <span class="mono">0.6² + (−0.8)² = 0.36 + 0.64 = 1</span> ✓</li>
+        <li><b>Step 3 — take the dot product.</b> Multiply matching components and add. That is all a dot product is.
+          <div class="work">D<sub>u</sub>f = ∇f · u<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; = (<span class="cx">−4</span>)(<span class="cu">0.6</span>) + (<span class="cy">7</span>)(<span class="cu">−0.8</span>)<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; = −2.4 + (−5.6)<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; = −8.0</div>
+          <span class="ans">D<sub>u</sub>f = −8</span></li>
+        <li><b>Interpret the sign.</b> Negative means you are heading <b>downhill</b> — walking in the direction ⟨3,−4⟩ from that point, the surface drops at 8 units of height per unit of distance travelled.</li>
+        <li><b>Cross-check with the cosine law.</b> The same answer must come out of <span class="mono">|∇f| cos φ</span>.
+          <div class="work">|∇f| = √((−4)² + 7²) = √65 ≈ 8.062<br>
+            cos φ = D<sub>u</sub>f / |∇f| = −8 / 8.0623 ≈ −0.9923<br>
+            φ = arccos(−0.9923) ≈ 172.9°</div>
+          Nearly 180° from the gradient — we are heading almost <em>directly</em> downhill, which is why the magnitude 8 is so close to the maximum possible 8.06.</li>
+        <li><b>What would the answer have been if you forgot to normalize?</b> Dotting with the raw <span class="mono">⟨3, −4⟩</span> gives
+          <div class="work">(−4)(3) + (7)(−4) = −12 − 28 = −40</div>
+          That is exactly <b>5 times too large</b> — the length of <span class="mono">v</span>. Nothing in the arithmetic looks wrong; the only defence is checking <span class="mono">|u| = 1</span> before you dot.</li>
+      </ol>
+    </div>
+
     <p class="pitfall"><b>The mistake everyone makes once.</b> Forgetting to normalize. If you dot the gradient with a raw direction vector like <span class="mono">(3, 4)</span> instead of <span class="mono">(3/5, 4/5)</span>, you get an answer five times too large — and nothing in the arithmetic warns you. A directional derivative is a rate <em>per unit of distance travelled</em>; feeding in a vector of length 5 quietly measures five units of travel per step. Check <span class="mono">|u| = 1</span> before you dot, every time.</p>
   </section>
 
