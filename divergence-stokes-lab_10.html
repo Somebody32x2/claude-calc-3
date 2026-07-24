@@ -91,6 +91,17 @@ input[type=range]::-moz-range-thumb{width:17px;height:17px;border-radius:50%;bac
 .tcard .f{font-family:'IBM Plex Mono';font-size:12.5px;color:var(--grad-soft);background:rgba(255,209,92,0.08);border-radius:7px;padding:9px 11px;line-height:1.7;margin-bottom:10px;overflow-x:auto}
 .tcard p{margin:0;font-size:13.5px;color:var(--ink-dim)}
 .tcard .dim{color:var(--ink-faint);font-family:'IBM Plex Mono';font-size:11px;letter-spacing:.1em;text-transform:uppercase;margin-bottom:8px}
+.notation{border:1px solid rgba(255,209,92,0.28);border-radius:12px;background:rgba(255,209,92,0.05);padding:18px 20px;margin:0 0 24px;max-width:820px}
+.notation .ntitle{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--grad);margin-bottom:14px}
+.notation table{border-collapse:collapse;width:100%;font-size:14.2px}
+.notation td{padding:8px 10px 8px 0;border-bottom:1px solid var(--line);vertical-align:top;color:var(--ink-dim)}
+.notation tr:last-child td{border-bottom:none}
+.notation td.sym{font-family:'IBM Plex Mono',monospace;color:var(--grad-soft);white-space:nowrap;width:1%;padding-right:20px;font-size:14.5px}
+.notation p{margin:14px 0 0;font-size:14.2px;color:var(--ink-dim)}
+.notation p b{color:var(--ink);font-weight:600}
+.notation p .mono{color:var(--grad-soft)}
+.notation .warn{margin-top:14px;border-left:2px solid var(--x);background:rgba(255,122,92,0.07);padding:11px 13px;border-radius:0 8px 8px 0;font-size:14px;color:var(--ink-dim)}
+.notation .warn b{color:var(--x-soft)}
 .byhand{border:1px solid var(--line);border-radius:14px;background:var(--bg2);padding:22px 24px;margin-bottom:18px}
 .byhand h3{font-size:17px;margin:0 0 4px;color:var(--ink)}
 .byhand .sub{font-size:13.5px;color:var(--ink-faint);margin:0 0 16px}
@@ -151,6 +162,17 @@ footer h3{font-size:20px;color:var(--ink);margin:0 0 14px}
       <p>A solid, and the field streaming through its skin. The flux out of the surface and the divergence summed over the interior are computed separately — and land on the same number.</p></div>
     <p class="prose">The statement, sometimes called Gauss's theorem:</p>
     <p class="prose eqn">∯<sub>S</sub> F · n dS = ∭<sub>E</sub> (∇ · F) dV&nbsp;&nbsp;&nbsp;where&nbsp;&nbsp;∇ · F = P<sub>x</sub> + Q<sub>y</sub> + R<sub>z</sub></p>
+    <div class="notation">
+      <div class="ntitle">Reading ∇·F and ∇×F</div>
+      <table>
+        <tr><td class="sym">F = ⟨P, Q, R⟩</td><td>Three <b>components</b> now: <span class="mono">P</span> along x, <span class="mono">Q</span> along y, <span class="mono">R</span> along z. Each is a plain scalar function of <span class="mono">x, y, z</span>. (<span class="mono">R</span> here is a component — nothing to do with a radius.)</td></tr>
+        <tr><td class="sym">P<sub>x</sub>, R<sub>y</sub>, …</td><td>Subscript = <b>differentiate that component with respect to that variable</b>. So <span class="mono">R<sub>y</sub></span> means "take the z-component, differentiate it with respect to y" — <span class="mono">∂R/∂y</span>.</td></tr>
+        <tr><td class="sym">∇ · F</td><td>The <b>divergence</b>: <span class="mono">P<sub>x</sub> + Q<sub>y</sub> + R<sub>z</sub></span>. Each component differentiated by <em>its own</em> variable, then added. The result is a single <b>number</b> at each point.</td></tr>
+        <tr><td class="sym">∇ × F</td><td>The <b>curl</b>: <span class="mono">⟨R<sub>y</sub> − Q<sub>z</sub>, P<sub>z</sub> − R<sub>x</sub>, Q<sub>x</sub> − P<sub>y</sub></span>⟩. Every term is <em>crossed</em> — component and variable never match — and the result is a <b>vector</b>.</td></tr>
+      </table>
+      <div class="warn"><b>The dot and cross are borrowed, not literal.</b> <span class="mono">∇</span> is not a vector of numbers you can multiply; it is a bundle of derivative <em>instructions</em>, <span class="mono">⟨∂/∂x, ∂/∂y, ∂/∂z⟩</span>. Writing <span class="mono">∇ · F</span> and <span class="mono">∇ × F</span> is a mnemonic: it makes divergence look like a dot product (matching slots, added → scalar) and curl look like a cross product (crossed slots, subtracted → vector), which is exactly how they behave. But <span class="mono">∇ · F ≠ F · ∇</span>, and no actual multiplication is happening.</div>
+      <p><b>A memory hook for the curl's pattern.</b> Each slot skips its own letter and crosses the other two, in cyclic order <span class="mono">x → y → z → x</span>. The x-slot uses <span class="mono">y</span> and <span class="mono">z</span>: <span class="mono">R<sub>y</sub> − Q<sub>z</sub></span>. Advance every letter by one and you get the y-slot, then the z-slot. If a term ever has a component and a subscript that match — like <span class="mono">P<sub>x</sub></span> inside a curl — you have made a slip.</p>
+    </div>
     <p class="prose">Think of <span class="mono">F</span> as the flow of a fluid. The left side counts what
       crosses the boundary going outward — <b>net escape</b>. The right side adds up, over every interior
       point, how much fluid is being <b>created</b> there. If nothing is created inside, nothing can escape;

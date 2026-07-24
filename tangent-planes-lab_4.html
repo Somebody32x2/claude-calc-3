@@ -126,6 +126,17 @@ input#sw::-webkit-slider-thumb{background:var(--pl)}input#sw::-moz-range-thumb{b
 .wk .hint{color:var(--ink-faint);font-size:13px}
 .pitfall{margin-top:26px;border-left:2px solid var(--x);background:rgba(255,122,92,0.06);padding:14px 16px;border-radius:0 8px 8px 0;font-size:14.5px;color:var(--ink-dim);max-width:820px}
 .pitfall b{color:var(--x-soft);font-weight:600}
+.notation{border:1px solid rgba(255,209,92,0.28);border-radius:12px;background:rgba(255,209,92,0.05);padding:18px 20px;margin:0 0 24px;max-width:820px}
+.notation .ntitle{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--grad);margin-bottom:14px}
+.notation table{border-collapse:collapse;width:100%;font-size:14.2px}
+.notation td{padding:8px 10px 8px 0;border-bottom:1px solid var(--line);vertical-align:top;color:var(--ink-dim)}
+.notation tr:last-child td{border-bottom:none}
+.notation td.sym{font-family:'IBM Plex Mono',monospace;color:var(--grad-soft);white-space:nowrap;width:1%;padding-right:20px;font-size:14.5px}
+.notation p{margin:14px 0 0;font-size:14.2px;color:var(--ink-dim)}
+.notation p b{color:var(--ink);font-weight:600}
+.notation p .mono{color:var(--grad-soft)}
+.notation .warn{margin-top:14px;border-left:2px solid var(--x);background:rgba(255,122,92,0.07);padding:11px 13px;border-radius:0 8px 8px 0;font-size:14px;color:var(--ink-dim)}
+.notation .warn b{color:var(--x-soft)}
 .myths{display:grid;grid-template-columns:1fr 1fr;gap:14px}
 .myth{border:1px solid var(--line);border-radius:12px;background:var(--bg2);padding:17px 19px}
 .myth .tagline{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.12em;text-transform:uppercase;margin-bottom:9px;color:var(--x)}
@@ -179,6 +190,16 @@ footer h3{font-size:20px;color:var(--ink);margin:0 0 14px}
   <section>
     <div class="sec-head"><span class="sec-num">01</span><h2>The plane that just touches</h2>
       <p>Move the point and watch the mint plane re-tilt to rest flush against the surface. Its two tilts are exactly ∂f/∂x and ∂f/∂y — the coral and teal tangent lines you met in Lab 01 lie inside it.</p></div>
+    <div class="notation">
+      <div class="ntitle">Decoding the formula</div>
+      <table>
+        <tr><td class="sym">f(a, b)</td><td>The <b>height</b> of the surface at the point of tangency. A single number, found by plugging <span class="mono">a</span> and <span class="mono">b</span> into <span class="mono">f</span>.</td></tr>
+        <tr><td class="sym">f<sub>x</sub>, f<sub>y</sub></td><td>The two partial derivatives, <b>evaluated at that same point</b> — so they are numbers here, not functions. The subscript says which variable was differentiated. Strictly these are <span class="mono">f<sub>x</sub>(a,b)</span> and <span class="mono">f<sub>y</sub>(a,b)</span>; the arguments are usually dropped once the point is fixed.</td></tr>
+        <tr><td class="sym">(x − a), (y − b)</td><td>How far you have <b>moved</b> from the point, east and north. These are the only things still varying — they are what make <span class="mono">L</span> a function rather than a number.</td></tr>
+        <tr><td class="sym">L(x, y)</td><td>The plane's height. Named <span class="mono">L</span> for <b>linear</b>, to distinguish it from the curved <span class="mono">f</span> it approximates.</td></tr>
+      </table>
+      <div class="warn"><b>The commonest slip is forgetting to evaluate.</b> <span class="mono">f<sub>x</sub></span> is a <em>function</em> in general, but in the tangent-plane formula it must be frozen to its value at <span class="mono">(a, b)</span> <b>before</b> you write the equation. Leaving a live <span class="mono">x</span> inside the coefficient gives something that is not a plane at all.</div>
+    </div>
     <p class="prose">Where does the formula come from? A plane through the point <span class="mono">(a, b, f(a,b))</span>
       is <span class="mono">z = f(a,b) + M(x−a) + N(y−b)</span> for some tilts <b>M</b> and <b>N</b>. For the
       plane to <b>touch</b> the surface — to share its slope, not just its height — walking east along the

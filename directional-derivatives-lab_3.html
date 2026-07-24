@@ -134,6 +134,17 @@ input#st::-webkit-slider-thumb{background:var(--u)}input#st::-moz-range-thumb{ba
 .wk .hint{color:var(--ink-faint);font-size:13px}
 .pitfall{margin-top:26px;border-left:2px solid var(--x);background:rgba(255,122,92,0.06);padding:14px 16px;border-radius:0 8px 8px 0;font-size:14.5px;color:var(--ink-dim);max-width:820px}
 .pitfall b{color:var(--x-soft);font-weight:600}
+.notation{border:1px solid rgba(255,209,92,0.28);border-radius:12px;background:rgba(255,209,92,0.05);padding:18px 20px;margin:0 0 24px;max-width:820px}
+.notation .ntitle{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--grad);margin-bottom:14px}
+.notation table{border-collapse:collapse;width:100%;font-size:14.2px}
+.notation td{padding:8px 10px 8px 0;border-bottom:1px solid var(--line);vertical-align:top;color:var(--ink-dim)}
+.notation tr:last-child td{border-bottom:none}
+.notation td.sym{font-family:'IBM Plex Mono',monospace;color:var(--grad-soft);white-space:nowrap;width:1%;padding-right:20px;font-size:14.5px}
+.notation p{margin:14px 0 0;font-size:14.2px;color:var(--ink-dim)}
+.notation p b{color:var(--ink);font-weight:600}
+.notation p .mono{color:var(--grad-soft)}
+.notation .warn{margin-top:14px;border-left:2px solid var(--x);background:rgba(255,122,92,0.07);padding:11px 13px;border-radius:0 8px 8px 0;font-size:14px;color:var(--ink-dim)}
+.notation .warn b{color:var(--x-soft)}
 .byhand{border:1px solid var(--line);border-radius:14px;background:var(--bg2);padding:22px 24px;margin-top:20px}
 .byhand h3{font-size:17px;margin:0 0 4px;color:var(--ink)}
 .byhand .sub{font-size:13.5px;color:var(--ink-faint);margin:0 0 16px}
@@ -270,6 +281,17 @@ footer h3{font-size:20px;color:var(--ink);margin:0 0 14px}
   <section>
     <div class="sec-head"><span class="sec-num">04</span><h2>Computing them by hand</h2></div>
     <p class="rule">Three steps, always the same. Find <b>∇f</b> at the point. Turn your direction into a <b>unit</b> vector. Take the <b>dot product</b>. The only step anyone ever skips is the middle one.</p>
+    <div class="notation">
+      <div class="ntitle">Notation used below</div>
+      <table>
+        <tr><td class="sym">f<sub>x</sub>, f<sub>y</sub></td><td>Shorthand for <span class="mono">∂f/∂x</span> and <span class="mono">∂f/∂y</span> — the subscript names <b>which variable you differentiated with respect to</b>. Covered in full in <a href="partial-derivatives-lab_1.html" style="color:var(--y)">Lab 01</a>.</td></tr>
+        <tr><td class="sym">∇f</td><td>The two partials stacked, <span class="mono">⟨f<sub>x</sub>, f<sub>y</sub>⟩</span>. A <b>vector</b>, and a different one at every point.</td></tr>
+        <tr><td class="sym">u</td><td>Your chosen heading, as a <b>unit</b> vector. The hat notation <span class="mono">û</span> is often used to stress that <span class="mono">|u| = 1</span>.</td></tr>
+        <tr><td class="sym">D<sub>u</sub>f</td><td>The directional derivative. The subscript here is <b>not</b> a variable being differentiated — it names the <b>direction</b> you are walking. The result is a single number.</td></tr>
+        <tr><td class="sym">φ</td><td>The angle between <span class="mono">u</span> and <span class="mono">∇f</span>. Distinct from <span class="mono">θ</span>, which is the compass heading measured from due east.</td></tr>
+      </table>
+      <div class="warn"><b>Same-looking subscript, two different jobs.</b> In <span class="mono">f<sub>x</sub></span> the subscript says <em>differentiate with respect to x</em>. In <span class="mono">D<sub>u</sub>f</span> it says <em>in the direction u</em> — nothing is being differentiated with respect to <span class="mono">u</span>. Context tells them apart: subscripts on <span class="mono">f</span> are variables, the subscript on <span class="mono">D</span> is a direction.</div>
+    </div>
     <div class="worked">
       <div class="wk"><div class="fn">f = x² + xy,  at (1, 2)<br>toward v = (3, 4)</div>
         <div class="step"><span class="tag tag-g">∇f</span><span class="hint">(2x + y, x) at (1,2)</span></div>

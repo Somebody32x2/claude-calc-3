@@ -137,6 +137,19 @@ input[type=range]::-moz-range-thumb{width:17px;height:17px;border-radius:50%;bac
 .wk th{color:var(--ink-faint);font-weight:400}
 .pitfall{margin-top:26px;border-left:2px solid var(--x);background:rgba(255,122,92,0.06);padding:14px 16px;border-radius:0 8px 8px 0;font-size:14.5px;color:var(--ink-dim);max-width:820px}
 .pitfall b{color:var(--x-soft);font-weight:600}
+.notation{border:1px solid rgba(255,209,92,0.28);border-radius:12px;background:rgba(255,209,92,0.05);padding:18px 20px;margin:0 0 24px;max-width:820px}
+.notation .ntitle{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--grad);margin-bottom:14px}
+.notation table{border-collapse:collapse;width:100%;font-size:14.2px}
+.notation td{padding:8px 10px 8px 0;border-bottom:1px solid var(--line);vertical-align:top;color:var(--ink-dim)}
+.notation tr:last-child td{border-bottom:none}
+.notation td.sym{font-family:'IBM Plex Mono',monospace;color:var(--grad-soft);white-space:nowrap;width:1%;padding-right:20px;font-size:14.5px}
+.notation td.lz{font-family:'IBM Plex Mono',monospace;color:var(--ink-faint);white-space:nowrap;width:1%;padding-left:16px;text-align:right}
+.notation p{margin:14px 0 0;font-size:14.2px;color:var(--ink-dim)}
+.notation p b{color:var(--ink);font-weight:600}
+.notation p .mono{color:var(--grad-soft)}
+.notation .warn{margin-top:14px;border-left:2px solid var(--x);background:rgba(255,122,92,0.07);padding:11px 13px;border-radius:0 8px 8px 0;font-size:14px;color:var(--ink-dim)}
+.notation .warn b{color:var(--x-soft)}
+@media(max-width:640px){.notation td.lz{display:none}}
 .myths{display:grid;grid-template-columns:1fr 1fr;gap:14px}
 .myth{border:1px solid var(--line);border-radius:12px;background:var(--bg2);padding:17px 19px}
 .myth .tagline{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.12em;text-transform:uppercase;margin-bottom:9px;color:var(--x)}
@@ -220,6 +233,18 @@ footer h3{font-size:20px;color:var(--ink);margin:0 0 14px}
   <section>
     <div class="sec-head"><span class="sec-num">02</span><h2>The test that tells them apart</h2>
       <p>Zoom in on a critical point and the surface looks like a bowl, an upside-down bowl, or a saddle — decided entirely by its second derivatives. The discriminant packages that decision into arithmetic.</p></div>
+    <div class="notation">
+      <div class="ntitle">First — reading the subscripts</div>
+      <table>
+        <tr><td class="sym">f<sub>x</sub></td><td>Differentiate <span class="mono">f</span> once with respect to <b>x</b>, holding <span class="mono">y</span> fixed.</td><td class="lz">∂f/∂x</td></tr>
+        <tr><td class="sym">f<sub>xx</sub></td><td>Differentiate with respect to <b>x</b>, then with respect to <b>x again</b>. How the x-slope itself changes as you move east — the curvature along x.</td><td class="lz">∂²f/∂x²</td></tr>
+        <tr><td class="sym">f<sub>yy</sub></td><td>Twice with respect to <b>y</b>. The curvature along the north–south direction.</td><td class="lz">∂²f/∂y²</td></tr>
+        <tr><td class="sym">f<sub>xy</sub></td><td>The <b>mixed</b> partial: first with respect to <b>x</b>, <em>then</em> with respect to <b>y</b>. How the x-slope changes as you move north — the twist.</td><td class="lz">∂²f/∂y∂x</td></tr>
+      </table>
+      <div class="warn"><b>The one that catches everyone.</b> Subscripts are read <b>left to right in the order you differentiate</b>: <span class="mono">f<sub>xy</sub></span> means "x first, then y". But the Leibniz form of the same thing, <span class="mono">∂²f/∂y∂x</span>, is read <b>right to left</b> — the operator nearest <span class="mono">f</span> is applied first. The two notations list the variables in opposite orders and mean the identical object. Whenever you switch between them, reverse the letters.</div>
+      <p><b>Does the order actually matter?</b> Almost never, and that is a theorem rather than a definition. <b>Clairaut's theorem</b> (also called Schwarz's) says that if the second partials are continuous near the point — true for every function in this lab — then <span class="mono">f<sub>xy</sub> = f<sub>yx</sub></span>. That is exactly why the Hessian below comes out <b>symmetric</b>, with the same number in both off-diagonal slots, and why the discriminant never has to specify which mixed partial you used.</p>
+      <p><b>And one piece of punctuation.</b> In <span class="mono">D = f<sub>xx</sub>f<sub>yy</sub> − f<sub>xy</sub>²</span>, the square sits on the <b>whole</b> mixed partial: it means <span class="mono">(f<sub>xy</sub>)²</span> — compute the mixed partial, then square the number. It does <em>not</em> mean differentiating twice more, and it is not <span class="mono">f</span> to any power.</p>
+    </div>
     <p class="prose">Near a flat point the linear part is gone (that was the whole point of ∇f = 0), so the
       surface's shape is set by the <b>quadratic</b> term of its Taylor expansion:
       <span class="mono">½(f<sub>xx</sub>h² + 2f<sub>xy</sub>hk + f<sub>yy</sub>k²)</span> for a small step
@@ -242,6 +267,10 @@ footer h3{font-size:20px;color:var(--ink);margin:0 0 14px}
           <div class="hessgrid">
             <span class="hl">Hessian</span>
             <span class="matrix"><span id="hxx">0</span><span id="hxy">0</span><span id="hxy2">0</span><span id="hyy">0</span></span>
+          </div>
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--ink-faint);margin-top:8px;line-height:1.7">
+            top-left = f<sub>xx</sub> &nbsp;·&nbsp; bottom-right = f<sub>yy</sub><br>
+            both off-diagonals = f<sub>xy</sub> (equal, by Clairaut)
           </div>
           <div class="readout" style="margin-top:12px">
             <div class="line"><span class="rl">Discriminant <span class="exp mono">D = f_xx·f_yy − f_xy²</span></span><span class="rv vg" id="Dval">0.00</span></div>
